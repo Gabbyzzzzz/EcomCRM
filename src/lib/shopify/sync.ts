@@ -111,7 +111,9 @@ function mapOrderLine(raw: ShopifyOrder) {
   return {
     shopifyId: raw.id,
     customerId: null as string | null, // resolved after customer upsert
-    shopifyCustomerId: raw.customer?.id ?? null, // Shopify GID for linking
+    // In bulk JSONL, nested orders use __parentId for the customer GID.
+    // In single-resource queries (webhooks), customer.id is used instead.
+    shopifyCustomerId: raw.__parentId ?? raw.customer?.id ?? null,
     totalPrice,
     lineItems,
     financialStatus: raw.displayFinancialStatus?.toLowerCase() ?? null,

@@ -31,6 +31,34 @@ export const BULK_CUSTOMERS_QUERY = `
               tags
               createdAt
               updatedAt
+              orders {
+                edges {
+                  node {
+                    id
+                    name
+                    totalPriceSet {
+                      shopMoney {
+                        amount
+                        currencyCode
+                      }
+                    }
+                    lineItems {
+                      edges {
+                        node {
+                          title
+                          quantity
+                          variant {
+                            price
+                          }
+                        }
+                      }
+                    }
+                    displayFinancialStatus
+                    createdAt
+                    updatedAt
+                  }
+                }
+              }
             }
           }
         }

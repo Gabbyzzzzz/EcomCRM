@@ -47,6 +47,8 @@ export interface ShopifyCustomer {
 
 export interface ShopifyOrder {
   id: string
+  /** Set by Shopify on bulk operation JSONL lines for nested resources */
+  __parentId?: string
   name: string
   totalPriceSet: {
     shopMoney: {
