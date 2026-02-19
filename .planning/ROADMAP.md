@@ -47,12 +47,14 @@ Plans:
   3. Sending the same webhook payload twice (duplicate `X-Shopify-Webhook-Id`) results in only one database record — no duplicate processing
   4. The UI shows "Last synced X ago" and displays an alert when no sync has completed in the past 24 hours
   5. GraphQL requests back off automatically when the Shopify API cost budget is low — no 429 errors crash the sync
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
 - [ ] 02-01-PLAN.md — Schema extensions (sync_logs, webhook_deliveries, is_historical, soft-delete) and Shopify GraphQL client with cost-based rate limiting
 - [ ] 02-02-PLAN.md — Bulk sync pipeline, webhook endpoint with HMAC + idempotency, incremental handlers, Inngest functions
 - [ ] 02-03-PLAN.md — Sync status nav indicator (idle/spinning/stale), settings/sync page, live progress, force sync
+- [ ] 02-04-PLAN.md — Gap closure: fix bulk_operations/finish failure path (syncLog marked failed) + add onFailure dead-letter handler + fix last-write-wins timestamp comparison in upsert queries
+- [ ] 02-05-PLAN.md — Gap closure: update documentation (CLAUDE.md, REQUIREMENTS.md, codebase map) to reflect SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET replacing SHOPIFY_ACCESS_TOKEN
 
 ### Phase 3: RFM Engine
 **Goal**: Every customer in the database has an RFM score and a named segment that updates automatically
@@ -141,7 +143,7 @@ Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 0/2 | Not started | - |
-| 2. Shopify Integration | 0/3 | Not started | - |
+| 2. Shopify Integration | 0/5 | Not started | - |
 | 3. RFM Engine | 0/2 | Not started | - |
 | 4. Email Infrastructure | 0/2 | Not started | - |
 | 5. Automation Engine | 0/3 | Not started | - |
