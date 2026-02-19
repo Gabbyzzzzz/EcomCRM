@@ -66,11 +66,11 @@ Plans:
   3. When a new order webhook arrives, the affected customer's order_count, total_spent, and last_order_at update within the same Inngest step that processes the event
   4. The daily Inngest cron runs, recomputes quintile boundaries across all customers, and persists updated segment assignments without manual intervention
   5. When a customer's segment changes (e.g., loyal to at_risk), a `segment_change` event is emitted that automation triggers can consume
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: RFM scoring engine with PostgreSQL window functions and segment mapping
-- [ ] 03-02: Daily cron, per-event rescoring, segment-change event emission
+- [ ] 03-01-PLAN.md — RFM scoring engine with PostgreSQL NTILE(5) window functions and segment mapping, customer counter recalculation query
+- [ ] 03-02-PLAN.md — Daily Inngest cron for full RFM recalculation, per-order customer counter updates, segment-change event emission
 
 ### Phase 4: Email Infrastructure
 **Goal**: Email can be sent to opted-in customers with full compliance — no unsubscribes honored, no sends to bounced addresses
