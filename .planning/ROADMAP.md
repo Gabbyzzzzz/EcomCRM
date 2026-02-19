@@ -82,11 +82,11 @@ Plans:
   3. When a customer clicks unsubscribe, the Resend webhook fires and sets `marketing_opted_out = true` on that customer within seconds — subsequent send attempts for that customer are blocked at the send layer
   4. When a hard bounce occurs, the customer is added to a suppression list and no further emails are dispatched to that address
   5. Calling `sendEmail()` twice with the same idempotency key results in exactly one email delivered — Resend deduplicates on the key
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: React Email templates (all 5), Resend send wrapper with idempotency
-- [ ] 04-02: Unsubscribe webhook, bounce suppression, compliance headers, subdomain config
+- [ ] 04-01-PLAN.md — Schema extensions (suppressions table, marketing_opted_out column, messageStatus enum), env vars, unsubscribe token utility, 5 React Email templates, Resend send wrapper with idempotency + compliance headers + suppression gate
+- [ ] 04-02-PLAN.md — Resend bounce/complaint webhook endpoint, unsubscribe API with Shopify tag sync, unsubscribe confirmation page with undo/resubscribe
 
 ### Phase 5: Automation Engine
 **Goal**: All 5 preset flows evaluate triggers, wait delays, and execute actions on real customer events — with no duplicate sends and no fires on historical data
