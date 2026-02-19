@@ -1,0 +1,161 @@
+import {
+  pgTable,
+  pgEnum,
+  uuid,
+  varchar,
+  text,
+  numeric,
+  integer,
+  jsonb,
+  boolean,
+  timestamp,
+  index,
+} from 'drizzle-orm/pg-core'
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+export const customerSegmentEnum = pgEnum('customer_segment', [
+  'champion',
+  'loyal',
+  'potential',
+  'new',
+  'at_risk',
+  'hibernating',
+  'lost',
+])
+
+export const triggerTypeEnum = pgEnum('trigger_type', [
+  'first_order',
+  'segment_change',
+  'days_since_order',
+  'tag_added',
+  'cart_abandoned',
+])
+
+export const actionTypeEnum = pgEnum('action_type', [
+  'send_email',
+  'add_tag',
+  'remove_tag',
+])
+
+export const messageChannelEnum = pgEnum('message_channel', ['email', 'sms'])
+
+export const messageStatusEnum = pgEnum('message_status', [
+  'sent',
+  'opened',
+  'clicked',
+  'converted',
+])
+
+export const financialStatusEnum = pgEnum('financial_status', [
+  'pending',
+  'authorized',
+  'paid',
+  'refunded',
+  'voided',
+])
+
+// ─── Tables ───────────────────────────────────────────────────────────────────
+
+export const customers = pgTable(
+  'customers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    shopifyId: varchar('shopify_id', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }),
+    email: varchar('email', { length: 255 }),
+    phone: varchar('phone', { length: 50 }),
+    rfmR: integer('rfm_r'),
+    rfmF: integer('rfm_f'),
+    rfmM: integer('rfm_m'),
+    segment: customerSegmentEnum('segment'),
+    lifecycleStage: varchar('lifecycle_stage', { length: 100 }),
+    tags: text('tags').array(),
+    totalSpent: numeric('total_spent', { precision: 19, scale: 4 }),
+    orderCount: integer('order_count').default(0),
+    avgOrderValue: numeric('avg_order_value', { precision: 19, scale: 4 }),
+    firstOrderAt: timestamp('first_order_at', { withTimezone: true }),
+    lastOrderAt: timestamp('last_order_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('customers_shop_id_idx').on(table.shopId),
+    index('customers_shopify_id_idx').on(table.shopifyId),
+    index('customers_segment_idx').on(table.segment),
+    index('customers_email_idx').on(table.email),
+  ]
+)
+
+export const orders = pgTable(
+  'orders',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    shopifyId: varchar('shopify_id', { length: 255 }).notNull(),
+    customerId: uuid('customer_id').references(() => customers.id),
+    totalPrice: numeric('total_price', { precision: 19, scale: 4 }),
+    lineItems: jsonb('line_items'),
+    financialStatus: financialStatusEnum('financial_status'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('orders_shop_id_idx').on(table.shopId),
+    index('orders_customer_id_idx').on(table.customerId),
+    index('orders_created_at_idx').on(table.createdAt),
+  ]
+)
+
+export const automations = pgTable(
+  'automations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    triggerType: triggerTypeEnum('trigger_type').notNull(),
+    triggerConfig: jsonb('trigger_config'),
+    delayValue: integer('delay_value'),
+    delayUnit: varchar('delay_unit', { length: 50 }),
+    actionType: actionTypeEnum('action_type').notNull(),
+    actionConfig: jsonb('action_config'),
+    emailTemplateId: varchar('email_template_id', { length: 255 }),
+    enabled: boolean('enabled').default(true).notNull(),
+    lastRunAt: timestamp('last_run_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('automations_shop_id_idx').on(table.shopId),
+    index('automations_enabled_idx').on(table.enabled),
+  ]
+)
+
+export const messageLogs = pgTable(
+  'message_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    customerId: uuid('customer_id').references(() => customers.id),
+    automationId: uuid('automation_id').references(() => automations.id),
+    channel: messageChannelEnum('channel').notNull(),
+    subject: varchar('subject', { length: 500 }),
+    status: messageStatusEnum('status').notNull(),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    openedAt: timestamp('opened_at', { withTimezone: true }),
+    clickedAt: timestamp('clicked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('message_logs_shop_id_idx').on(table.shopId),
+    index('message_logs_customer_id_idx').on(table.customerId),
+    index('message_logs_automation_id_idx').on(table.automationId),
+    index('message_logs_status_idx').on(table.status),
+  ]
+)
