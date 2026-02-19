@@ -76,7 +76,8 @@
 - Environment variables stored in `.env.local` (not committed to git)
 - Verified env vars required:
   - `SHOPIFY_STORE_URL` - Shopify store domain
-  - `SHOPIFY_ACCESS_TOKEN` - Custom App API token
+  - `SHOPIFY_CLIENT_ID` - Partners Dashboard OAuth client ID
+  - `SHOPIFY_CLIENT_SECRET` - Partners Dashboard OAuth client secret (also used as webhook secret)
   - `SHOPIFY_WEBHOOK_SECRET` - HMAC secret for webhook verification
   - `DATABASE_URL` - PostgreSQL connection string
   - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (public)
@@ -125,7 +126,7 @@
 **Runtime Constraints:**
 - Money fields must use Decimal types (not float) per CLAUDE.md
 - Inngest requires event key and signing key configuration
-- Shopify Custom App (not Public App) requires explicit access token
+- Shopify OAuth app (Partners Dashboard) uses SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET via client credentials grant — no static access token
 
 ---
 

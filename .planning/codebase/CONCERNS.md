@@ -30,7 +30,7 @@
 ## Security & Configuration Risks
 
 **Secrets Management:**
-- Risk: CLAUDE.md lists 10 required environment variables (SHOPIFY_STORE_URL, SHOPIFY_ACCESS_TOKEN, SHOPIFY_WEBHOOK_SECRET, DATABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, ANTHROPIC_API_KEY, INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY)
+- Risk: CLAUDE.md lists 11 required environment variables (SHOPIFY_STORE_URL, SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET, SHOPIFY_WEBHOOK_SECRET, DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, ANTHROPIC_API_KEY, INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY)
 - Current: No `.env.local` template or documentation of required vars in codebase
 - Missing: No validation that all required env vars are present at startup
 - Current mitigation: None. Project will fail at runtime if any var is missing.

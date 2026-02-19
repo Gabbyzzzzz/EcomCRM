@@ -8,8 +8,8 @@
 - Shopify Admin API (GraphQL)
   - What it's used for: Sync customers, orders, product data; real-time webhooks for order/customer updates
   - SDK/Client: Custom wrapper (not yet implemented, planned in `lib/shopify/client.ts`)
-  - Auth: Custom App access token
-  - Auth Env Var: `SHOPIFY_ACCESS_TOKEN`
+  - Auth: OAuth client credentials grant (Partners Dashboard app)
+  - Auth Env Vars: `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET`
   - Store URL Env Var: `SHOPIFY_STORE_URL`
   - Webhook Secret Env Var: `SHOPIFY_WEBHOOK_SECRET`
 
@@ -54,7 +54,7 @@
 
 **Auth Provider:**
 - Custom/Shopify-based
-  - Implementation approach: Custom App access token from Shopify (not OAuth)
+  - Implementation approach: OAuth client credentials grant using Partners Dashboard app (SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET)
   - No additional auth provider (Auth0, Clerk, Supabase Auth) in dependencies
   - Future multi-tenant: shop_id column in all tables for multi-store support
 
@@ -92,7 +92,8 @@
 
 **Required env vars:**
 - `SHOPIFY_STORE_URL` - Shopify store domain (e.g., "mystore.myshopify.com")
-- `SHOPIFY_ACCESS_TOKEN` - Custom App private API token
+- `SHOPIFY_CLIENT_ID` - Partners Dashboard OAuth client ID
+- `SHOPIFY_CLIENT_SECRET` - Partners Dashboard OAuth client secret (doubles as SHOPIFY_WEBHOOK_SECRET value)
 - `SHOPIFY_WEBHOOK_SECRET` - HMAC secret for webhook signature verification
 - `DATABASE_URL` - PostgreSQL connection string (Supabase)
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (public, safe for client)
