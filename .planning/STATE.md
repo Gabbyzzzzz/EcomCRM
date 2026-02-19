@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 4 of 7 (Email Infrastructure) — COMPLETE
-Plan: 2 of 2 — plan 02 complete
-Status: Active — Phase 4 complete; ready for Phase 5 (automation engine)
-Last activity: 2026-02-19 — Phase 4 plan 02 complete: Resend bounce webhook, unsubscribe API + page, Shopify tag sync, processResendWebhook Inngest function
+Phase: 5 of 7 (Automation Engine) — Active
+Plan: 1 of 2 — plan 01 complete
+Status: Active — Phase 5 plan 01 complete; ready for Phase 5 plan 02
+Last activity: 2026-02-19 — Phase 5 plan 01 complete: automation engine core (engine.ts, actions.ts, presets.ts), 3 Inngest functions (processFirstOrder, processSegmentChange, processCartAbandoned), 5 automation DB query functions
 
-Progress: [████████░░] 70%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -31,6 +31,7 @@ Progress: [████████░░] 70%
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
+| 05-automation-engine | 1/2 | 3 min | 3 min |
 
 **Recent Trend:**
 - Last 5 plans: 02-04 (2 min), 03-01 (3 min), 03-02 (3 min), 04-01 (6 min), 04-02 (3 min)
@@ -81,6 +82,10 @@ Recent decisions affecting current work:
 - [Phase 04-email-infrastructure]: Single /api/unsubscribe route handles GET link-click, POST one-click RFC 8058, and POST resubscribe flows — distinguished by method + form body
 - [Phase 04-email-infrastructure]: Shopify tagsAdd/tagsRemove is best-effort on unsubscribe — tag sync failure must not block compliance opt-out
 - [Phase 04-email-infrastructure]: svix webhook verification for Resend is a known gap — accepted per plan spec, TODO comment in route
+- [Phase 05-automation-engine]: eventTimestamp read from event.data in processSegmentChange — never new Date() — prevents duplicate sends on Inngest retry by keeping idempotency key stable
+- [Phase 05-automation-engine]: recalcTimestamp generated ONCE before segmentChanges loop in dailyRfmRecalculation — all events in a batch share the same timestamp for consistent idempotency
+- [Phase 05-automation-engine]: executeTagAction is best-effort (catch+log, no rethrow) — Shopify tag sync failure must not block automation engine
+- [Phase 05-automation-engine]: automation/first_order emit wrapped in try/catch in processShopifyWebhook — event emission failure must not break webhook processing
 
 ### Pending Todos
 
@@ -94,5 +99,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 04-02-PLAN.md — Resend bounce webhook, unsubscribe API (GET + POST one-click + POST resubscribe), /unsubscribe page with undo, Shopify tag sync, processResendWebhook Inngest function
+Stopped at: Completed 05-01-PLAN.md — automation engine core (engine.ts, actions.ts, presets.ts), processFirstOrder + processSegmentChange + processCartAbandoned Inngest functions, 5 automation DB query functions, automations_shop_name_unique index
 Resume file: None
