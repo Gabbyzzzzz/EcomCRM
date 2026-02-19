@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 2 of 7 (Shopify Integration)
-Plan: 2 of N in current phase
-Status: In progress
-Last activity: 2026-02-19 — Completed 02-02 (Shopify sync pipeline, webhooks, Inngest wiring)
+Plan: 3 of N in current phase
+Status: Paused at checkpoint (02-03 Task 3 — human-verify)
+Last activity: 2026-02-19 — Completed 02-03 Tasks 1+2 (sync status UI, settings page), paused at human verification checkpoint
 
-Progress: [████░░░░░░] 28%
+Progress: [████░░░░░░] 30%
 
 ## Performance Metrics
 
@@ -29,9 +29,10 @@ Progress: [████░░░░░░] 28%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 2/N | 9 min | 4.5 min |
+| 02-shopify-integration | 02-03 (partial) | 5 min | — |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min), 02-02 (6 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (5 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -61,6 +62,9 @@ Recent decisions affecting current work:
 - upsertCustomer.onConflictDoUpdate.set excludes rfmR/rfmF/rfmM/segment/lifecycleStage — CRM field preservation enforced at query layer
 - Decimal used for all money arithmetic including intermediate avgOrderValue computation — never parseFloat anywhere in shopify/ db/ inngest/
 - shopId derived from new URL(env.SHOPIFY_STORE_URL).hostname — consistent single-tenant identifier pattern
+- Adaptive polling: setTimeout chain (not setInterval) — 2s when running, 10s when idle, avoids drift
+- hasAutoTriggered ref: prevents duplicate /api/sync POSTs when React re-renders on mount in development
+- SyncActions extracted as separate client component from settings page to keep page.tsx as Server Component
 
 ### Pending Todos
 
@@ -74,5 +78,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 02-02-PLAN.md (Shopify sync pipeline and webhook infrastructure)
+Stopped at: 02-03 Task 3 (human-verify checkpoint) — Tasks 1+2 complete, awaiting human verification of sync UI and endpoints
 Resume file: None
