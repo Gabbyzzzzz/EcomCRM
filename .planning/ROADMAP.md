@@ -99,12 +99,11 @@ Plans:
   4. When a customer transitions to the `champion` segment, they receive the VIP email and the "vip" tag is added back to their Shopify customer record
   5. No automation fires on orders that arrived during the initial historical backfill (is_historical = true orders are excluded from trigger evaluation)
   6. The automation list page shows all 5 preset flows; toggling enable/disable takes effect on the next evaluation cycle
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Automation trigger evaluation engine and Inngest wiring
-- [ ] 05-02: Delay handling via step.sleep(), action executors (send_email, add_tag, remove_tag)
-- [ ] 05-03: All 5 preset flow configurations, MessageLog writes, automation list page
+- [ ] 05-01-PLAN.md — Automation engine core: engine.ts + actions.ts + presets.ts + DB query helpers + event-driven Inngest functions (first_order, segment_change, cart_abandoned)
+- [ ] 05-02-PLAN.md — Days-since-order daily cron + preset seed API + automation PATCH toggle API + automation list page (with human-verify checkpoint)
 
 ### Phase 6: Dashboard and Customer UI
 **Goal**: The CRM interface surfaces all data — KPIs, segment health, customer profiles, and automation status — over live data from the database
@@ -146,6 +145,6 @@ Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5
 | 2. Shopify Integration | 5/5 | ✓ Complete | 2026-02-19 |
 | 3. RFM Engine | 2/2 | ✓ Complete | 2026-02-19 |
 | 4. Email Infrastructure | 2/2 | ✓ Complete | 2026-02-19 |
-| 5. Automation Engine | 0/3 | Not started | - |
+| 5. Automation Engine | 0/2 | Not started | - |
 | 6. Dashboard and Customer UI | 0/3 | Not started | - |
 | 7. AI Insights | 0/1 | Not started | - |
