@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { customers, orders, syncLogs, webhookDeliveries } from './schema'
-import { eq, and, desc, isNotNull, lte, or, isNull } from 'drizzle-orm'
+import { eq, and, desc, isNotNull, lte, or, isNull, sql } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -309,6 +309,69 @@ export async function updateWebhookDeliveryStatus(
       and(
         eq(webhookDeliveries.shopId, shopId),
         eq(webhookDeliveries.webhookId, webhookId)
+      )
+    )
+}
+
+// ─── Customer counter recalculation ──────────────────────────────────────────
+
+/**
+ * Recalculate a single customer's aggregate order counters from the orders table.
+ *
+ * Uses SQL aggregation (COUNT, SUM, MIN, MAX) — no rows are loaded into JS for arithmetic.
+ * Decimal is used for money arithmetic (avgOrderValue) — never parseFloat.
+ *
+ * Updates: order_count, total_spent, avg_order_value, first_order_at, last_order_at.
+ */
+export async function updateCustomerCountersFromOrders(
+  shopId: string,
+  customerInternalId: string
+): Promise<void> {
+  interface AggRow extends Record<string, unknown> {
+    order_count: string | number
+    total_spent: string | null
+    first_order_at: Date | string | null
+    last_order_at: Date | string | null
+  }
+
+  const rows = await db.execute<AggRow>(sql`
+    SELECT
+      COUNT(*)                        AS order_count,
+      SUM(total_price::numeric)       AS total_spent,
+      MIN(shopify_created_at)         AS first_order_at,
+      MAX(shopify_created_at)         AS last_order_at
+    FROM ${orders}
+    WHERE customer_id = ${customerInternalId}::uuid
+      AND shop_id     = ${shopId}
+  `)
+
+  const agg = rows[0]
+  if (!agg) return
+
+  const orderCount = Number(agg.order_count ?? 0)
+  const totalSpentDecimal =
+    agg.total_spent != null ? new Decimal(agg.total_spent) : new Decimal(0)
+  const avgOrderValue =
+    orderCount > 0 ? totalSpentDecimal.div(orderCount).toString() : '0'
+
+  const firstOrderAt =
+    agg.first_order_at != null ? new Date(agg.first_order_at as string) : null
+  const lastOrderAt =
+    agg.last_order_at != null ? new Date(agg.last_order_at as string) : null
+
+  await db
+    .update(customers)
+    .set({
+      orderCount,
+      totalSpent: totalSpentDecimal.toString(),
+      avgOrderValue,
+      firstOrderAt,
+      lastOrderAt,
+    })
+    .where(
+      and(
+        eq(customers.id, customerInternalId),
+        eq(customers.shopId, shopId)
       )
     )
 }
