@@ -28,10 +28,10 @@ Progress: [█████░░░░░] 40%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
-| 02-shopify-integration | 5/5 | 16 min | 3.2 min |
+| 02-shopify-integration | 5/5 | 18 min | 3.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (8 min)
+- Last 5 plans: 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (8 min), 02-04 (2 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -64,6 +64,8 @@ Recent decisions affecting current work:
 - Adaptive polling: setTimeout chain (not setInterval) — 2s when running, 10s when idle, avoids drift
 - hasAutoTriggered ref: prevents duplicate /api/sync POSTs when React re-renders on mount in development
 - SyncActions extracted as separate client component from settings page to keep page.tsx as Server Component
+- [Phase 02-shopify-integration]: upsertCustomer/upsertOrder setWhere uses or(isNull, lte) timestamp guards — older webhook replays cannot overwrite newer stored data
+- [Phase 02-shopify-integration]: updateWebhookDeliveryStatus uses plain .update() (not insert-or-ignore) to flip existing processing row to dead_letter after Inngest retries exhausted
 
 ### Pending Todos
 
@@ -77,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 02-05-PLAN.md — Phase 2 (Shopify Integration) gap-closure plans complete, all 6 doc surfaces accurate
+Stopped at: Completed 02-04-PLAN.md — gap closure for sync failure path and last-write-wins fixes
 Resume file: None
