@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Schema, DB connection, env, and Inngest registered
 - [x] **Phase 2: Shopify Integration** - Real customer and order data flowing into the DB
-- [ ] **Phase 3: RFM Engine** - Customers auto-segmented into 7 labeled groups
-- [ ] **Phase 4: Email Infrastructure** - Compliant email sending with suppression and templates
+- [x] **Phase 3: RFM Engine** - Customers auto-segmented into 7 labeled groups
+- [x] **Phase 4: Email Infrastructure** - Compliant email sending with suppression and templates
 - [ ] **Phase 5: Automation Engine** - Triggered email flows firing on real customer events
 - [ ] **Phase 6: Dashboard and Customer UI** - Full CRM interface over live data
 - [ ] **Phase 7: AI Insights** - Per-customer narratives and copy generation via Claude
@@ -144,8 +144,8 @@ Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | ✓ Complete | 2026-02-19 |
 | 2. Shopify Integration | 5/5 | ✓ Complete | 2026-02-19 |
-| 3. RFM Engine | 0/2 | Not started | - |
-| 4. Email Infrastructure | 0/2 | Not started | - |
+| 3. RFM Engine | 2/2 | ✓ Complete | 2026-02-19 |
+| 4. Email Infrastructure | 2/2 | ✓ Complete | 2026-02-19 |
 | 5. Automation Engine | 0/3 | Not started | - |
 | 6. Dashboard and Customer UI | 0/3 | Not started | - |
 | 7. AI Insights | 0/1 | Not started | - |
