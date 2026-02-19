@@ -125,25 +125,64 @@
 
 ## Traceability
 
-*Populated during roadmap creation.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 through FOUND-06 | Phase 1 | Pending |
-| SHOP-01 through SHOP-09 | Phase 2 | Pending |
-| RFM-01 through RFM-06 | Phase 3 | Pending |
-| EMAIL-01 through EMAIL-06 | Phase 4 | Pending |
-| AUTO-01 through AUTO-07 | Phase 5 | Pending |
-| FLOW-01 through FLOW-05 | Phase 5 | Pending |
-| CRM-01 through CRM-04 | Phase 6 | Pending |
-| DASH-01 through DASH-05 | Phase 6 | Pending |
-| AI-01 through AI-02 | Phase 7 | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| FOUND-06 | Phase 1 | Pending |
+| SHOP-01 | Phase 2 | Pending |
+| SHOP-02 | Phase 2 | Pending |
+| SHOP-03 | Phase 2 | Pending |
+| SHOP-04 | Phase 2 | Pending |
+| SHOP-05 | Phase 2 | Pending |
+| SHOP-06 | Phase 2 | Pending |
+| SHOP-07 | Phase 2 | Pending |
+| SHOP-08 | Phase 2 | Pending |
+| SHOP-09 | Phase 2 | Pending |
+| RFM-01 | Phase 3 | Pending |
+| RFM-02 | Phase 3 | Pending |
+| RFM-03 | Phase 3 | Pending |
+| RFM-04 | Phase 3 | Pending |
+| RFM-05 | Phase 3 | Pending |
+| RFM-06 | Phase 3 | Pending |
+| EMAIL-01 | Phase 4 | Pending |
+| EMAIL-02 | Phase 4 | Pending |
+| EMAIL-03 | Phase 4 | Pending |
+| EMAIL-04 | Phase 4 | Pending |
+| EMAIL-05 | Phase 4 | Pending |
+| EMAIL-06 | Phase 4 | Pending |
+| AUTO-01 | Phase 5 | Pending |
+| AUTO-02 | Phase 5 | Pending |
+| AUTO-03 | Phase 5 | Pending |
+| AUTO-04 | Phase 5 | Pending |
+| AUTO-05 | Phase 5 | Pending |
+| AUTO-06 | Phase 5 | Pending |
+| AUTO-07 | Phase 5 | Pending |
+| FLOW-01 | Phase 5 | Pending |
+| FLOW-02 | Phase 5 | Pending |
+| FLOW-03 | Phase 5 | Pending |
+| FLOW-04 | Phase 5 | Pending |
+| FLOW-05 | Phase 5 | Pending |
+| CRM-01 | Phase 6 | Pending |
+| CRM-02 | Phase 6 | Pending |
+| CRM-03 | Phase 6 | Pending |
+| CRM-04 | Phase 6 | Pending |
+| DASH-01 | Phase 6 | Pending |
+| DASH-02 | Phase 6 | Pending |
+| DASH-03 | Phase 6 | Pending |
+| DASH-04 | Phase 6 | Pending |
+| DASH-05 | Phase 6 | Pending |
+| AI-01 | Phase 7 | Pending |
+| AI-02 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 52 total
-- Mapped to phases: 52
-- Unmapped: 0 ✓
+- v1 requirements: 50 total
+- Mapped to phases: 50
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after roadmap creation*
