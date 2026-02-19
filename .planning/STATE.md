@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 2 of 7 (Shopify Integration)
-Plan: 1 of N in current phase
+Plan: 2 of N in current phase
 Status: In progress
-Last activity: 2026-02-19 — Completed 02-01 (Shopify GraphQL client + schema extensions)
+Last activity: 2026-02-19 — Completed 02-02 (Shopify sync pipeline, webhooks, Inngest wiring)
 
-Progress: [███░░░░░░░] 21%
+Progress: [████░░░░░░] 28%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3 min
-- Total execution time: 0.15 hours
+- Total plans completed: 4
+- Average duration: 4 min
+- Total execution time: 0.30 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
-| 02-shopify-integration | 1/N | 3 min | 3 min |
+| 02-shopify-integration | 2/N | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min), 02-02 (6 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -56,6 +56,11 @@ Recent decisions affecting current work:
 - Cost-based proactive throttling: shopifyGraphQL sleeps when currentlyAvailable < requestedQueryCost*2 to prevent 429s before they occur
 - shopifyClient.rawQuery<T> exposes full GraphQLResponse (including extensions.cost) for callers needing cost metadata
 - syncLogs.cursor stores checkpoint for resume-on-failure in bulk operations; webhookDeliveries unique index on (shop_id, webhook_id) enforces idempotency at DB level
+- bulk_operations/finish handled inline in processShopifyWebhook switch-case — no separate dead-code processFullSyncCompletion function
+- Checkpoint-based resume: syncLog.cursor stores last processed GID, written every 100 records; startFullSync checks getFailedSyncWithCursor before starting fresh
+- upsertCustomer.onConflictDoUpdate.set excludes rfmR/rfmF/rfmM/segment/lifecycleStage — CRM field preservation enforced at query layer
+- Decimal used for all money arithmetic including intermediate avgOrderValue computation — never parseFloat anywhere in shopify/ db/ inngest/
+- shopId derived from new URL(env.SHOPIFY_STORE_URL).hostname — consistent single-tenant identifier pattern
 
 ### Pending Todos
 
@@ -69,5 +74,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 02-01-PLAN.md (Shopify GraphQL client + schema extensions)
+Stopped at: Completed 02-02-PLAN.md (Shopify sync pipeline and webhook infrastructure)
 Resume file: None
