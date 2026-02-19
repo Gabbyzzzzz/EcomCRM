@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { customers, orders, syncLogs, webhookDeliveries } from './schema'
-import { eq, and, desc, isNotNull } from 'drizzle-orm'
+import { eq, and, desc, isNotNull, lte, or, isNull } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ export interface OrderUpsertData {
  *
  * Shopify-owned fields are always overwritten.
  * CRM fields (rfmR, rfmF, rfmM, segment, lifecycleStage) are preserved on conflict.
- * Last-write-wins: only updates if incoming shopifyUpdatedAt >= existing value.
+ * Last-write-wins: only updates if stored shopifyUpdatedAt is NULL or <= incoming value.
  *
  * Money values: always converted via Decimal — never parseFloat (SHOP-07).
  */
@@ -83,12 +83,12 @@ export async function upsertCustomer(shopId: string, data: CustomerUpsertData) {
         lastOrderAt: data.lastOrderAt ?? null,
         shopifyUpdatedAt: data.shopifyUpdatedAt ?? null,
       },
-      // Only apply update if incoming shopifyUpdatedAt is newer than (or same as) what's stored.
+      // Only apply update if stored shopifyUpdatedAt is NULL (never set) or <= incoming value.
       // This prevents older webhook replays from overwriting more recent data.
       setWhere: data.shopifyUpdatedAt
-        ? and(
-            eq(customers.shopId, shopId),
-            eq(customers.shopifyId, data.shopifyId)
+        ? or(
+            isNull(customers.shopifyUpdatedAt),
+            lte(customers.shopifyUpdatedAt, data.shopifyUpdatedAt)
           )
         : undefined,
     })
@@ -115,7 +115,7 @@ export async function softDeleteCustomer(shopId: string, shopifyId: string) {
  *
  * isHistorical: true for bulk-synced orders predating syncStartedAt, false for realtime webhooks.
  * Money values: always converted via Decimal — never parseFloat (SHOP-07).
- * Last-write-wins on shopifyUpdatedAt.
+ * Last-write-wins: only updates if stored shopifyUpdatedAt is NULL or <= incoming value.
  */
 export async function upsertOrder(
   shopId: string,
@@ -160,9 +160,9 @@ export async function upsertOrder(
         shopifyUpdatedAt: data.shopifyUpdatedAt ?? null,
       },
       setWhere: data.shopifyUpdatedAt
-        ? and(
-            eq(orders.shopId, shopId),
-            eq(orders.shopifyId, data.shopifyId)
+        ? or(
+            isNull(orders.shopifyUpdatedAt),
+            lte(orders.shopifyUpdatedAt, data.shopifyUpdatedAt)
           )
         : undefined,
     })
@@ -290,4 +290,25 @@ export async function recordWebhookDelivery(
       status,
     })
     .onConflictDoNothing()
+}
+
+/**
+ * Updates an existing webhookDeliveries row to a new status.
+ * Used by the onFailure dead-letter handler where the row already exists as 'processing'.
+ * Unlike recordWebhookDelivery (which uses onConflictDoNothing), this does a plain UPDATE.
+ */
+export async function updateWebhookDeliveryStatus(
+  shopId: string,
+  webhookId: string,
+  status: 'processing' | 'processed' | 'failed' | 'dead_letter'
+): Promise<void> {
+  await db
+    .update(webhookDeliveries)
+    .set({ status })
+    .where(
+      and(
+        eq(webhookDeliveries.shopId, shopId),
+        eq(webhookDeliveries.webhookId, webhookId)
+      )
+    )
 }
