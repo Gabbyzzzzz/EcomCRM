@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 4 — Email Templates
+**Current focus:** Phase 5 — Automation Engine
 
 ## Current Position
 
-Phase: 4 of 7 (Email Infrastructure) — IN PROGRESS
-Plan: 1 of 2 — plan 01 complete
-Status: Active — Phase 4 plan 01 complete; ready for Phase 4 plan 02 (unsubscribe webhook page + Resend bounce webhook)
-Last activity: 2026-02-19 — Phase 4 plan 01 complete: email send layer with Resend, 5 React Email templates, suppression gate, unsubscribe tokens, compliance headers
+Phase: 4 of 7 (Email Infrastructure) — COMPLETE
+Plan: 2 of 2 — plan 02 complete
+Status: Active — Phase 4 complete; ready for Phase 5 (automation engine)
+Last activity: 2026-02-19 — Phase 4 plan 02 complete: Resend bounce webhook, unsubscribe API + page, Shopify tag sync, processResendWebhook Inngest function
 
-Progress: [███████░░░] 60%
+Progress: [████████░░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 3.8 min
-- Total execution time: 0.32 hours
+- Total plans completed: 6
+- Average duration: 3.7 min
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [███████░░░] 60%
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
-| 04-email-infrastructure | 1/2 | 6 min | 6 min |
+| 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (8 min), 02-04 (2 min), 03-01 (3 min), 03-02 (3 min), 04-01 (6 min)
+- Last 5 plans: 02-04 (2 min), 03-01 (3 min), 03-02 (3 min), 04-01 (6 min), 04-02 (3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -78,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 04-email-infrastructure]: Unsubscribe tokens do not expire — links in sent emails must always work regardless of age
 - [Phase 04-email-infrastructure]: All email send failures return SendResult (never throw) — email errors are non-fatal to automation engine
 - [Phase 04-email-infrastructure]: resend.emails.send(options, { idempotencyKey }) — second argument pattern per Resend SDK v6+
+- [Phase 04-email-infrastructure]: Single /api/unsubscribe route handles GET link-click, POST one-click RFC 8058, and POST resubscribe flows — distinguished by method + form body
+- [Phase 04-email-infrastructure]: Shopify tagsAdd/tagsRemove is best-effort on unsubscribe — tag sync failure must not block compliance opt-out
+- [Phase 04-email-infrastructure]: svix webhook verification for Resend is a known gap — accepted per plan spec, TODO comment in route
 
 ### Pending Todos
 
@@ -91,5 +94,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 04-01-PLAN.md — email send layer: Resend send wrapper, 5 React Email templates, suppression gate, HMAC unsubscribe tokens, compliance headers
+Stopped at: Completed 04-02-PLAN.md — Resend bounce webhook, unsubscribe API (GET + POST one-click + POST resubscribe), /unsubscribe page with undo, Shopify tag sync, processResendWebhook Inngest function
 Resume file: None
