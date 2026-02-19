@@ -5,6 +5,77 @@ import type { GraphQLResponse } from './types'
 
 const SHOPIFY_API_VERSION = '2024-10'
 const MAX_RETRIES = 3
+/** Refresh the token if it expires within this many ms (5 minutes) */
+const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000
+
+// ─── Token cache ─────────────────────────────────────────────────────────────
+
+interface CachedToken {
+  accessToken: string
+  /** Absolute timestamp (ms) when the token expires */
+  expiresAt: number
+}
+
+let tokenCache: CachedToken | null = null
+
+/**
+ * Fetches a new access token from Shopify using the client credentials grant.
+ * Tokens expire in 24 hours (expires_in: 86399).
+ */
+async function fetchAccessToken(): Promise<CachedToken> {
+  const tokenEndpoint = `${env.SHOPIFY_STORE_URL}/admin/oauth/access_token`
+
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: env.SHOPIFY_CLIENT_ID,
+      client_secret: env.SHOPIFY_CLIENT_SECRET,
+      grant_type: 'client_credentials',
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(
+      `Shopify token request failed: ${response.status} ${response.statusText} — ${body}`
+    )
+  }
+
+  const data = (await response.json()) as {
+    access_token: string
+    expires_in: number
+    scope: string
+  }
+
+  const cached: CachedToken = {
+    accessToken: data.access_token,
+    expiresAt: Date.now() + data.expires_in * 1000,
+  }
+
+  console.info(
+    `[shopify] Access token obtained, expires in ${Math.round(data.expires_in / 3600)}h`
+  )
+
+  return cached
+}
+
+/**
+ * Returns a valid access token, auto-refreshing if it expires within 5 minutes.
+ */
+async function getAccessToken(): Promise<string> {
+  const now = Date.now()
+
+  if (
+    tokenCache === null ||
+    tokenCache.expiresAt - now < TOKEN_REFRESH_BUFFER_MS
+  ) {
+    console.info('[shopify] Refreshing access token...')
+    tokenCache = await fetchAccessToken()
+  }
+
+  return tokenCache.accessToken
+}
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -21,6 +92,10 @@ function getShopifyEndpoint(): string {
 /**
  * Makes an authenticated request to the Shopify Admin GraphQL API.
  *
+ * Token management:
+ * - Uses client credentials grant (Partners Dashboard OAuth app).
+ * - Tokens are cached in memory and auto-refreshed 5 minutes before expiry.
+ *
  * Cost-based throttling (SHOP-01):
  * - After each response, checks currentlyAvailable vs requestedQueryCost.
  * - If budget is getting low (< requestedQueryCost * 2), proactively sleeps
@@ -33,15 +108,11 @@ export async function shopifyGraphQL<T>(
   variables?: Record<string, unknown>
 ): Promise<GraphQLResponse<T>> {
   const endpoint = getShopifyEndpoint()
-  const headers = {
-    'Content-Type': 'application/json',
-    'X-Shopify-Access-Token': env.SHOPIFY_ACCESS_TOKEN,
-  }
 
   let lastError: Error | undefined
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    // Exponential backoff for retries (skip on first attempt)
+    // Exponential backoff for throttle retries (skip on first attempt)
     if (attempt > 0) {
       const backoffMs = Math.pow(2, attempt - 1) * 1000 // 1s, 2s, 4s
       console.warn(
@@ -50,9 +121,15 @@ export async function shopifyGraphQL<T>(
       await sleep(backoffMs)
     }
 
+    // Resolve a valid token before each attempt (auto-refreshes if near expiry)
+    const accessToken = await getAccessToken()
+
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken,
+      },
       body: JSON.stringify({ query, variables }),
     })
 
@@ -62,6 +139,12 @@ export async function shopifyGraphQL<T>(
       )
       // 429 rate limit — treat like a throttle and retry
       if (response.status === 429) {
+        continue
+      }
+      // 401 Unauthorized — token may have just expired; clear cache and retry once
+      if (response.status === 401 && attempt === 0) {
+        console.warn('[shopify] 401 on GraphQL request — clearing token cache and retrying')
+        tokenCache = null
         continue
       }
       throw lastError

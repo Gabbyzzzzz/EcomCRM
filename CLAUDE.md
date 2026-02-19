@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## What is this
-EcomCRM — a lightweight CRM + marketing automation tool for Shopify merchants. Connects to a real Shopify store via Custom App (not Public App), syncs customer/order data, auto-segments customers using RFM scoring, and runs email automation flows.
+EcomCRM — a lightweight CRM + marketing automation tool for Shopify merchants. Connects to a real Shopify store via OAuth app (Partners Dashboard, not Custom App), syncs customer/order data, auto-segments customers using RFM scoring, and runs email automation flows.
 
 ## Tech Stack
 - **Framework**: Next.js 14 (App Router) + TypeScript (strict)
@@ -10,7 +10,7 @@ EcomCRM — a lightweight CRM + marketing automation tool for Shopify merchants.
 - **Task scheduling**: Inngest (cron jobs + event-driven functions)
 - **Email**: Resend + React Email (templates)
 - **AI**: Claude API (customer insights + copy generation)
-- **Shopify**: Admin API (GraphQL) via Custom App access token
+- **Shopify**: Admin API (GraphQL) via OAuth app (Partners Dashboard)
 - **Charts**: Recharts
 - **Deploy**: Vercel
 
@@ -70,11 +70,13 @@ src/
 All tables include shop_id column (for future multi-tenant support).
 
 ## Shopify Integration
-- Auth: Custom App access token stored in env var `SHOPIFY_ACCESS_TOKEN`
+- Auth: OAuth app from Partners Dashboard. Token obtained via manual OAuth exchange — NOT a Custom App static token
+- `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` in env (Partners Dashboard credentials)
+- `SHOPIFY_ACCESS_TOKEN` in env for single-store dev convenience; in production tokens are stored per-store in DB
 - Store URL in env var `SHOPIFY_STORE_URL`
 - Initial sync: use `bulkOperationRunQuery` for full pull
 - Real-time: Webhooks for orders/create, orders/updated, customers/create, customers/update
-- Webhook verification: HMAC-SHA256 with `SHOPIFY_WEBHOOK_SECRET`
+- Webhook verification: HMAC-SHA256 using `SHOPIFY_WEBHOOK_SECRET` = `SHOPIFY_CLIENT_SECRET` (Partners Dashboard client secret, not a separate webhook secret)
 - Handle rate limits: cost-based throttling for GraphQL
 - Money fields: always use string/decimal, never float
 
@@ -104,8 +106,10 @@ Flow: trigger fires → check delay → execute action → log to MessageLog
 ## Env Vars Needed
 ```
 SHOPIFY_STORE_URL=
-SHOPIFY_ACCESS_TOKEN=
-SHOPIFY_WEBHOOK_SECRET=
+SHOPIFY_CLIENT_ID=           # Partners Dashboard client ID
+SHOPIFY_CLIENT_SECRET=       # Partners Dashboard client secret
+SHOPIFY_ACCESS_TOKEN=        # OAuth access token (dev convenience; prod stores in DB)
+SHOPIFY_WEBHOOK_SECRET=      # Same value as SHOPIFY_CLIENT_SECRET
 DATABASE_URL=
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=

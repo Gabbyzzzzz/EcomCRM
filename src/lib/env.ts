@@ -9,9 +9,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
-  // Shopify Custom App (NOT Public App — access token directly, no OAuth)
+  // Shopify OAuth app (Partners Dashboard — client credentials grant, tokens expire in 24h)
   SHOPIFY_STORE_URL: z.string().min(1),
-  SHOPIFY_ACCESS_TOKEN: z.string().min(1),
+  SHOPIFY_CLIENT_ID: z.string().min(1),
+  SHOPIFY_CLIENT_SECRET: z.string().min(1),
   SHOPIFY_WEBHOOK_SECRET: z.string().min(1),
 
   // Resend (email sending)
