@@ -161,6 +161,8 @@ export const automations = pgTable(
   (table) => [
     index('automations_shop_id_idx').on(table.shopId),
     index('automations_enabled_idx').on(table.enabled),
+    // Unique composite for upsertAutomation target — name is stable preset identifier
+    uniqueIndex('automations_shop_name_unique').on(table.shopId, table.name),
   ]
 )
 

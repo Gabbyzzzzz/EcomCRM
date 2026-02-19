@@ -1,7 +1,14 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries, suppressions } from './schema'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations } from './schema'
 import { eq, and, desc, isNotNull, lte, or, isNull, sql } from 'drizzle-orm'
 import Decimal from 'decimal.js'
+
+// ─── AutomationRow type ───────────────────────────────────────────────────────
+// Inferred directly from Drizzle schema to avoid circular imports with engine.ts
+type AutomationRow = typeof automations.$inferSelect
+
+// Type for inserting an automation row (minus auto-generated fields)
+type AutomationInsert = typeof automations.$inferInsert
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -478,4 +485,98 @@ export async function updateCustomerCountersFromOrders(
         eq(customers.shopId, shopId)
       )
     )
+}
+
+// ─── Automation queries ───────────────────────────────────────────────────────
+
+/**
+ * Fetch all enabled automations for a shop that match the given trigger type.
+ * Same query as fetchEnabledAutomationsByTrigger in engine.ts — exported for
+ * direct use in Inngest functions.
+ */
+export async function getEnabledAutomationsByTrigger(
+  shopId: string,
+  triggerType: 'first_order' | 'segment_change' | 'days_since_order' | 'tag_added' | 'cart_abandoned'
+): Promise<AutomationRow[]> {
+  return db
+    .select()
+    .from(automations)
+    .where(
+      and(
+        eq(automations.shopId, shopId),
+        eq(automations.enabled, true),
+        eq(automations.triggerType, triggerType)
+      )
+    )
+}
+
+/**
+ * Upsert an automation on (shopId, name).
+ * Name is the stable preset identifier. On conflict updates all non-PK fields.
+ * Returns the upserted row.
+ */
+export async function upsertAutomation(
+  shopId: string,
+  data: Omit<AutomationInsert, 'id' | 'shopId' | 'createdAt'>
+): Promise<AutomationRow> {
+  const [row] = await db
+    .insert(automations)
+    .values({
+      shopId,
+      ...data,
+    })
+    .onConflictDoUpdate({
+      target: [automations.shopId, automations.name],
+      set: {
+        triggerType: data.triggerType,
+        triggerConfig: data.triggerConfig,
+        delayValue: data.delayValue,
+        delayUnit: data.delayUnit,
+        actionType: data.actionType,
+        actionConfig: data.actionConfig,
+        emailTemplateId: data.emailTemplateId,
+        enabled: data.enabled,
+      },
+    })
+    .returning()
+
+  return row
+}
+
+/**
+ * List all automations for a shop, ordered by createdAt ascending.
+ */
+export async function listAutomations(shopId: string): Promise<AutomationRow[]> {
+  return db
+    .select()
+    .from(automations)
+    .where(eq(automations.shopId, shopId))
+    .orderBy(automations.createdAt)
+}
+
+/**
+ * Enable or disable a single automation by id.
+ */
+export async function setAutomationEnabled(
+  id: string,
+  enabled: boolean
+): Promise<void> {
+  await db
+    .update(automations)
+    .set({ enabled })
+    .where(eq(automations.id, id))
+}
+
+/**
+ * Update lastRunAt on an automation row.
+ * Called by Inngest automation functions after each successful execution.
+ */
+export async function updateAutomationLastRun(
+  id: string,
+  lastRunAt: Date
+): Promise<void> {
+  await db
+    .update(automations)
+    .set({ lastRunAt })
+    .where(eq(automations.id, id))
 }
