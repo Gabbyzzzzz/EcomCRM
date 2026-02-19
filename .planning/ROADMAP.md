@@ -31,11 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The application connects to Supabase via the PgBouncer Transaction mode pooler (port 6543) without connection exhaustion errors under concurrent requests
   3. All required env vars are documented in `.env.local.example` and the app fails with a clear error at startup if any are missing
   4. A GET to `/api/inngest` returns 200 and Inngest Dev Server can receive test events from the local app
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Drizzle schema, migration workflow, Supabase connection
-- [ ] 01-02: Missing packages, env setup, Inngest client and serve handler
+- [ ] 01-01-PLAN.md — Drizzle schema (4 tables + 6 enums), db singleton with prepare: false, drizzle.config.ts, generate migration SQL
+- [ ] 01-02-PLAN.md — Install @react-email/render + decimal.js, next.config serverExternalPackages, Zod env validation, .env.local.example, Inngest client + serve handler
 
 ### Phase 2: Shopify Integration
 **Goal**: Real Shopify customer and order data is in the database, kept current via webhooks
