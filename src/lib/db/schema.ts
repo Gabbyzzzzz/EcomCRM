@@ -46,6 +46,14 @@ export const messageStatusEnum = pgEnum('message_status', [
   'opened',
   'clicked',
   'converted',
+  'suppressed',
+  'failed',
+])
+
+export const suppressionReasonEnum = pgEnum('suppression_reason', [
+  'hard_bounce',
+  'unsubscribe',
+  'manual',
 ])
 
 export const financialStatusEnum = pgEnum('financial_status', [
@@ -80,6 +88,7 @@ export const customers = pgTable(
     rfmM: integer('rfm_m'),
     segment: customerSegmentEnum('segment'),
     lifecycleStage: varchar('lifecycle_stage', { length: 100 }),
+    marketingOptedOut: boolean('marketing_opted_out').default(false).notNull(),
     tags: text('tags').array(),
     totalSpent: numeric('total_spent', { precision: 19, scale: 4 }),
     orderCount: integer('order_count').default(0),
@@ -201,6 +210,23 @@ export const syncLogs = pgTable(
     index('sync_logs_shop_id_idx').on(table.shopId),
     index('sync_logs_status_idx').on(table.status),
     index('sync_logs_started_at_idx').on(table.startedAt),
+  ]
+)
+
+export const suppressions = pgTable(
+  'suppressions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull(),
+    reason: suppressionReasonEnum('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('suppressions_shop_id_idx').on(table.shopId),
+    uniqueIndex('suppressions_shop_email_unique').on(table.shopId, table.email),
   ]
 )
 

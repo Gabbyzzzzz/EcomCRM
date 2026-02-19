@@ -22,6 +22,13 @@
       "when": 1771482755355,
       "tag": "0002_giant_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771506561552,
+      "tag": "0003_naive_masque",
+      "breakpoints": true
     }
   ]
 }

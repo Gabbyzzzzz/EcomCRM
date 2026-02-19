@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries } from './schema'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions } from './schema'
 import { eq, and, desc, isNotNull, lte, or, isNull, sql } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
@@ -311,6 +311,110 @@ export async function updateWebhookDeliveryStatus(
         eq(webhookDeliveries.webhookId, webhookId)
       )
     )
+}
+
+// ─── Suppression queries ──────────────────────────────────────────────────────
+
+/**
+ * Check if an email address is in the suppressions table for this shop.
+ * Returns true = email is suppressed (caller should not send).
+ */
+export async function checkSuppression(
+  shopId: string,
+  email: string
+): Promise<boolean> {
+  const [existing] = await db
+    .select({ id: suppressions.id })
+    .from(suppressions)
+    .where(
+      and(eq(suppressions.shopId, shopId), eq(suppressions.email, email))
+    )
+    .limit(1)
+
+  return existing != null
+}
+
+/**
+ * Insert an email into the suppressions table.
+ * Uses onConflictDoNothing on the (shopId, email) unique index — safe to call multiple times.
+ */
+export async function insertSuppression(
+  shopId: string,
+  email: string,
+  reason: 'hard_bounce' | 'unsubscribe' | 'manual'
+): Promise<void> {
+  await db
+    .insert(suppressions)
+    .values({ shopId, email, reason })
+    .onConflictDoNothing()
+}
+
+/**
+ * Remove an email from the suppressions table.
+ * Used for re-subscribe / undo-unsubscribe flows.
+ */
+export async function removeSuppression(
+  shopId: string,
+  email: string
+): Promise<void> {
+  await db
+    .delete(suppressions)
+    .where(
+      and(eq(suppressions.shopId, shopId), eq(suppressions.email, email))
+    )
+}
+
+/**
+ * Set the marketing_opted_out flag on a customer row.
+ * Used by the unsubscribe page and compliance flows.
+ */
+export async function setMarketingOptedOut(
+  shopId: string,
+  customerInternalId: string,
+  optedOut: boolean
+): Promise<void> {
+  await db
+    .update(customers)
+    .set({ marketingOptedOut: optedOut })
+    .where(
+      and(eq(customers.id, customerInternalId), eq(customers.shopId, shopId))
+    )
+}
+
+/**
+ * Get a customer by their internal UUID.
+ * Needed by the send wrapper and unsubscribe page.
+ */
+export async function getCustomerByInternalId(
+  shopId: string,
+  customerInternalId: string
+) {
+  const [row] = await db
+    .select()
+    .from(customers)
+    .where(
+      and(
+        eq(customers.id, customerInternalId),
+        eq(customers.shopId, shopId)
+      )
+    )
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * Get a customer by their email address.
+ * Needed by the Resend bounce webhook to look up the customer.
+ */
+export async function getCustomerByEmail(shopId: string, email: string) {
+  const [row] = await db
+    .select()
+    .from(customers)
+    .where(and(eq(customers.shopId, shopId), eq(customers.email, email)))
+    .limit(1)
+
+  return row ?? null
 }
 
 // ─── Customer counter recalculation ──────────────────────────────────────────
