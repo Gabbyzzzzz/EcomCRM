@@ -10,6 +10,7 @@ import {
   boolean,
   timestamp,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,14 @@ export const financialStatusEnum = pgEnum('financial_status', [
   'voided',
 ])
 
+export const syncStatusEnum = pgEnum('sync_status', [
+  'pending',
+  'running',
+  'completed',
+  'failed',
+  'cancelled',
+])
+
 // ─── Tables ───────────────────────────────────────────────────────────────────
 
 export const customers = pgTable(
@@ -77,6 +86,8 @@ export const customers = pgTable(
     avgOrderValue: numeric('avg_order_value', { precision: 19, scale: 4 }),
     firstOrderAt: timestamp('first_order_at', { withTimezone: true }),
     lastOrderAt: timestamp('last_order_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    shopifyUpdatedAt: timestamp('shopify_updated_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -99,6 +110,9 @@ export const orders = pgTable(
     totalPrice: numeric('total_price', { precision: 19, scale: 4 }),
     lineItems: jsonb('line_items'),
     financialStatus: financialStatusEnum('financial_status'),
+    isHistorical: boolean('is_historical').default(false).notNull(),
+    shopifyCreatedAt: timestamp('shopify_created_at', { withTimezone: true }),
+    shopifyUpdatedAt: timestamp('shopify_updated_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -157,5 +171,53 @@ export const messageLogs = pgTable(
     index('message_logs_customer_id_idx').on(table.customerId),
     index('message_logs_automation_id_idx').on(table.automationId),
     index('message_logs_status_idx').on(table.status),
+  ]
+)
+
+export const syncLogs = pgTable(
+  'sync_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    type: varchar('type', { length: 50 }).notNull(),
+    status: syncStatusEnum('status').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    customersCount: integer('customers_count').default(0),
+    ordersCount: integer('orders_count').default(0),
+    errorMessage: text('error_message'),
+    cursor: text('cursor'),
+    bulkOperationId: varchar('bulk_operation_id', { length: 255 }),
+  },
+  (table) => [
+    index('sync_logs_shop_id_idx').on(table.shopId),
+    index('sync_logs_status_idx').on(table.status),
+    index('sync_logs_started_at_idx').on(table.startedAt),
+  ]
+)
+
+export const webhookDeliveries = pgTable(
+  'webhook_deliveries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    webhookId: varchar('webhook_id', { length: 255 }).notNull(),
+    topic: varchar('topic', { length: 100 }).notNull(),
+    processedAt: timestamp('processed_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    status: varchar('status', { length: 50 }).notNull().default('processed'),
+    errorMessage: text('error_message'),
+    retryCount: integer('retry_count').default(0),
+  },
+  (table) => [
+    index('webhook_deliveries_shop_id_idx').on(table.shopId),
+    uniqueIndex('webhook_deliveries_shop_webhook_unique_idx').on(
+      table.shopId,
+      table.webhookId
+    ),
+    index('webhook_deliveries_topic_idx').on(table.topic),
   ]
 )
