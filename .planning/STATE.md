@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 5 — Automation Engine
+**Current focus:** Phase 6 — Dashboard and Customer UI
 
 ## Current Position
 
-Phase: 5 of 7 (Automation Engine) — Active
-Plan: 2 of 2 — plan 02 complete (awaiting checkpoint human-verify)
-Status: Active — Phase 5 plan 02 automated tasks complete; checkpoint human-verify pending
-Last activity: 2026-02-19 — Phase 5 plan 02 complete: checkDaysSinceOrder cron, getRecentMessageLog, seed/[id] APIs, /automations list page with toggle
+Phase: 6 of 7 (Dashboard and Customer UI) — Active
+Plan: 1 of 2 — plan 01 complete
+Status: Active — Phase 6 plan 01 complete
+Last activity: 2026-02-19 — Phase 6 plan 01 complete: KPI dashboard page, SegmentChart, RevenueChart, 5 dashboard query functions
 
-Progress: [█████████░] 85%
+Progress: [██████████] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 3.7 min
-- Total execution time: 0.43 hours
+- Total plans completed: 8
+- Average duration: 3.9 min
+- Total execution time: 0.52 hours
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [█████████░] 85%
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
 | 05-automation-engine | 2/2 | 7 min | 3.5 min |
+| 06-dashboard-and-customer-ui | 1/2 | 8 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 04-01 (6 min), 04-02 (3 min), 05-02 (4 min)
+- Last 5 plans: 03-02 (3 min), 04-01 (6 min), 04-02 (3 min), 05-02 (4 min), 06-01 (8 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -88,6 +89,10 @@ Recent decisions affecting current work:
 - [Phase 05-automation-engine]: automation/first_order emit wrapped in try/catch in processShopifyWebhook — event emission failure must not break webhook processing
 - [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run instead of evaluateSegmentFilter — avoids JsonifyObject type incompatibility when Inngest serializes AutomationRow dates
 - [Phase 05-automation-engine]: Automations page at (dashboard)/automations/page.tsx to inherit dashboard sidebar layout via Next.js route group
+- [Phase 06-dashboard-and-customer-ui]: db.execute<T>() with single correlated-subquery SQL for getDashboardKpis — one round-trip for 4 KPIs instead of 4 separate queries
+- [Phase 06-dashboard-and-customer-ui]: shopifyUpdatedAt used as proxy for "recently moved to churn segment" in getChurnAlerts — acceptable approximation since daily RFM cron updates customers when segment changes
+- [Phase 06-dashboard-and-customer-ui]: Revenue strings converted to parseFloat only inside chart component — DB/API layers always remain Decimal/string
+- [Phase 06-dashboard-and-customer-ui]: Tooltip content={<CustomTooltip />} pattern for RevenueChart — avoids Recharts generic Tooltip type complexity
 
 ### Pending Todos
 
@@ -101,5 +106,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 05-02-PLAN.md automated tasks — checkDaysSinceOrder cron, seed/PATCH APIs, /automations page; checkpoint human-verify pending (Task 3)
+Stopped at: Completed 06-01-PLAN.md — dashboard KPI cards, SegmentChart, RevenueChart, churn alerts, activity feed
 Resume file: None
