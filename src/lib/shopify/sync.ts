@@ -63,10 +63,11 @@ function buildName(
  * Money fields always go through Decimal (SHOP-07).
  */
 function mapCustomerLine(raw: ShopifyCustomer) {
-  // totalSpentV2.amount is a string from Shopify — never parseFloat
-  const totalSpent = new Decimal(raw.totalSpentV2?.amount ?? '0').toString()
+  // amountSpent.amount is a string from Shopify — never parseFloat
+  const totalSpent = new Decimal(raw.amountSpent?.amount ?? '0').toString()
 
-  const orderCount = raw.ordersCount ?? 0
+  // numberOfOrders is an UnsignedInt64 serialized as a string
+  const orderCount = parseInt(raw.numberOfOrders ?? '0', 10)
   const avgOrderValue =
     orderCount > 0
       ? new Decimal(totalSpent).div(orderCount).toFixed(4)
@@ -411,8 +412,8 @@ export async function startIncrementalSync(shopId: string): Promise<void> {
               lastName
               email
               phone
-              ordersCount
-              totalSpentV2 {
+              numberOfOrders
+              amountSpent {
                 amount
                 currencyCode
               }

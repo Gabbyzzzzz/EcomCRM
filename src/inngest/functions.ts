@@ -90,8 +90,9 @@ export const processShopifyWebhook = inngest.createFunction(
         case 'customers/create':
         case 'customers/update': {
           const customer = payload as ShopifyCustomer
-          const totalSpent = customer.totalSpentV2?.amount ?? '0'
-          const orderCount = customer.ordersCount ?? 0
+          const totalSpent = customer.amountSpent?.amount ?? '0'
+          // numberOfOrders is an UnsignedInt64 serialized as a string
+          const orderCount = parseInt(customer.numberOfOrders ?? '0', 10)
           // Use Decimal for all money arithmetic (SHOP-07 — never parseFloat)
           const avgOrderValue =
             orderCount > 0

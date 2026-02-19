@@ -32,8 +32,9 @@ export interface ShopifyCustomer {
   lastName: string | null
   email: string | null
   phone: string | null
-  ordersCount: number
-  totalSpentV2: {
+  /** UnsignedInt64 — serialized as a string by the Shopify GraphQL API */
+  numberOfOrders: string
+  amountSpent: {
     amount: string
     currencyCode: string
   }

@@ -23,8 +23,8 @@ export const BULK_CUSTOMERS_QUERY = `
               lastName
               email
               phone
-              ordersCount
-              totalSpentV2 {
+              numberOfOrders
+              amountSpent {
                 amount
                 currencyCode
               }
@@ -140,8 +140,8 @@ export const SINGLE_CUSTOMER_QUERY = `
       lastName
       email
       phone
-      ordersCount
-      totalSpentV2 {
+      numberOfOrders
+      amountSpent {
         amount
         currencyCode
       }
