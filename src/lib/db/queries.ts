@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs } from './schema'
-import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte } from 'drizzle-orm'
+import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte, inArray } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
 // ─── AutomationRow type ───────────────────────────────────────────────────────
@@ -606,4 +606,228 @@ export async function getRecentMessageLog(
     )
     .limit(1)
   return row !== undefined
+}
+
+// ─── Dashboard query functions ─────────────────────────────────────────────────
+
+export interface DashboardKpis {
+  totalCustomers: number
+  totalRevenue: string
+  newCustomers30d: number
+  emailsSent30d: number
+}
+
+export interface SegmentDistributionItem {
+  segment: string
+  count: number
+}
+
+export interface RevenueOverTimeItem {
+  date: string
+  revenue: string
+}
+
+export interface ChurnAlertItem {
+  id: string
+  name: string | null
+  email: string | null
+  segment: string
+}
+
+export interface RecentMessageItem {
+  id: string
+  customerName: string | null
+  subject: string | null
+  status: string
+  sentAt: Date | null
+}
+
+export interface RecentOrderItem {
+  id: string
+  customerName: string | null
+  totalPrice: string | null
+  createdAt: Date | null
+}
+
+export interface RecentActivity {
+  messages: RecentMessageItem[]
+  orders: RecentOrderItem[]
+}
+
+/**
+ * Fetch 4 KPI values for the dashboard header cards.
+ * Uses a single SQL query with subqueries for efficiency.
+ */
+export async function getDashboardKpis(shopId: string): Promise<DashboardKpis> {
+  interface KpiRow extends Record<string, unknown> {
+    total_customers: string | number
+    total_revenue: string | null
+    new_customers_30d: string | number
+    emails_sent_30d: string | number
+  }
+
+  const rows = await db.execute<KpiRow>(sql`
+    SELECT
+      (SELECT COUNT(*) FROM ${customers} WHERE shop_id = ${shopId} AND deleted_at IS NULL)
+        AS total_customers,
+      (SELECT COALESCE(SUM(total_price::numeric), 0) FROM ${orders} WHERE shop_id = ${shopId})
+        AS total_revenue,
+      (SELECT COUNT(*) FROM ${customers}
+        WHERE shop_id = ${shopId} AND deleted_at IS NULL AND created_at >= NOW() - INTERVAL '30 days')
+        AS new_customers_30d,
+      (SELECT COUNT(*) FROM ${messageLogs}
+        WHERE shop_id = ${shopId} AND status = 'sent' AND sent_at >= NOW() - INTERVAL '30 days')
+        AS emails_sent_30d
+  `)
+
+  const row = rows[0]
+  return {
+    totalCustomers: Number(row?.total_customers ?? 0),
+    totalRevenue: row?.total_revenue != null ? new Decimal(row.total_revenue).toString() : '0',
+    newCustomers30d: Number(row?.new_customers_30d ?? 0),
+    emailsSent30d: Number(row?.emails_sent_30d ?? 0),
+  }
+}
+
+/**
+ * Fetch the count of customers per segment for the segment distribution chart.
+ */
+export async function getSegmentDistribution(shopId: string): Promise<SegmentDistributionItem[]> {
+  interface SegRow extends Record<string, unknown> {
+    segment: string
+    count: string | number
+  }
+
+  const rows = await db.execute<SegRow>(sql`
+    SELECT segment, COUNT(*) AS count
+    FROM ${customers}
+    WHERE shop_id = ${shopId} AND deleted_at IS NULL AND segment IS NOT NULL
+    GROUP BY segment
+  `)
+
+  return rows.map((r) => ({
+    segment: String(r.segment),
+    count: Number(r.count),
+  }))
+}
+
+/**
+ * Fetch daily revenue totals for the last N days for the revenue over time chart.
+ */
+export async function getRevenueOverTime(
+  shopId: string,
+  days: number = 90
+): Promise<RevenueOverTimeItem[]> {
+  interface RevRow extends Record<string, unknown> {
+    date: Date | string
+    revenue: string | null
+  }
+
+  const rows = await db.execute<RevRow>(sql`
+    SELECT
+      DATE(shopify_created_at) AS date,
+      SUM(total_price::numeric) AS revenue
+    FROM ${orders}
+    WHERE shop_id = ${shopId}
+      AND shopify_created_at >= NOW() - (${days} || ' days')::interval
+    GROUP BY DATE(shopify_created_at)
+    ORDER BY date ASC
+  `)
+
+  return rows.map((r) => ({
+    date: r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date),
+    revenue: r.revenue != null ? new Decimal(r.revenue).toString() : '0',
+  }))
+}
+
+/**
+ * Fetch customers in churn segments (at_risk, hibernating, lost) updated recently.
+ * Uses shopifyUpdatedAt as a proxy for "recently moved to churn segment" since
+ * the daily RFM cron updates customers when their segment changes.
+ */
+export async function getChurnAlerts(
+  shopId: string,
+  days: number = 7
+): Promise<ChurnAlertItem[]> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+  const rows = await db
+    .select({
+      id: customers.id,
+      name: customers.name,
+      email: customers.email,
+      segment: customers.segment,
+    })
+    .from(customers)
+    .where(
+      and(
+        eq(customers.shopId, shopId),
+        inArray(customers.segment, ['at_risk', 'hibernating', 'lost']),
+        gte(customers.shopifyUpdatedAt, cutoff),
+        isNull(customers.deletedAt)
+      )
+    )
+    .orderBy(desc(customers.shopifyUpdatedAt))
+    .limit(20)
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name ?? null,
+    email: r.email ?? null,
+    segment: r.segment ?? '',
+  }))
+}
+
+/**
+ * Fetch recent message log entries and orders for the activity feed.
+ * Returns both arrays separately; the caller is responsible for merging and sorting.
+ */
+export async function getRecentActivity(
+  shopId: string,
+  limit: number = 20
+): Promise<RecentActivity> {
+  const [messageRows, orderRows] = await Promise.all([
+    db
+      .select({
+        id: messageLogs.id,
+        customerName: customers.name,
+        subject: messageLogs.subject,
+        status: messageLogs.status,
+        sentAt: messageLogs.sentAt,
+      })
+      .from(messageLogs)
+      .leftJoin(customers, eq(messageLogs.customerId, customers.id))
+      .where(eq(messageLogs.shopId, shopId))
+      .orderBy(desc(messageLogs.sentAt))
+      .limit(limit),
+
+    db
+      .select({
+        id: orders.id,
+        customerName: customers.name,
+        totalPrice: orders.totalPrice,
+        createdAt: orders.shopifyCreatedAt,
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customerId, customers.id))
+      .where(eq(orders.shopId, shopId))
+      .orderBy(desc(orders.shopifyCreatedAt))
+      .limit(limit),
+  ])
+
+  return {
+    messages: messageRows.map((r) => ({
+      id: r.id,
+      customerName: r.customerName ?? null,
+      subject: r.subject ?? null,
+      status: r.status,
+      sentAt: r.sentAt ?? null,
+    })),
+    orders: orderRows.map((r) => ({
+      id: r.id,
+      customerName: r.customerName ?? null,
+      totalPrice: r.totalPrice ?? null,
+      createdAt: r.createdAt ?? null,
+    })),
+  }
 }
