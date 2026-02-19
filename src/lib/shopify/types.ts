@@ -62,15 +62,12 @@ export interface ShopifyOrder {
       node: {
         title: string
         quantity: number
-        variant: {
-          price: {
-            amount: string
-          }
-        } | null
+        /** Money scalar — a plain decimal string like "19.99" */
+        variant: { price: string } | null
       }
     }>
   }
-  financialStatus: string
+  displayFinancialStatus: string
   createdAt: string
   updatedAt: string
 }

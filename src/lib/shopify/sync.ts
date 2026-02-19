@@ -102,8 +102,9 @@ function mapOrderLine(raw: ShopifyOrder) {
   const lineItems = raw.lineItems?.edges?.map((e) => ({
     title: e.node.title,
     quantity: e.node.quantity,
-    price: e.node.variant?.price?.amount
-      ? new Decimal(e.node.variant.price.amount).toString()
+    // variant.price is a Money scalar (plain decimal string)
+    price: e.node.variant?.price
+      ? new Decimal(e.node.variant.price).toString()
       : null,
   })) ?? []
 
@@ -113,7 +114,7 @@ function mapOrderLine(raw: ShopifyOrder) {
     shopifyCustomerId: raw.customer?.id ?? null, // Shopify GID for linking
     totalPrice,
     lineItems,
-    financialStatus: raw.financialStatus?.toLowerCase() ?? null,
+    financialStatus: raw.displayFinancialStatus?.toLowerCase() ?? null,
     shopifyCreatedAt: raw.createdAt ? new Date(raw.createdAt) : null,
     shopifyUpdatedAt: raw.updatedAt ? new Date(raw.updatedAt) : null,
   }
@@ -489,14 +490,12 @@ export async function startIncrementalSync(shopId: string): Promise<void> {
                     title
                     quantity
                     variant {
-                      price {
-                        amount
-                      }
+                      price
                     }
                   }
                 }
               }
-              financialStatus
+              displayFinancialStatus
               createdAt
               updatedAt
             }

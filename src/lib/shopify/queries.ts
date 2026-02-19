@@ -78,14 +78,12 @@ export const BULK_ORDERS_QUERY = `
                     title
                     quantity
                     variant {
-                      price {
-                        amount
-                      }
+                      price
                     }
                   }
                 }
               }
-              financialStatus
+              displayFinancialStatus
               createdAt
               updatedAt
             }
@@ -176,14 +174,12 @@ export const SINGLE_ORDER_QUERY = `
             title
             quantity
             variant {
-              price {
-                amount
-              }
+              price
             }
           }
         }
       }
-      financialStatus
+      displayFinancialStatus
       createdAt
       updatedAt
     }

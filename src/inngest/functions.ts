@@ -76,9 +76,9 @@ export const processShopifyWebhook = inngest.createFunction(
               lineItems: order.lineItems?.edges?.map((e) => ({
                 title: e.node.title,
                 quantity: e.node.quantity,
-                price: e.node.variant?.price?.amount ?? null,
+                price: e.node.variant?.price ?? null,
               })) ?? [],
-              financialStatus: order.financialStatus?.toLowerCase() ?? null,
+              financialStatus: order.displayFinancialStatus?.toLowerCase() ?? null,
               shopifyCreatedAt: order.createdAt ? new Date(order.createdAt) : null,
               shopifyUpdatedAt: order.updatedAt ? new Date(order.updatedAt) : null,
             },
