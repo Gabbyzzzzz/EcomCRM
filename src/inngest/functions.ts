@@ -8,6 +8,7 @@ import {
   updateSyncLog,
   recordWebhookDelivery,
   updateWebhookDeliveryStatus,
+  updateCustomerCountersFromOrders,
 } from '@/lib/db/queries'
 import {
   processFullSyncResults,
@@ -15,7 +16,11 @@ import {
   fetchAndUpsertCustomer,
   fetchAndUpsertOrder,
 } from '@/lib/shopify/sync'
+import { recalculateAllRfmScores } from '@/lib/rfm/engine'
 import { env } from '@/lib/env'
+import { db } from '@/lib/db'
+import { customers as customersTable, syncLogs } from '@/lib/db/schema'
+import { eq, and } from 'drizzle-orm'
 import type { BulkOperationWebhookPayload } from '@/lib/shopify/types'
 import type { ShopifyCustomer, ShopifyOrder } from '@/lib/shopify/types'
 
@@ -40,8 +45,8 @@ type WebhookEventData = {
  * Processes all incoming Shopify webhook events dispatched from the webhook route.
  *
  * Topics handled:
- * - orders/create           → upsert order (isHistorical=false)
- * - orders/updated          → upsert order with last-write-wins
+ * - orders/create           → upsert order (isHistorical=false) + update customer counters
+ * - orders/updated          → upsert order with last-write-wins + update customer counters
  * - customers/create        → upsert customer
  * - customers/update        → upsert customer with last-write-wins
  * - customers/delete        → soft-delete customer
@@ -84,6 +89,26 @@ export const processShopifyWebhook = inngest.createFunction(
             },
             false // realtime webhook orders are never historical
           )
+
+          // RFM-04: Recalculate customer counters from orders table.
+          // Updates order_count, total_spent, avg_order_value, first_order_at, last_order_at
+          // for the affected customer. Full quintile recalculation runs in the daily cron only.
+          if (order.customer?.id) {
+            const [customerRow] = await db
+              .select({ id: customersTable.id })
+              .from(customersTable)
+              .where(
+                and(
+                  eq(customersTable.shopId, shopId),
+                  eq(customersTable.shopifyId, order.customer.id)
+                )
+              )
+              .limit(1)
+
+            if (customerRow) {
+              await updateCustomerCountersFromOrders(shopId, customerRow.id)
+            }
+          }
           break
         }
 
@@ -130,12 +155,6 @@ export const processShopifyWebhook = inngest.createFunction(
         case 'bulk_operations/finish': {
           // SHOP-03: Async bulk operation completion arrives as a webhook
           const bulkPayload = payload as BulkOperationWebhookPayload
-
-          // Find the syncLog associated with this bulk operation
-          // We query by bulkOperationId stored when we started the sync
-          const { db } = await import('@/lib/db')
-          const { syncLogs } = await import('@/lib/db/schema')
-          const { eq, and } = await import('drizzle-orm')
 
           if (bulkPayload.status !== 'completed') {
             console.warn(
@@ -266,13 +285,68 @@ export const scheduledSync = inngest.createFunction(
   }
 )
 
+// ─── Function 3: dailyRfmRecalculation ───────────────────────────────────────
+
+/**
+ * Runs a full RFM quintile recalculation for all active customers daily at 2 AM UTC.
+ *
+ * Steps:
+ * 1. Call recalculateAllRfmScores to recompute NTILE scores and update the DB (RFM-05).
+ * 2. Emit an 'rfm/segment.changed' event for each customer whose segment label changed.
+ *
+ * Segment change events are consumed by the Phase 5 automation engine to trigger
+ * flows (e.g. win-back when champion → at_risk).
+ *
+ * Uses step.run() for Inngest checkpointing: if the function fails after scoring
+ * but before event emission, Inngest will resume at the event-emission step on retry
+ * without re-running the expensive NTILE query.
+ */
+export const dailyRfmRecalculation = inngest.createFunction(
+  {
+    id: 'daily-rfm-recalculation',
+    retries: 2,
+  },
+  { cron: '0 2 * * *' }, // Run at 2 AM UTC daily
+  async ({ step }) => {
+    const shopId = getShopId()
+
+    // Step 1: Recalculate all RFM scores (returns segment changes)
+    const segmentChanges = await step.run('recalculate-rfm-scores', async () => {
+      return await recalculateAllRfmScores(shopId)
+    })
+
+    // Step 2: Emit segment_change events for each changed customer
+    if (segmentChanges.length > 0) {
+      await step.run('emit-segment-changes', async () => {
+        // Batch send all segment change events
+        await inngest.send(
+          segmentChanges.map((change) => ({
+            name: 'rfm/segment.changed' as const,
+            data: {
+              shopId,
+              customerId: change.customerId,
+              oldSegment: change.oldSegment,
+              newSegment: change.newSegment,
+            },
+          }))
+        )
+      })
+    }
+
+    console.log(
+      `[inngest] Daily RFM recalculation complete: ${segmentChanges.length} segment changes`
+    )
+  }
+)
+
 // ─── Export functions array ────────────────────────────────────────────────────
 
-// 3 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync
+// 4 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync, dailyRfmRecalculation
 export const functions: InngestFunction.Like[] = [
   processShopifyWebhook,
   processShopifyWebhookFailure,
   scheduledSync,
+  dailyRfmRecalculation,
 ]
 
 // Suppress unused import warning for fetchAndUpsertCustomer/fetchAndUpsertOrder
