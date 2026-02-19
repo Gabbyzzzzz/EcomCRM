@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 6 of 7 (Dashboard and Customer UI) — Active
-Plan: 2 of 2 — plan 02 complete
-Status: Active — Phase 6 plan 02 complete
-Last activity: 2026-02-19 — Phase 6 plan 02 complete: GET/api/customers, customer list page with debounced search + segment filter + pagination
+Plan: 3 of 3 — plan 03 complete (awaiting human verification checkpoint)
+Status: Active — Phase 6 plan 03 complete, checkpoint pending
+Last activity: 2026-02-19 — Phase 6 plan 03 complete: customer 360 profile page at /customers/[id] with RFM scores, order history, message history
 
-Progress: [██████████] 95%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -32,10 +32,10 @@ Progress: [██████████] 95%
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
 | 05-automation-engine | 2/2 | 7 min | 3.5 min |
-| 06-dashboard-and-customer-ui | 2/2 | 13 min | 6.5 min |
+| 06-dashboard-and-customer-ui | 3/3 | 17 min | 5.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (6 min), 04-02 (3 min), 05-02 (4 min), 06-01 (8 min), 06-02 (5 min)
+- Last 5 plans: 04-02 (3 min), 05-02 (4 min), 06-01 (8 min), 06-02 (5 min), 06-03 (4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -96,6 +96,8 @@ Recent decisions affecting current work:
 - [Phase 06-dashboard-and-customer-ui]: Segment filter validation uses VALID_SEGMENTS string array guard (not z.enum with empty string) — avoids TS2367 narrowing error
 - [Phase 06-dashboard-and-customer-ui]: searchRef useRef tracks search alongside useState so debounce closure reads current value without stale capture
 - [Phase 06-dashboard-and-customer-ui]: lastOrderAt serialized as ISO string in server component initialData — Date objects cannot cross server/client boundary in Next.js
+- [Phase 06-dashboard-and-customer-ui]: RFM score bars use widthClasses[score-1] array (w-1/5 through w-full) — avoids dynamic Tailwind class generation, all classes statically present for purging
+- [Phase 06-dashboard-and-customer-ui]: getCustomerMessages uses leftJoin(automations) for automation name in single query — avoids N+1 queries per message
 
 ### Pending Todos
 
@@ -109,5 +111,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 06-02-PLAN.md — GET/api/customers, customer list page, CustomerFilters with search/segment/pagination
+Stopped at: Completed 06-03-PLAN.md — customer 360 profile at /customers/[id]; checkpoint:human-verify pending for full Phase 6 UI verification
 Resume file: None
