@@ -47,12 +47,12 @@ Plans:
   3. Sending the same webhook payload twice (duplicate `X-Shopify-Webhook-Id`) results in only one database record — no duplicate processing
   4. The UI shows "Last synced X ago" and displays an alert when no sync has completed in the past 24 hours
   5. GraphQL requests back off automatically when the Shopify API cost budget is low — no 429 errors crash the sync
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Shopify GraphQL client with rate limiting and bulk sync logic
-- [ ] 02-02: Webhook ingestion endpoint, HMAC verification, idempotency
-- [ ] 02-03: Incremental sync handlers, Inngest event wiring, sync status UI
+- [ ] 02-01-PLAN.md — Schema extensions (sync_logs, webhook_deliveries, is_historical, soft-delete) and Shopify GraphQL client with cost-based rate limiting
+- [ ] 02-02-PLAN.md — Bulk sync pipeline, webhook endpoint with HMAC + idempotency, incremental handlers, Inngest functions
+- [ ] 02-03-PLAN.md — Sync status nav indicator (idle/spinning/stale), settings/sync page, live progress, force sync
 
 ### Phase 3: RFM Engine
 **Goal**: Every customer in the database has an RFM score and a named segment that updates automatically
@@ -136,7 +136,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in dependency order: 1 → 2 → 3 → 4 (can overlap with 2-3) → 5 → 6 → 7
+Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
