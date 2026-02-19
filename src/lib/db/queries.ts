@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations } from './schema'
-import { eq, and, desc, isNotNull, lte, or, isNull, sql } from 'drizzle-orm'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs } from './schema'
+import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
 // ─── AutomationRow type ───────────────────────────────────────────────────────
@@ -579,4 +579,31 @@ export async function updateAutomationLastRun(
     .update(automations)
     .set({ lastRunAt })
     .where(eq(automations.id, id))
+}
+
+// ─── Message log queries ──────────────────────────────────────────────────────
+
+/**
+ * Returns true if a 'sent' MessageLog record exists for the given
+ * (customerId, automationId) pair within the window starting at sinceDate.
+ * Used to prevent re-sending days_since_order emails on every cron run.
+ */
+export async function getRecentMessageLog(
+  customerId: string,
+  automationId: string,
+  sinceDate: Date
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: messageLogs.id })
+    .from(messageLogs)
+    .where(
+      and(
+        eq(messageLogs.customerId, customerId),
+        eq(messageLogs.automationId, automationId),
+        eq(messageLogs.status, 'sent'),
+        gte(messageLogs.sentAt, sinceDate)
+      )
+    )
+    .limit(1)
+  return row !== undefined
 }

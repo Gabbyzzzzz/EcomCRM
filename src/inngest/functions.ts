@@ -14,6 +14,7 @@ import {
   getCustomerByEmail,
   updateAutomationLastRun,
   getCustomerByInternalId,
+  getRecentMessageLog,
 } from '@/lib/db/queries'
 import {
   processFullSyncResults,
@@ -27,7 +28,7 @@ import { executeEmailAction, executeTagAction } from '@/lib/automation/actions'
 import { env } from '@/lib/env'
 import { db } from '@/lib/db'
 import { customers as customersTable, syncLogs, orders as ordersTable } from '@/lib/db/schema'
-import { eq, and, gte } from 'drizzle-orm'
+import { eq, and, gte, lte, isNull, isNotNull } from 'drizzle-orm'
 import type { BulkOperationWebhookPayload } from '@/lib/shopify/types'
 import type { ShopifyCustomer, ShopifyOrder } from '@/lib/shopify/types'
 
@@ -613,11 +614,108 @@ export const processCartAbandoned = inngest.createFunction(
   }
 )
 
+// ─── Function 9: checkDaysSinceOrder ──────────────────────────────────────────
+
+/**
+ * Daily cron at 3 AM UTC (after the 2 AM RFM recalculation).
+ * Scans all active customers and fires repurchase and win-back emails for eligible ones.
+ *
+ * For each days_since_order automation:
+ * 1. Reads triggerConfig.days and triggerConfig.segments
+ * 2. Queries customers whose lastOrderAt <= cutoffDate (i.e. days ago)
+ * 3. Filters by segment using evaluateSegmentFilter
+ * 4. Guards against duplicate sends via getRecentMessageLog before each executeEmailAction
+ * 5. Updates automation lastRunAt after all customers are processed
+ *
+ * NOTE: shopId comes from getShopId() — NOT event.data (cron triggers have no data object).
+ */
+export const checkDaysSinceOrder = inngest.createFunction(
+  {
+    id: 'check-days-since-order',
+    retries: 2,
+  },
+  { cron: '0 3 * * *' }, // 3 AM UTC daily
+  async ({ step }) => {
+    const shopId = getShopId()
+
+    const automationList = await step.run('fetch-automations', async () =>
+      fetchEnabledAutomationsByTrigger(shopId, 'days_since_order')
+    )
+
+    for (const automation of automationList) {
+      await step.run(`scan-customers-${automation.id}`, async () => {
+        const config = automation.triggerConfig as { days?: number; segments?: string[] } | null
+        const days = config?.days ?? 30
+        const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+        // dedupeWindowStart == cutoffDate: skip customers already sent this automation
+        // within the past `days` days so we don't resend every cron run until they order.
+        const dedupeWindowStart = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+        const eligibleCustomers = await db
+          .select({
+            id: customersTable.id,
+            lastOrderAt: customersTable.lastOrderAt,
+            segment: customersTable.segment,
+            shopifyId: customersTable.shopifyId,
+          })
+          .from(customersTable)
+          .where(
+            and(
+              eq(customersTable.shopId, shopId),
+              lte(customersTable.lastOrderAt, cutoffDate),
+              isNotNull(customersTable.lastOrderAt),
+              isNull(customersTable.deletedAt)
+            )
+          )
+
+        let emailCount = 0
+
+        for (const customer of eligibleCustomers) {
+          // Apply segment filter from triggerConfig.segments (inline — avoids JsonifyObject type issue)
+          const segmentList = config?.segments
+          if (segmentList && segmentList.length > 0) {
+            if (!customer.segment || !segmentList.includes(customer.segment)) {
+              continue
+            }
+          }
+
+          // Duplicate-send guard: skip if already sent within the dedupe window
+          const alreadySent = await getRecentMessageLog(
+            customer.id,
+            automation.id,
+            dedupeWindowStart
+          )
+          if (alreadySent) {
+            console.log(
+              `[automation] Skipping customer ${customer.id} — already sent automation ${automation.id} within window`
+            )
+            continue
+          }
+
+          await executeEmailAction({
+            shopId,
+            customerId: customer.id,
+            automationId: automation.id,
+            emailTemplateId: automation.emailTemplateId ?? 'repurchase',
+            eventTimestamp: new Date().toISOString(),
+          })
+          emailCount++
+        }
+
+        await updateAutomationLastRun(automation.id, new Date())
+        console.log(
+          `[automation] checkDaysSinceOrder: automation ${automation.id} — ${emailCount} emails attempted`
+        )
+      })
+    }
+  }
+)
+
 // ─── Export functions array ────────────────────────────────────────────────────
 
-// 8 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter),
+// 9 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter),
 // scheduledSync, dailyRfmRecalculation, processResendWebhook,
-// processFirstOrder, processSegmentChange, processCartAbandoned
+// processFirstOrder, processSegmentChange, processCartAbandoned, checkDaysSinceOrder
 export const functions: InngestFunction.Like[] = [
   processShopifyWebhook,
   processShopifyWebhookFailure,
@@ -627,6 +725,7 @@ export const functions: InngestFunction.Like[] = [
   processFirstOrder,
   processSegmentChange,
   processCartAbandoned,
+  checkDaysSinceOrder,
 ]
 
 // Suppress unused import warning for fetchAndUpsertCustomer/fetchAndUpsertOrder
