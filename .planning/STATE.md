@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 2 — Shopify Integration
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-19 — Completed 01-02 (packages, env validation, Inngest setup)
+Phase: 2 of 7 (Shopify Integration)
+Plan: 1 of N in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed 02-01 (Shopify GraphQL client + schema extensions)
 
-Progress: [██░░░░░░░░] 14%
+Progress: [███░░░░░░░] 21%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: 3 min
-- Total execution time: 0.10 hours
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
+| 02-shopify-integration | 1/N | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (3 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -52,6 +53,9 @@ Recent decisions affecting current work:
 - shop_id column on every table enables future multi-tenant support without schema migration
 - InngestFunction.Like[] (not GetFunctionOutput<any>[]) is the correct type for the functions array passed to serve() — GetFunctionOutput produces unknown[] which is incompatible
 - env.ts import throws at module load on missing vars — all app code imports env from '@/lib/env', never process.env directly
+- Cost-based proactive throttling: shopifyGraphQL sleeps when currentlyAvailable < requestedQueryCost*2 to prevent 429s before they occur
+- shopifyClient.rawQuery<T> exposes full GraphQLResponse (including extensions.cost) for callers needing cost metadata
+- syncLogs.cursor stores checkpoint for resume-on-failure in bulk operations; webhookDeliveries unique index on (shop_id, webhook_id) enforces idempotency at DB level
 
 ### Pending Todos
 
@@ -65,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 01-02-PLAN.md — Phase 1 complete. Packages, env validation, Inngest serve handler ready.
+Stopped at: Completed 02-01-PLAN.md (Shopify GraphQL client + schema extensions)
 Resume file: None
