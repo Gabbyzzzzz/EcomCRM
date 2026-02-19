@@ -778,6 +778,56 @@ export async function getChurnAlerts(
   }))
 }
 
+// ─── Customer 360 profile query functions ─────────────────────────────────────
+
+/**
+ * Fetch a single customer's full row by internal UUID.
+ * Returns null if the customer does not exist or does not belong to this shop.
+ */
+export async function getCustomerProfile(shopId: string, customerId: string) {
+  const [row] = await db
+    .select()
+    .from(customers)
+    .where(and(eq(customers.id, customerId), eq(customers.shopId, shopId)))
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * Fetch all orders for a customer, ordered by shopifyCreatedAt descending.
+ * Returns all orders — no limit applied (typically <100 per customer).
+ */
+export async function getCustomerOrders(shopId: string, customerId: string) {
+  return db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.customerId, customerId), eq(orders.shopId, shopId)))
+    .orderBy(desc(orders.shopifyCreatedAt))
+}
+
+/**
+ * Fetch all message logs for a customer, joined with automations for automation name.
+ * Returns rows ordered by sentAt descending with selected fields.
+ */
+export async function getCustomerMessages(shopId: string, customerId: string) {
+  return db
+    .select({
+      id: messageLogs.id,
+      automationName: automations.name,
+      channel: messageLogs.channel,
+      subject: messageLogs.subject,
+      status: messageLogs.status,
+      sentAt: messageLogs.sentAt,
+      openedAt: messageLogs.openedAt,
+      clickedAt: messageLogs.clickedAt,
+    })
+    .from(messageLogs)
+    .leftJoin(automations, eq(messageLogs.automationId, automations.id))
+    .where(and(eq(messageLogs.customerId, customerId), eq(messageLogs.shopId, shopId)))
+    .orderBy(desc(messageLogs.sentAt))
+}
+
 /**
  * Fetch recent message log entries and orders for the activity feed.
  * Returns both arrays separately; the caller is responsible for merging and sorting.
