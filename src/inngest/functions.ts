@@ -12,6 +12,8 @@ import {
   insertSuppression,
   setMarketingOptedOut,
   getCustomerByEmail,
+  updateAutomationLastRun,
+  getCustomerByInternalId,
 } from '@/lib/db/queries'
 import {
   processFullSyncResults,
@@ -20,10 +22,12 @@ import {
   fetchAndUpsertOrder,
 } from '@/lib/shopify/sync'
 import { recalculateAllRfmScores } from '@/lib/rfm/engine'
+import { fetchEnabledAutomationsByTrigger } from '@/lib/automation/engine'
+import { executeEmailAction, executeTagAction } from '@/lib/automation/actions'
 import { env } from '@/lib/env'
 import { db } from '@/lib/db'
-import { customers as customersTable, syncLogs } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { customers as customersTable, syncLogs, orders as ordersTable } from '@/lib/db/schema'
+import { eq, and, gte } from 'drizzle-orm'
 import type { BulkOperationWebhookPayload } from '@/lib/shopify/types'
 import type { ShopifyCustomer, ShopifyOrder } from '@/lib/shopify/types'
 
@@ -98,7 +102,7 @@ export const processShopifyWebhook = inngest.createFunction(
           // for the affected customer. Full quintile recalculation runs in the daily cron only.
           if (order.customer?.id) {
             const [customerRow] = await db
-              .select({ id: customersTable.id })
+              .select({ id: customersTable.id, orderCount: customersTable.orderCount })
               .from(customersTable)
               .where(
                 and(
@@ -110,6 +114,35 @@ export const processShopifyWebhook = inngest.createFunction(
 
             if (customerRow) {
               await updateCustomerCountersFromOrders(shopId, customerRow.id)
+
+              // AUTO-01: Emit automation/first_order for first-time orders only.
+              // Re-fetch customer row after counter update to get the updated orderCount.
+              // Only emit for orders/create topic (not orders/updated) — webhook orders
+              // are always isHistorical=false, so no additional guard needed.
+              if (topic === 'orders/create') {
+                const [updatedCustomer] = await db
+                  .select({ orderCount: customersTable.orderCount })
+                  .from(customersTable)
+                  .where(eq(customersTable.id, customerRow.id))
+                  .limit(1)
+
+                if (updatedCustomer?.orderCount === 1) {
+                  try {
+                    await inngest.send({
+                      name: 'automation/first_order',
+                      data: {
+                        shopId,
+                        customerId: customerRow.id,
+                        shopifyCustomerId: order.customer.id,
+                        eventTimestamp: new Date().toISOString(),
+                      },
+                    })
+                  } catch (emitErr) {
+                    // Event emission failure must not break webhook processing
+                    console.error('[inngest] Failed to emit automation/first_order:', emitErr)
+                  }
+                }
+              }
             }
           }
           break
@@ -318,9 +351,13 @@ export const dailyRfmRecalculation = inngest.createFunction(
       return await recalculateAllRfmScores(shopId)
     })
 
-    // Step 2: Emit segment_change events for each changed customer
+    // Step 2: Emit segment_change events for each changed customer.
+    // eventTimestamp is stable for this recalculation run — generated ONCE before the
+    // loop and reused for all events, ensuring idempotency keys in executeEmailAction
+    // are consistent across Inngest retries (CRITICAL — do NOT generate per-event).
     if (segmentChanges.length > 0) {
       await step.run('emit-segment-changes', async () => {
+        const recalcTimestamp = new Date().toISOString()
         // Batch send all segment change events
         await inngest.send(
           segmentChanges.map((change) => ({
@@ -330,6 +367,7 @@ export const dailyRfmRecalculation = inngest.createFunction(
               customerId: change.customerId,
               oldSegment: change.oldSegment,
               newSegment: change.newSegment,
+              eventTimestamp: recalcTimestamp,
             },
           }))
         )
@@ -403,15 +441,192 @@ export const processResendWebhook = inngest.createFunction(
   }
 )
 
+// ─── Function 6: processFirstOrder ───────────────────────────────────────────
+
+/**
+ * Triggered by 'automation/first_order' event, emitted from processShopifyWebhook
+ * when a customer places their first order (orderCount === 1, isHistorical=false).
+ *
+ * For each enabled first_order automation:
+ * 1. Sleeps for the configured delay (e.g. 1h for Welcome Flow)
+ * 2. Sends the configured email template
+ */
+export const processFirstOrder = inngest.createFunction(
+  { id: 'process-first-order', retries: 3 },
+  { event: 'automation/first_order' },
+  async ({ event, step }) => {
+    const { shopId, customerId, eventTimestamp } = event.data as {
+      shopId: string
+      customerId: string
+      shopifyCustomerId: string
+      eventTimestamp: string
+    }
+
+    const automations = await step.run('fetch-automations', async () =>
+      fetchEnabledAutomationsByTrigger(shopId, 'first_order')
+    )
+
+    for (const automation of automations) {
+      if (automation.delayValue && automation.delayUnit) {
+        const sleepFor = `${automation.delayValue}${automation.delayUnit === 'hours' ? 'h' : 'd'}`
+        await step.sleep(`delay-${automation.id}`, sleepFor)
+      }
+      await step.run(`execute-${automation.id}`, async () => {
+        await executeEmailAction({
+          shopId,
+          customerId,
+          automationId: automation.id,
+          emailTemplateId: automation.emailTemplateId ?? 'welcome',
+          eventTimestamp,
+        })
+        await updateAutomationLastRun(automation.id, new Date())
+      })
+    }
+  }
+)
+
+// ─── Function 7: processSegmentChange ────────────────────────────────────────
+
+/**
+ * Triggered by 'rfm/segment.changed' event, emitted by dailyRfmRecalculation
+ * when a customer's segment label changes.
+ *
+ * For each enabled segment_change automation:
+ * - Only fires when transitioning TO the configured segment (exact match on toSegment)
+ * - No delay (delayValue is null for VIP flow)
+ * - Sends the email template
+ * - If actionConfig.alsoAddTag exists, adds the tag to Shopify (best-effort)
+ *
+ * CRITICAL: eventTimestamp is read from event.data — NOT generated with new Date().
+ * On Inngest retry, a locally-generated timestamp would produce a new idempotency key,
+ * allowing duplicate sends. The emitter generates a stable timestamp for the whole run.
+ */
+export const processSegmentChange = inngest.createFunction(
+  { id: 'process-segment-change', retries: 3 },
+  { event: 'rfm/segment.changed' },
+  async ({ event, step }) => {
+    const { shopId, customerId, newSegment, eventTimestamp } = event.data as {
+      shopId: string
+      customerId: string
+      oldSegment: string | null
+      newSegment: string | null
+      eventTimestamp: string
+    }
+    // eventTimestamp comes from event.data — do NOT generate with new Date() here
+
+    const automations = await step.run('fetch-automations', async () =>
+      fetchEnabledAutomationsByTrigger(shopId, 'segment_change')
+    )
+
+    for (const automation of automations) {
+      const config = automation.triggerConfig as { toSegment?: string } | null
+      if (config?.toSegment !== newSegment) continue
+
+      await step.run(`execute-${automation.id}`, async () => {
+        await executeEmailAction({
+          shopId,
+          customerId,
+          automationId: automation.id,
+          emailTemplateId: automation.emailTemplateId ?? 'vip',
+          eventTimestamp,
+        })
+
+        const actionConfig = automation.actionConfig as { alsoAddTag?: string } | null
+        if (actionConfig?.alsoAddTag) {
+          const customer = await getCustomerByInternalId(shopId, customerId)
+          if (customer?.shopifyId) {
+            await executeTagAction(shopId, customer.shopifyId, actionConfig.alsoAddTag, 'add')
+          }
+        }
+
+        await updateAutomationLastRun(automation.id, new Date())
+      })
+    }
+  }
+)
+
+// ─── Function 8: processCartAbandoned ────────────────────────────────────────
+
+/**
+ * Triggered by 'automation/cart_abandoned' event, emitted from the Shopify
+ * checkouts/create webhook (Phase 6 concern, handled here proactively).
+ *
+ * For each enabled cart_abandoned automation:
+ * 1. Waits for the configured delay (e.g. 2h for Abandoned Cart Recovery)
+ * 2. Checks if the customer placed an order AFTER eventTimestamp
+ * 3. If order found → cancel (customer already converted)
+ * 4. If no order → send the email template
+ */
+export const processCartAbandoned = inngest.createFunction(
+  { id: 'process-cart-abandoned', retries: 3 },
+  { event: 'automation/cart_abandoned' },
+  async ({ event, step }) => {
+    const { shopId, customerId, eventTimestamp } = event.data as {
+      shopId: string
+      customerId: string
+      shopifyCustomerId: string
+      cartToken: string
+      eventTimestamp: string
+    }
+
+    const automations = await step.run('fetch-automations', async () =>
+      fetchEnabledAutomationsByTrigger(shopId, 'cart_abandoned')
+    )
+
+    for (const automation of automations) {
+      if (automation.delayValue && automation.delayUnit) {
+        const sleepFor = `${automation.delayValue}${automation.delayUnit === 'hours' ? 'h' : 'd'}`
+        await step.sleep(`delay-${automation.id}`, sleepFor)
+      }
+
+      await step.run(`check-and-send-${automation.id}`, async () => {
+        // Cancel if customer placed an order during the delay window
+        const [orderSinceAbandonment] = await db
+          .select({ id: ordersTable.id })
+          .from(ordersTable)
+          .where(
+            and(
+              eq(ordersTable.customerId, customerId),
+              gte(ordersTable.shopifyCreatedAt, new Date(eventTimestamp)),
+              eq(ordersTable.isHistorical, false)
+            )
+          )
+          .limit(1)
+
+        if (orderSinceAbandonment) {
+          console.log(
+            `[automation] Cart recovery cancelled — order placed for customer ${customerId}`
+          )
+          return
+        }
+
+        await executeEmailAction({
+          shopId,
+          customerId,
+          automationId: automation.id,
+          emailTemplateId: automation.emailTemplateId ?? 'abandoned-cart',
+          eventTimestamp,
+        })
+        await updateAutomationLastRun(automation.id, new Date())
+      })
+    }
+  }
+)
+
 // ─── Export functions array ────────────────────────────────────────────────────
 
-// 5 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync, dailyRfmRecalculation, processResendWebhook
+// 8 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter),
+// scheduledSync, dailyRfmRecalculation, processResendWebhook,
+// processFirstOrder, processSegmentChange, processCartAbandoned
 export const functions: InngestFunction.Like[] = [
   processShopifyWebhook,
   processShopifyWebhookFailure,
   scheduledSync,
   dailyRfmRecalculation,
   processResendWebhook,
+  processFirstOrder,
+  processSegmentChange,
+  processCartAbandoned,
 ]
 
 // Suppress unused import warning for fetchAndUpsertCustomer/fetchAndUpsertOrder
