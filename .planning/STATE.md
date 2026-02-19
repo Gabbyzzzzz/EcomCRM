@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 6 of 7 (Dashboard and Customer UI) — Active
-Plan: 1 of 2 — plan 01 complete
-Status: Active — Phase 6 plan 01 complete
-Last activity: 2026-02-19 — Phase 6 plan 01 complete: KPI dashboard page, SegmentChart, RevenueChart, 5 dashboard query functions
+Plan: 2 of 2 — plan 02 complete
+Status: Active — Phase 6 plan 02 complete
+Last activity: 2026-02-19 — Phase 6 plan 02 complete: GET/api/customers, customer list page with debounced search + segment filter + pagination
 
-Progress: [██████████] 90%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -32,10 +32,10 @@ Progress: [██████████] 90%
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
 | 05-automation-engine | 2/2 | 7 min | 3.5 min |
-| 06-dashboard-and-customer-ui | 1/2 | 8 min | 8 min |
+| 06-dashboard-and-customer-ui | 2/2 | 13 min | 6.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (3 min), 04-01 (6 min), 04-02 (3 min), 05-02 (4 min), 06-01 (8 min)
+- Last 5 plans: 04-01 (6 min), 04-02 (3 min), 05-02 (4 min), 06-01 (8 min), 06-02 (5 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -93,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 06-dashboard-and-customer-ui]: shopifyUpdatedAt used as proxy for "recently moved to churn segment" in getChurnAlerts — acceptable approximation since daily RFM cron updates customers when segment changes
 - [Phase 06-dashboard-and-customer-ui]: Revenue strings converted to parseFloat only inside chart component — DB/API layers always remain Decimal/string
 - [Phase 06-dashboard-and-customer-ui]: Tooltip content={<CustomTooltip />} pattern for RevenueChart — avoids Recharts generic Tooltip type complexity
+- [Phase 06-dashboard-and-customer-ui]: Segment filter validation uses VALID_SEGMENTS string array guard (not z.enum with empty string) — avoids TS2367 narrowing error
+- [Phase 06-dashboard-and-customer-ui]: searchRef useRef tracks search alongside useState so debounce closure reads current value without stale capture
+- [Phase 06-dashboard-and-customer-ui]: lastOrderAt serialized as ISO string in server component initialData — Date objects cannot cross server/client boundary in Next.js
 
 ### Pending Todos
 
@@ -106,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 06-01-PLAN.md — dashboard KPI cards, SegmentChart, RevenueChart, churn alerts, activity feed
+Stopped at: Completed 06-02-PLAN.md — GET/api/customers, customer list page, CustomerFilters with search/segment/pagination
 Resume file: None
