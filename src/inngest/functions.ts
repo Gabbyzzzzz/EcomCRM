@@ -9,6 +9,9 @@ import {
   recordWebhookDelivery,
   updateWebhookDeliveryStatus,
   updateCustomerCountersFromOrders,
+  insertSuppression,
+  setMarketingOptedOut,
+  getCustomerByEmail,
 } from '@/lib/db/queries'
 import {
   processFullSyncResults,
@@ -339,14 +342,76 @@ export const dailyRfmRecalculation = inngest.createFunction(
   }
 )
 
+// ─── Function 5: processResendWebhook ────────────────────────────────────────
+
+/**
+ * Processes Resend webhook events dispatched from the /api/webhooks/resend route.
+ *
+ * Events handled:
+ * - email.bounced  → hard bounce only → insertSuppression('hard_bounce') + setMarketingOptedOut
+ *                    soft bounces are transient; they are intentionally ignored (locked decision).
+ * - email.complained → spam complaint, treated as unsubscribe →
+ *                      insertSuppression('unsubscribe') + setMarketingOptedOut
+ */
+export const processResendWebhook = inngest.createFunction(
+  { id: 'process-resend-webhook', retries: 3 },
+  { event: 'resend/webhook.received' },
+  async ({ event }) => {
+    const { type, data } = event.data as { type: string; data: Record<string, unknown> }
+    const shopId = getShopId()
+
+    // Extract recipient email(s) — Resend sends 'to' as string or string[]
+    const toField = data.to
+    const emails: string[] = Array.isArray(toField)
+      ? toField
+      : typeof toField === 'string'
+        ? [toField]
+        : []
+
+    switch (type) {
+      case 'email.bounced': {
+        const bounceType = data.bounce_type as string | undefined
+        // Only suppress on HARD bounce — soft bounces are transient (per locked decision)
+        if (bounceType === 'hard') {
+          for (const email of emails) {
+            await insertSuppression(shopId, email, 'hard_bounce')
+            // Also set marketing_opted_out on the customer if they exist
+            const customer = await getCustomerByEmail(shopId, email)
+            if (customer) {
+              await setMarketingOptedOut(shopId, customer.id, true)
+            }
+          }
+        }
+        break
+      }
+
+      case 'email.complained': {
+        // Spam complaint — treat as unsubscribe (EMAIL-01 compliance)
+        for (const email of emails) {
+          await insertSuppression(shopId, email, 'unsubscribe')
+          const customer = await getCustomerByEmail(shopId, email)
+          if (customer) {
+            await setMarketingOptedOut(shopId, customer.id, true)
+          }
+        }
+        break
+      }
+
+      default:
+        console.log(`[resend-webhook] Unhandled event type: ${type}`)
+    }
+  }
+)
+
 // ─── Export functions array ────────────────────────────────────────────────────
 
-// 4 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync, dailyRfmRecalculation
+// 5 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync, dailyRfmRecalculation, processResendWebhook
 export const functions: InngestFunction.Like[] = [
   processShopifyWebhook,
   processShopifyWebhookFailure,
   scheduledSync,
   dailyRfmRecalculation,
+  processResendWebhook,
 ]
 
 // Suppress unused import warning for fetchAndUpsertCustomer/fetchAndUpsertOrder
