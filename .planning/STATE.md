@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 3 of 7 (RFM Engine)
-Plan: 0 of 2 — ready to plan
-Status: Active — Phase 2 fully verified (5/5, human approved), ready for Phase 3
-Last activity: 2026-02-19 — Phase 2 complete: gap closure plans 02-04/02-05 executed, verification passed
+Plan: 1 of 2 — plan 01 complete, plan 02 pending
+Status: Active — Phase 3 plan 01 complete (RFM scoring engine + counter recalculation)
+Last activity: 2026-02-19 — Phase 3 plan 01 complete: RFM engine with NTILE(5) and updateCustomerCountersFromOrders
 
-Progress: [█████░░░░░] 40%
+Progress: [█████░░░░░] 43%
 
 ## Performance Metrics
 
@@ -29,9 +29,10 @@ Progress: [█████░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
+| 03-rfm-engine | 1/2 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (8 min), 02-04 (2 min)
+- Last 5 plans: 02-01 (3 min), 02-02 (6 min), 02-03 (8 min), 02-04 (2 min), 03-01 (3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - SyncActions extracted as separate client component from settings page to keep page.tsx as Server Component
 - [Phase 02-shopify-integration]: upsertCustomer/upsertOrder setWhere uses or(isNull, lte) timestamp guards — older webhook replays cannot overwrite newer stored data
 - [Phase 02-shopify-integration]: updateWebhookDeliveryStatus uses plain .update() (not insert-or-ignore) to flip existing processing row to dead_letter after Inngest retries exhausted
+- [Phase 03-rfm-engine]: db.execute<T>() returns RowList<T[]> which IS the array directly — no .rows property; T must extend Record<string,unknown> per drizzle-orm postgres-js constraint
+- [Phase 03-rfm-engine]: NTILE ordering ASC NULLS FIRST for all three RFM dimensions ensures NULL/zero customers receive quintile 1 (lowest score)
+- [Phase 03-rfm-engine]: mapRfmToSegment priority order: champion > loyal > new > potential > at_risk > hibernating > lost; covers all 125 R/F/M combinations
 
 ### Pending Todos
 
@@ -79,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 02-04-PLAN.md — gap closure for sync failure path and last-write-wins fixes
+Stopped at: Completed 03-01-PLAN.md — RFM scoring engine with NTILE(5) and customer counter recalculation
 Resume file: None
