@@ -115,12 +115,12 @@ Plans:
   3. A customer 360 profile shows order timeline, RFM scores with segment label, Shopify tags, lifecycle stage, and message history (subject, sent date, open/click status) for that customer
   4. The churn alert widget on the dashboard shows the count and names of customers who moved to at_risk, hibernating, or lost in the last 7 days
   5. The recent activity feed shows the latest automation sends and Shopify order events in reverse chronological order
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: Dashboard page (KPIs, segment chart, revenue chart, churn widget, activity feed)
-- [ ] 06-02: Customer list page (pagination, search, segment filter)
-- [ ] 06-03: Customer 360 profile page (order timeline, RFM, tags, message history)
+- [ ] 06-01-PLAN.md — Dashboard page: KPI cards, segment distribution chart, revenue over time chart, churn alert widget, recent activity feed
+- [ ] 06-02-PLAN.md — Customer list page: paginated table with search by name/email, segment filter, API endpoint
+- [ ] 06-03-PLAN.md — Customer 360 profile page: customer info, RFM scores, order timeline, tags, message history (with human-verify checkpoint)
 
 ### Phase 7: AI Insights
 **Goal**: The Claude API adds per-customer intelligence and email copy generation on top of the complete data layer
