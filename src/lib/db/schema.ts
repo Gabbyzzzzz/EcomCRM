@@ -97,6 +97,9 @@ export const customers = pgTable(
     index('customers_shopify_id_idx').on(table.shopifyId),
     index('customers_segment_idx').on(table.segment),
     index('customers_email_idx').on(table.email),
+    // Unique composite for upsert target — required by onConflictDoUpdate
+    // NOTE: A proper unique index migration should be applied to production DB
+    uniqueIndex('customers_shop_shopify_unique').on(table.shopId, table.shopifyId),
   ]
 )
 
@@ -121,6 +124,9 @@ export const orders = pgTable(
     index('orders_shop_id_idx').on(table.shopId),
     index('orders_customer_id_idx').on(table.customerId),
     index('orders_created_at_idx').on(table.createdAt),
+    // Unique composite for upsert target — required by onConflictDoUpdate
+    // NOTE: A proper unique index migration should be applied to production DB
+    uniqueIndex('orders_shop_shopify_unique').on(table.shopId, table.shopifyId),
   ]
 )
 

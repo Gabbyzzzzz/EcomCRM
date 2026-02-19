@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "customers_shop_shopify_unique" ON "customers" USING btree ("shop_id","shopify_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "orders_shop_shopify_unique" ON "orders" USING btree ("shop_id","shopify_id");
