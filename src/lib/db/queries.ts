@@ -673,7 +673,7 @@ export async function getDashboardKpis(shopId: string): Promise<DashboardKpis> {
       (SELECT COALESCE(SUM(total_price::numeric), 0) FROM ${orders} WHERE shop_id = ${shopId})
         AS total_revenue,
       (SELECT COUNT(*) FROM ${customers}
-        WHERE shop_id = ${shopId} AND deleted_at IS NULL AND created_at >= NOW() - INTERVAL '30 days')
+        WHERE shop_id = ${shopId} AND deleted_at IS NULL AND first_order_at >= NOW() - INTERVAL '30 days')
         AS new_customers_30d,
       (SELECT COUNT(*) FROM ${messageLogs}
         WHERE shop_id = ${shopId} AND status = 'sent' AND sent_at >= NOW() - INTERVAL '30 days')

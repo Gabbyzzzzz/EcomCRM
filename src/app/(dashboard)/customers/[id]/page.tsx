@@ -172,8 +172,8 @@ export default async function CustomerProfilePage({
               <dd className="text-sm capitalize">{customer.lifecycleStage ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground mb-0.5">Customer Since</dt>
-              <dd className="text-sm">{formatDate(customer.createdAt)}</dd>
+              <dt className="text-xs text-muted-foreground mb-0.5">First Order</dt>
+              <dd className="text-sm">{formatDate(customer.firstOrderAt)}</dd>
             </div>
           </dl>
         </div>
