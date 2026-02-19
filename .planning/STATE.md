@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 5 of 7 (Automation Engine) — Active
-Plan: 1 of 2 — plan 01 complete
-Status: Active — Phase 5 plan 01 complete; ready for Phase 5 plan 02
-Last activity: 2026-02-19 — Phase 5 plan 01 complete: automation engine core (engine.ts, actions.ts, presets.ts), 3 Inngest functions (processFirstOrder, processSegmentChange, processCartAbandoned), 5 automation DB query functions
+Plan: 2 of 2 — plan 02 complete (awaiting checkpoint human-verify)
+Status: Active — Phase 5 plan 02 automated tasks complete; checkpoint human-verify pending
+Last activity: 2026-02-19 — Phase 5 plan 02 complete: checkDaysSinceOrder cron, getRecentMessageLog, seed/[id] APIs, /automations list page with toggle
 
-Progress: [████████░░] 75%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 3.7 min
-- Total execution time: 0.37 hours
+- Total execution time: 0.43 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [████████░░] 75%
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
-| 05-automation-engine | 1/2 | 3 min | 3 min |
+| 05-automation-engine | 2/2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-04 (2 min), 03-01 (3 min), 03-02 (3 min), 04-01 (6 min), 04-02 (3 min)
+- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 04-01 (6 min), 04-02 (3 min), 05-02 (4 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -86,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 05-automation-engine]: recalcTimestamp generated ONCE before segmentChanges loop in dailyRfmRecalculation — all events in a batch share the same timestamp for consistent idempotency
 - [Phase 05-automation-engine]: executeTagAction is best-effort (catch+log, no rethrow) — Shopify tag sync failure must not block automation engine
 - [Phase 05-automation-engine]: automation/first_order emit wrapped in try/catch in processShopifyWebhook — event emission failure must not break webhook processing
+- [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run instead of evaluateSegmentFilter — avoids JsonifyObject type incompatibility when Inngest serializes AutomationRow dates
+- [Phase 05-automation-engine]: Automations page at (dashboard)/automations/page.tsx to inherit dashboard sidebar layout via Next.js route group
 
 ### Pending Todos
 
@@ -99,5 +101,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 05-01-PLAN.md — automation engine core (engine.ts, actions.ts, presets.ts), processFirstOrder + processSegmentChange + processCartAbandoned Inngest functions, 5 automation DB query functions, automations_shop_name_unique index
+Stopped at: Completed 05-02-PLAN.md automated tasks — checkDaysSinceOrder cron, seed/PATCH APIs, /automations page; checkpoint human-verify pending (Task 3)
 Resume file: None
