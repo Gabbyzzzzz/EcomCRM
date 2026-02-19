@@ -71,8 +71,7 @@ All tables include shop_id column (for future multi-tenant support).
 
 ## Shopify Integration
 - Auth: OAuth app from Partners Dashboard. Token obtained via manual OAuth exchange — NOT a Custom App static token
-- `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` in env (Partners Dashboard credentials)
-- `SHOPIFY_ACCESS_TOKEN` in env for single-store dev convenience; in production tokens are stored per-store in DB
+- `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` in env (Partners Dashboard credentials — used via OAuth client credentials grant to obtain access tokens at runtime)
 - Store URL in env var `SHOPIFY_STORE_URL`
 - Initial sync: use `bulkOperationRunQuery` for full pull
 - Real-time: Webhooks for orders/create, orders/updated, customers/create, customers/update
@@ -108,7 +107,6 @@ Flow: trigger fires → check delay → execute action → log to MessageLog
 SHOPIFY_STORE_URL=
 SHOPIFY_CLIENT_ID=           # Partners Dashboard client ID
 SHOPIFY_CLIENT_SECRET=       # Partners Dashboard client secret
-SHOPIFY_ACCESS_TOKEN=        # OAuth access token (dev convenience; prod stores in DB)
 SHOPIFY_WEBHOOK_SECRET=      # Same value as SHOPIFY_CLIENT_SECRET
 DATABASE_URL=
 NEXT_PUBLIC_SUPABASE_URL=

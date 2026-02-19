@@ -13,7 +13,7 @@
 - [ ] **FOUND-02**: Drizzle migration workflow established (`generate` + `migrate`, never `push` to production)
 - [ ] **FOUND-03**: Supabase connection uses PgBouncer Transaction mode pooler endpoint (port 6543)
 - [ ] **FOUND-04**: Missing packages added (`@react-email/render`, `decimal.js`)
-- [ ] **FOUND-05**: All env vars documented and loaded (SHOPIFY_STORE_URL, SHOPIFY_ACCESS_TOKEN, SHOPIFY_WEBHOOK_SECRET, DATABASE_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY)
+- [ ] **FOUND-05**: All env vars documented and loaded (SHOPIFY_STORE_URL, SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET, SHOPIFY_WEBHOOK_SECRET, DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, ANTHROPIC_API_KEY, INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY)
 - [ ] **FOUND-06**: Inngest client configured and `/api/inngest` serve handler registered
 
 ### Shopify Integration
