@@ -7,6 +7,7 @@ import {
   softDeleteCustomer,
   updateSyncLog,
   recordWebhookDelivery,
+  updateWebhookDeliveryStatus,
 } from '@/lib/db/queries'
 import {
   processFullSyncResults,
@@ -129,12 +130,34 @@ export const processShopifyWebhook = inngest.createFunction(
           // SHOP-03: Async bulk operation completion arrives as a webhook
           const bulkPayload = payload as BulkOperationWebhookPayload
 
+          // Find the syncLog associated with this bulk operation
+          // We query by bulkOperationId stored when we started the sync
+          const { db } = await import('@/lib/db')
+          const { syncLogs } = await import('@/lib/db/schema')
+          const { eq, and } = await import('drizzle-orm')
+
           if (bulkPayload.status !== 'completed') {
             console.warn(
               `[inngest] Bulk operation finished with status ${bulkPayload.status}: ${bulkPayload.error_code ?? 'no error code'}`
             )
-            // Find the syncLog and mark it failed
-            // bulkOperationId is the admin_graphql_api_id from the payload
+            // Find and mark the syncLog as failed so stale detection and resume logic work correctly
+            const [failedSyncLog] = await db
+              .select({ id: syncLogs.id })
+              .from(syncLogs)
+              .where(
+                and(
+                  eq(syncLogs.shopId, shopId),
+                  eq(syncLogs.bulkOperationId, bulkPayload.admin_graphql_api_id)
+                )
+              )
+              .limit(1)
+            if (failedSyncLog) {
+              await updateSyncLog(failedSyncLog.id, {
+                status: 'failed',
+                errorMessage: `Bulk operation ended with status: ${bulkPayload.status}${bulkPayload.error_code ? ` (${bulkPayload.error_code})` : ''}`,
+                completedAt: new Date(),
+              })
+            }
             break
           }
 
@@ -142,12 +165,6 @@ export const processShopifyWebhook = inngest.createFunction(
             console.warn('[inngest] Bulk operation completed but no URL provided')
             break
           }
-
-          // Find the syncLog associated with this bulk operation
-          // We query by bulkOperationId stored when we started the sync
-          const { db } = await import('@/lib/db')
-          const { syncLogs } = await import('@/lib/db/schema')
-          const { eq, and } = await import('drizzle-orm')
 
           const [syncLog] = await db
             .select()
@@ -188,11 +205,43 @@ export const processShopifyWebhook = inngest.createFunction(
       const message = error instanceof Error ? error.message : 'Unknown error'
       console.error(`[inngest] Webhook ${webhookId} (${topic}) failed:`, error)
 
-      // Re-throw so Inngest retries the function
-      // On final failure (all 4 retries exhausted), Inngest marks it dead
-      // We update status to 'dead_letter' in the onFailure handler below
+      // Re-throw so Inngest retries the function.
+      // Inngest retries up to 4 times; processShopifyWebhookFailure handles final dead-letter on exhaustion.
       throw new Error(message)
     }
+  }
+)
+
+// ─── onFailure: dead-letter handler for processShopifyWebhook ─────────────────
+
+/**
+ * Called by Inngest after all retries for processShopifyWebhook are exhausted.
+ * Updates the webhookDeliveries row to status='dead_letter' so the UI can surface it.
+ */
+export const processShopifyWebhookFailure = inngest.createFunction(
+  {
+    id: 'process-shopify-webhook-failure',
+    retries: 0,
+  },
+  { event: 'inngest/function.failed' },
+  async ({ event }) => {
+    // Guard: only handle failures from the webhook processor, not scheduledSync or other functions
+    if (event.data.function_id !== 'process-shopify-webhook') return
+
+    const failedEvent = event.data.event as { data?: { shopId?: string; webhookId?: string; topic?: string } } | undefined
+    const shopId = failedEvent?.data?.shopId
+    const webhookId = failedEvent?.data?.webhookId
+    const topic = failedEvent?.data?.topic ?? 'unknown'
+
+    if (!shopId || !webhookId) {
+      console.warn('[inngest] onFailure: missing shopId or webhookId in failed event data')
+      return
+    }
+
+    console.warn(`[inngest] Dead-lettering webhook ${webhookId} (${topic}) for shop ${shopId}`)
+    // Use updateWebhookDeliveryStatus (not recordWebhookDelivery) because the row already exists
+    // as 'processing' — recordWebhookDelivery uses onConflictDoNothing and would silently skip.
+    await updateWebhookDeliveryStatus(shopId, webhookId, 'dead_letter')
   }
 )
 
@@ -218,9 +267,10 @@ export const scheduledSync = inngest.createFunction(
 
 // ─── Export functions array ────────────────────────────────────────────────────
 
-// Exactly 2 functions — no dead processFullSyncCompletion (SHOP-03 handled inline)
+// 3 functions: processShopifyWebhook, processShopifyWebhookFailure (dead-letter), scheduledSync
 export const functions: InngestFunction.Like[] = [
   processShopifyWebhook,
+  processShopifyWebhookFailure,
   scheduledSync,
 ]
 
@@ -228,4 +278,3 @@ export const functions: InngestFunction.Like[] = [
 // These are exported from sync.ts for direct use in webhook handler extensions
 void fetchAndUpsertCustomer
 void fetchAndUpsertOrder
-void updateSyncLog
