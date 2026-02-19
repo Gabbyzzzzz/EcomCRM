@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 
 ## Current Position
 
-Phase: 3 of 7 (RFM Engine) — COMPLETE
-Plan: 2 of 2 — all plans complete
-Status: Active — Phase 3 complete; ready for Phase 4 (Email Templates)
-Last activity: 2026-02-19 — Phase 3 plan 02 complete: RFM Inngest wiring with daily cron + segment change events + per-order counter updates
+Phase: 4 of 7 (Email Infrastructure) — IN PROGRESS
+Plan: 1 of 2 — plan 01 complete
+Status: Active — Phase 4 plan 01 complete; ready for Phase 4 plan 02 (unsubscribe webhook page + Resend bounce webhook)
+Last activity: 2026-02-19 — Phase 4 plan 01 complete: email send layer with Resend, 5 React Email templates, suppression gate, unsubscribe tokens, compliance headers
 
-Progress: [██████░░░░] 50%
+Progress: [███████░░░] 60%
 
 ## Performance Metrics
 
@@ -30,9 +30,10 @@ Progress: [██████░░░░] 50%
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
 | 03-rfm-engine | 2/2 | 6 min | 3 min |
+| 04-email-infrastructure | 1/2 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (6 min), 02-03 (8 min), 02-04 (2 min), 03-01 (3 min), 03-02 (3 min)
+- Last 5 plans: 02-03 (8 min), 02-04 (2 min), 03-01 (3 min), 03-02 (3 min), 04-01 (6 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -72,6 +73,11 @@ Recent decisions affecting current work:
 - [Phase 03-rfm-engine]: mapRfmToSegment priority order: champion > loyal > new > potential > at_risk > hibernating > lost; covers all 125 R/F/M combinations
 - [Phase 03-rfm-engine]: dailyRfmRecalculation uses step.run() for two distinct Inngest steps — scoring and event-emission are independently resumable on retry
 - [Phase 03-rfm-engine]: Counter updates (per-event) use updateCustomerCountersFromOrders; full NTILE quintile recalculation (daily cron) kept separate to avoid expensive window queries on every webhook
+- [Phase 04-email-infrastructure]: templateFactory pattern for sendMarketingEmail — (unsubscribeUrl: string) => ReactElement ensures List-Unsubscribe header URL == email body URL
+- [Phase 04-email-infrastructure]: SHOPIFY_CLIENT_SECRET used as HMAC signing key for unsubscribe tokens — no new secret needed, key already scoped to shop
+- [Phase 04-email-infrastructure]: Unsubscribe tokens do not expire — links in sent emails must always work regardless of age
+- [Phase 04-email-infrastructure]: All email send failures return SendResult (never throw) — email errors are non-fatal to automation engine
+- [Phase 04-email-infrastructure]: resend.emails.send(options, { idempotencyKey }) — second argument pattern per Resend SDK v6+
 
 ### Pending Todos
 
@@ -80,10 +86,10 @@ None yet.
 ### Blockers/Concerns
 
 - Phase 2: Shopify `bulkOperationRunQuery` async model should be verified against current Shopify docs before implementation (research flagged as needs validation)
-- Phase 4: Resend idempotency key API support and Gmail/Yahoo `List-Unsubscribe-Post` enforcement should be verified before implementation
+- (Resolved Phase 4) Resend idempotency key and List-Unsubscribe-Post: verified — idempotencyKey is a first-class option in Resend SDK v6+, List-Unsubscribe-Post header can be set via custom headers
 
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 03-02-PLAN.md — RFM Inngest wiring: daily cron + segment change events + per-order counter updates
+Stopped at: Completed 04-01-PLAN.md — email send layer: Resend send wrapper, 5 React Email templates, suppression gate, HMAC unsubscribe tokens, compliance headers
 Resume file: None
