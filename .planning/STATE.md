@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 2 of 7 (Shopify Integration)
-Plan: 3 of 3 in current phase — PHASE COMPLETE
+Plan: 5 of 5 in current phase — PHASE COMPLETE (including gap-closure plans 02-04, 02-05)
 Status: Active — ready for Phase 3 (RFM Engine)
-Last activity: 2026-02-19 — Completed 02-03 (sync status UI, settings page, human verification passed)
+Last activity: 2026-02-19 — Completed 02-05 (env var documentation gap closure, Gap 3 resolved)
 
 Progress: [█████░░░░░] 40%
 
@@ -28,7 +28,7 @@ Progress: [█████░░░░░] 40%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
-| 02-shopify-integration | 3/3 | 14 min | 4.7 min |
+| 02-shopify-integration | 5/5 | 16 min | 3.2 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-01 (3 min), 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (8 min)
@@ -43,7 +43,7 @@ Progress: [█████░░░░░] 40%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Custom App (not Public App): Single store access token in env — no OAuth flow needed
+- OAuth Partners Dashboard app (not Custom App): SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET used via client credentials grant — no static SHOPIFY_ACCESS_TOKEN needed
 - Inngest for scheduling: Handles retries, idempotency, cron natively — all async work goes through Inngest
 - Quintile-based RFM: Must run as PostgreSQL NTILE(5) window function — never in application memory
 - Resend + React Email: @react-email/render@2.0.4 and decimal.js@10.6.0 installed as explicit deps in Phase 1-02
@@ -77,5 +77,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 02-03-PLAN.md — Phase 2 (Shopify Integration) fully complete
+Stopped at: Completed 02-05-PLAN.md — Phase 2 (Shopify Integration) gap-closure plans complete, all 6 doc surfaces accurate
 Resume file: None
