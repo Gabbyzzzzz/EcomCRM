@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 1 of 7 (Foundation)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-02-19 — Roadmap created, ready to begin Phase 1 planning
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-19 — Completed 01-01 (Drizzle schema + migrations)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 7%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 3 min
+- Total execution time: 0.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1/2 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 01-01 (3 min)
 - Trend: -
 
 *Updated after each plan completion*
@@ -46,6 +46,10 @@ Recent decisions affecting current work:
 - Inngest for scheduling: Handles retries, idempotency, cron natively — all async work goes through Inngest
 - Quintile-based RFM: Must run as PostgreSQL NTILE(5) window function — never in application memory
 - Resend + React Email: Two missing packages must be added before Phase 1 is done (`@react-email/render`, `decimal.js`)
+- prepare: false on postgres client is mandatory for Supabase Transaction mode pooler (port 6543) — omitting causes "prepared statements are not supported" errors under load
+- All pgEnums must be exported with export const at module top level — drizzle-kit silently skips non-exported enums, producing missing CREATE TYPE in migration
+- numeric(19,4) used for all money fields (total_spent, avg_order_value, total_price) — never float to avoid precision loss
+- shop_id column on every table enables future multi-tenant support without schema migration
 
 ### Pending Todos
 
@@ -59,5 +63,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Roadmap created — Phase 1 ready to plan
+Stopped at: Completed 01-01-PLAN.md — Drizzle schema, db singleton, and migration SQL generated
 Resume file: None
