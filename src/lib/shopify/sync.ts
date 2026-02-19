@@ -220,6 +220,12 @@ export async function processFullSyncResults(
   let lineNumber = 0
   let currentCursor: string | undefined
 
+  // Maps built during streaming, used to resolve relationships.
+  // customerIdMap: shopify GID → internal UUID (populated when customers are upserted)
+  const customerIdMap = new Map<string, string>()
+  // pendingLineItems: order shopify GID → accumulated line item rows
+  const pendingLineItems = new Map<string, Array<{ title: string; quantity: number; price: string | null }>>()
+
   // Determine if we are in skip-mode (fast-forward to resume position)
   let skipping = resumeCursor != null
 
@@ -287,6 +293,22 @@ export async function processFullSyncResults(
       }
     }
 
+    // ── Flush line items: update each order with its collected line items ──────
+    // Line items in bulk JSONL are separate rows (no id, __parentId = order GID).
+    // They are collected into pendingLineItems during streaming and written here.
+    if (pendingLineItems.size > 0) {
+      const { db } = await import('@/lib/db')
+      const { orders: ordersTable } = await import('@/lib/db/schema')
+      const { eq, and: dbAnd } = await import('drizzle-orm')
+      for (const [orderShopifyId, items] of Array.from(pendingLineItems)) {
+        await db
+          .update(ordersTable)
+          .set({ lineItems: items })
+          .where(dbAnd(eq(ordersTable.shopId, shopId), eq(ordersTable.shopifyId, orderShopifyId)))
+      }
+      console.log(`[sync] Flushed line items for ${pendingLineItems.size} orders`)
+    }
+
     // Final update — mark as completed
     await updateSyncLog(syncLogId, {
       status: 'completed',
@@ -328,20 +350,43 @@ export async function processFullSyncResults(
 
     const record = parsed as Record<string, unknown>
 
-    // Shopify bulk JSONL: each line has an "id" field in GID format
-    // e.g. "gid://shopify/Customer/123" or "gid://shopify/Order/456"
+    // Shopify bulk JSONL: top-level entities have an "id" GID field.
+    // Nested line items are separate rows with __parentId but no id.
     const id = record.id as string | undefined
-    if (!id) return
+    const parentId = record.__parentId as string | undefined
+
+    if (!id) {
+      // No id → this is a line item row (child of an order).
+      // Accumulate into pendingLineItems keyed by the parent order GID.
+      if (parentId?.includes('/Order/')) {
+        const price = (record.variant as Record<string, unknown> | null)?.price as string | null ?? null
+        const item = {
+          title: (record.title as string) ?? '',
+          quantity: (record.quantity as number) ?? 0,
+          price: price ? new Decimal(price).toString() : null,
+        }
+        const existing = pendingLineItems.get(parentId) ?? []
+        pendingLineItems.set(parentId, [...existing, item])
+      }
+      return
+    }
 
     if (id.includes('/Customer/')) {
       const customer = record as unknown as ShopifyCustomer
       const data = mapCustomerLine(customer)
-      await upsertCustomer(shopId, data)
+      const row = await upsertCustomer(shopId, data)
+      // Capture internal UUID so orders can reference it without an extra DB query
+      if (row?.id) customerIdMap.set(id, row.id)
       customersCount++
       currentCursor = id
     } else if (id.includes('/Order/')) {
       const order = record as unknown as ShopifyOrder
       const data = mapOrderLine(order)
+      // Resolve internal customer UUID from the map built during customer processing.
+      // shopifyCustomerId comes from __parentId (bulk JSONL) or customer.id (single query).
+      const resolvedCustomerId = data.shopifyCustomerId
+        ? customerIdMap.get(data.shopifyCustomerId) ?? null
+        : null
       // SHOP-08: isHistorical = created before sync started
       const createdAt = data.shopifyCreatedAt
       const isHistorical = createdAt != null && createdAt < syncStartedAt
@@ -349,9 +394,9 @@ export async function processFullSyncResults(
         shopId,
         {
           shopifyId: data.shopifyId,
-          customerId: data.customerId,
+          customerId: resolvedCustomerId,
           totalPrice: data.totalPrice,
-          lineItems: data.lineItems,
+          lineItems: data.lineItems, // empty for bulk; filled by pendingLineItems flush
           financialStatus: data.financialStatus,
           shopifyCreatedAt: data.shopifyCreatedAt,
           shopifyUpdatedAt: data.shopifyUpdatedAt,
