@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 2 — Shopify Integration
+**Current focus:** Phase 3 — RFM Engine
 
 ## Current Position
 
-Phase: 2 of 7 (Shopify Integration)
-Plan: 5 of 5 in current phase — PHASE COMPLETE (including gap-closure plans 02-04, 02-05)
-Status: Active — ready for Phase 3 (RFM Engine)
-Last activity: 2026-02-19 — Completed 02-05 (env var documentation gap closure, Gap 3 resolved)
+Phase: 3 of 7 (RFM Engine)
+Plan: 0 of 2 — ready to plan
+Status: Active — Phase 2 fully verified (5/5, human approved), ready for Phase 3
+Last activity: 2026-02-19 — Phase 2 complete: gap closure plans 02-04/02-05 executed, verification passed
 
 Progress: [█████░░░░░] 40%
 
