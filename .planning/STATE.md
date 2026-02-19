@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 3 — RFM Engine
+**Current focus:** Phase 4 — Email Templates
 
 ## Current Position
 
-Phase: 3 of 7 (RFM Engine)
-Plan: 1 of 2 — plan 01 complete, plan 02 pending
-Status: Active — Phase 3 plan 01 complete (RFM scoring engine + counter recalculation)
-Last activity: 2026-02-19 — Phase 3 plan 01 complete: RFM engine with NTILE(5) and updateCustomerCountersFromOrders
+Phase: 3 of 7 (RFM Engine) — COMPLETE
+Plan: 2 of 2 — all plans complete
+Status: Active — Phase 3 complete; ready for Phase 4 (Email Templates)
+Last activity: 2026-02-19 — Phase 3 plan 02 complete: RFM Inngest wiring with daily cron + segment change events + per-order counter updates
 
-Progress: [█████░░░░░] 43%
+Progress: [██████░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 4 min
-- Total execution time: 0.30 hours
+- Total plans completed: 5
+- Average duration: 3.8 min
+- Total execution time: 0.32 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [█████░░░░░] 43%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
-| 03-rfm-engine | 1/2 | 3 min | 3 min |
+| 03-rfm-engine | 2/2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (3 min), 02-02 (6 min), 02-03 (8 min), 02-04 (2 min), 03-01 (3 min)
+- Last 5 plans: 02-02 (6 min), 02-03 (8 min), 02-04 (2 min), 03-01 (3 min), 03-02 (3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -70,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase 03-rfm-engine]: db.execute<T>() returns RowList<T[]> which IS the array directly — no .rows property; T must extend Record<string,unknown> per drizzle-orm postgres-js constraint
 - [Phase 03-rfm-engine]: NTILE ordering ASC NULLS FIRST for all three RFM dimensions ensures NULL/zero customers receive quintile 1 (lowest score)
 - [Phase 03-rfm-engine]: mapRfmToSegment priority order: champion > loyal > new > potential > at_risk > hibernating > lost; covers all 125 R/F/M combinations
+- [Phase 03-rfm-engine]: dailyRfmRecalculation uses step.run() for two distinct Inngest steps — scoring and event-emission are independently resumable on retry
+- [Phase 03-rfm-engine]: Counter updates (per-event) use updateCustomerCountersFromOrders; full NTILE quintile recalculation (daily cron) kept separate to avoid expensive window queries on every webhook
 
 ### Pending Todos
 
@@ -83,5 +85,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-19
-Stopped at: Completed 03-01-PLAN.md — RFM scoring engine with NTILE(5) and customer counter recalculation
+Stopped at: Completed 03-02-PLAN.md — RFM Inngest wiring: daily cron + segment change events + per-order counter updates
 Resume file: None
