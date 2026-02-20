@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { listAutomations } from '@/lib/db/queries'
 import { env } from '@/lib/env'
 import { AutomationToggle } from '@/components/automation-toggle'
@@ -99,7 +100,14 @@ export default async function AutomationsPage() {
                   key={automation.id}
                   className="hover:bg-muted/30 transition-colors"
                 >
-                  <td className="px-4 py-3 font-medium">{automation.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <Link
+                      href={`/automations/${automation.id}`}
+                      className="hover:underline text-primary"
+                    >
+                      {automation.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {triggerLabel(automation.triggerType, automation.triggerConfig)}
                   </td>
