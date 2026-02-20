@@ -129,10 +129,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Opening a customer 360 profile generates and displays a plain-language insight narrative (e.g., "Customer is at risk: last ordered 90 days ago, down from monthly cadence. Suggest win-back offer.") using live RFM scores and order data
   2. On the automation template editor, clicking "Generate suggestions" produces AI-written subject line and body copy options that can be accepted or discarded before saving
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: AI insights library, customer profile integration, automation editor copy generation
+- [ ] 07-01-PLAN.md — AI insights library (generateCustomerInsight + generateEmailCopy), customer profile insight API + async client component
+- [ ] 07-02-PLAN.md — Automation detail page with AI email copy generator, clickable automation list rows (with human-verify checkpoint)
 
 ## Progress
 
@@ -147,4 +148,4 @@ Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5
 | 4. Email Infrastructure | 2/2 | ✓ Complete | 2026-02-19 |
 | 5. Automation Engine | 0/2 | Not started | - |
 | 6. Dashboard and Customer UI | 0/3 | Not started | - |
-| 7. AI Insights | 0/1 | Not started | - |
+| 7. AI Insights | 0/2 | Not started | - |
