@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 6 — Dashboard and Customer UI
+**Current focus:** Phase 7 — AI Insights
 
 ## Current Position
 
-Phase: 6 of 7 (Dashboard and Customer UI) — Active
-Plan: 3 of 3 — plan 03 complete (awaiting human verification checkpoint)
-Status: Active — Phase 6 plan 03 complete, checkpoint pending
-Last activity: 2026-02-19 — Phase 6 plan 03 complete: customer 360 profile page at /customers/[id] with RFM scores, order history, message history
+Phase: 7 of 7 (AI Insights) — Active
+Plan: 1 of 2 — plan 01 complete
+Status: Active — Phase 7 plan 01 complete
+Last activity: 2026-02-20 — Phase 7 plan 01 complete: Vercel AI SDK provider abstraction, generateCustomerInsight, /api/customers/[id]/insights, CustomerAiInsight component, customer 360 profile integration
 
-Progress: [██████████] 97%
+Progress: [██████████] 99%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 3.9 min
-- Total execution time: 0.52 hours
+- Total plans completed: 9
+- Average duration: 3.8 min
+- Total execution time: 0.57 hours
 
 **By Phase:**
 
@@ -33,9 +33,10 @@ Progress: [██████████] 97%
 | 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
 | 05-automation-engine | 2/2 | 7 min | 3.5 min |
 | 06-dashboard-and-customer-ui | 3/3 | 17 min | 5.7 min |
+| 07-ai-insights | 1/2 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (3 min), 05-02 (4 min), 06-01 (8 min), 06-02 (5 min), 06-03 (4 min)
+- Last 5 plans: 05-02 (4 min), 06-01 (8 min), 06-02 (5 min), 06-03 (4 min), 07-01 (3 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -98,6 +99,10 @@ Recent decisions affecting current work:
 - [Phase 06-dashboard-and-customer-ui]: lastOrderAt serialized as ISO string in server component initialData — Date objects cannot cross server/client boundary in Next.js
 - [Phase 06-dashboard-and-customer-ui]: RFM score bars use widthClasses[score-1] array (w-1/5 through w-full) — avoids dynamic Tailwind class generation, all classes statically present for purging
 - [Phase 06-dashboard-and-customer-ui]: getCustomerMessages uses leftJoin(automations) for automation name in single query — avoids N+1 queries per message
+- [Phase 07-ai-insights]: Vercel AI SDK v4 (ai@6.x) uses maxOutputTokens not maxTokens — API rename from earlier SDK versions
+- [Phase 07-ai-insights]: Provider factory getModel() selects google('gemini-1.5-flash') by default, anthropic('claude-sonnet-4-20250514') when AI_PROVIDER=anthropic — no code changes needed to switch providers
+- [Phase 07-ai-insights]: GOOGLE_GENERATIVE_AI_API_KEY is required, ANTHROPIC_API_KEY is optional — matches primary/fallback provider model
+- [Phase 07-ai-insights]: generateCustomerInsight and generateEmailCopy wrap entire body in try/catch returning fallback values — AI errors never propagate to profile page or automation builder
 
 ### Pending Todos
 
@@ -110,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Completed 06-03-PLAN.md — customer 360 profile at /customers/[id]; checkpoint:human-verify pending for full Phase 6 UI verification
+Last session: 2026-02-20
+Stopped at: Completed 07-01-PLAN.md — Vercel AI SDK integration, generateCustomerInsight, /api/customers/[id]/insights, CustomerAiInsight component
 Resume file: None
