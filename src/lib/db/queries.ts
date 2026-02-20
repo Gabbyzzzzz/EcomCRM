@@ -23,6 +23,7 @@ export interface CustomerUpsertData {
   avgOrderValue?: string | null    // raw amount string from Shopify
   firstOrderAt?: Date | null
   lastOrderAt?: Date | null
+  shopifyCreatedAt?: Date | null   // Shopify customer registration date
   shopifyUpdatedAt?: Date | null
 }
 
@@ -72,6 +73,7 @@ export async function upsertCustomer(shopId: string, data: CustomerUpsertData) {
       avgOrderValue: avgOrderValue ?? null,
       firstOrderAt: data.firstOrderAt ?? null,
       lastOrderAt: data.lastOrderAt ?? null,
+      shopifyCreatedAt: data.shopifyCreatedAt ?? null,
       shopifyUpdatedAt: data.shopifyUpdatedAt ?? null,
     })
     .onConflictDoUpdate({
@@ -88,6 +90,7 @@ export async function upsertCustomer(shopId: string, data: CustomerUpsertData) {
         avgOrderValue: avgOrderValue ?? null,
         firstOrderAt: data.firstOrderAt ?? null,
         lastOrderAt: data.lastOrderAt ?? null,
+        shopifyCreatedAt: data.shopifyCreatedAt ?? null,
         shopifyUpdatedAt: data.shopifyUpdatedAt ?? null,
       },
       // Only apply update if stored shopifyUpdatedAt is NULL (never set) or <= incoming value.
@@ -673,7 +676,7 @@ export async function getDashboardKpis(shopId: string): Promise<DashboardKpis> {
       (SELECT COALESCE(SUM(total_price::numeric), 0) FROM ${orders} WHERE shop_id = ${shopId})
         AS total_revenue,
       (SELECT COUNT(*) FROM ${customers}
-        WHERE shop_id = ${shopId} AND deleted_at IS NULL AND first_order_at >= NOW() - INTERVAL '30 days')
+        WHERE shop_id = ${shopId} AND deleted_at IS NULL AND shopify_created_at >= NOW() - INTERVAL '30 days')
         AS new_customers_30d,
       (SELECT COUNT(*) FROM ${messageLogs}
         WHERE shop_id = ${shopId} AND status = 'sent' AND sent_at >= NOW() - INTERVAL '30 days')

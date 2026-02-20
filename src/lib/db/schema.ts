@@ -96,6 +96,7 @@ export const customers = pgTable(
     firstOrderAt: timestamp('first_order_at', { withTimezone: true }),
     lastOrderAt: timestamp('last_order_at', { withTimezone: true }),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    shopifyCreatedAt: timestamp('shopify_created_at', { withTimezone: true }),
     shopifyUpdatedAt: timestamp('shopify_updated_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
