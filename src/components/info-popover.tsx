@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { useState, useRef, type ReactNode } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface InfoPopoverProps {
@@ -11,12 +11,13 @@ interface InfoPopoverProps {
 }
 
 /**
- * Reusable info icon with a Popover for explanatory content.
+ * Reusable info icon that shows explanatory content on hover.
  *
- * Uses @radix-ui/react-popover via the shadcn/ui wrapper:
- * - Rendered in a Portal → never clips against card overflow
- * - Viewport-aware positioning → stays on screen
- * - Click-outside closes automatically via Radix focus management
+ * Uses @radix-ui/react-popover controlled via open state:
+ * - Opens on mouseenter of the trigger icon
+ * - Closes on mouseleave with a small delay so the user can move into the panel
+ * - Panel's own mouseenter/leave cancels/restarts the close timer (no flicker)
+ * - Rendered in a Portal → never clips against card overflow or page header
  */
 export function InfoPopover({
   children,
@@ -24,13 +25,29 @@ export function InfoPopover({
   align = 'start',
   width = 'w-80',
 }: InfoPopoverProps) {
+  const [open, setOpen] = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function scheduleClose() {
+    closeTimer.current = setTimeout(() => setOpen(false), 120)
+  }
+
+  function cancelClose() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
           className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
           aria-label="More information"
+          onMouseEnter={() => { cancelClose(); setOpen(true) }}
+          onMouseLeave={scheduleClose}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +64,15 @@ export function InfoPopover({
           </svg>
         </button>
       </PopoverTrigger>
-      <PopoverContent side={side} align={align} className={`${width} text-xs`}>
+      <PopoverContent
+        side={side}
+        align={align}
+        className={`${width} text-xs`}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+        // Prevent Radix from closing when focus leaves the trigger
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         {children}
       </PopoverContent>
     </Popover>

@@ -86,9 +86,9 @@ function formatDateTime(date: Date | null): string {
 function RfmScoreBar({ label, score }: { label: string; score: number | null }) {
   if (score == null) {
     return (
-      <div className="flex items-center gap-3">
-        <span className="w-16 text-sm font-medium text-muted-foreground">{label}</span>
-        <span className="text-sm text-muted-foreground">Not scored</span>
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-muted-foreground">{label}: —</span>
+        <div className="h-2 rounded-full bg-muted" />
       </div>
     )
   }
@@ -97,9 +97,9 @@ function RfmScoreBar({ label, score }: { label: string; score: number | null }) 
   const widthClass = widthClasses[Math.min(score - 1, 4)] ?? 'w-0'
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-16 text-sm font-medium">{label}: {score}/5</span>
-      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+    <div className="flex flex-col gap-1">
+      <span className="text-sm font-medium">{label}: {score}/5</span>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full bg-primary ${widthClass}`} />
       </div>
     </div>
