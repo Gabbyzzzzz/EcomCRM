@@ -24,8 +24,13 @@ const envSchema = z.object({
   // App base URL (for unsubscribe links)
   APP_URL: z.string().min(1).optional().default('http://localhost:3000'),
 
-  // Anthropic (AI insights)
-  ANTHROPIC_API_KEY: z.string().min(1),
+  // AI Provider (Vercel AI SDK)
+  // Primary provider: Google Gemini Flash (default)
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+  // Optional fallback: Anthropic Claude
+  ANTHROPIC_API_KEY: z.string().optional(),
+  // Switch provider: 'google' (default) or 'anthropic'
+  AI_PROVIDER: z.enum(['google', 'anthropic']).default('google'),
 
   // Inngest (background jobs)
   INNGEST_EVENT_KEY: z.string().min(1),
