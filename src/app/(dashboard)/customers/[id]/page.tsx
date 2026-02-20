@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { env } from '@/lib/env'
 import { getCustomerProfile, getCustomerOrders, getCustomerMessages } from '@/lib/db/queries'
 import { InfoPopover } from '@/components/info-popover'
+import { CustomerAiInsight } from '@/components/customer-ai-insight'
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
@@ -244,6 +245,11 @@ export default async function CustomerProfilePage({
           </dl>
         </div>
 
+      </div>
+
+      {/* ── AI Insight ───────────────────────────────────────────────────── */}
+      <div className="rounded-lg border bg-card p-6">
+        <CustomerAiInsight customerId={id} />
       </div>
 
       {/* ── Tags Section ─────────────────────────────────────────────────── */}
