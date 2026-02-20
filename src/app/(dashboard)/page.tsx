@@ -8,6 +8,7 @@ import {
 import { env } from '@/lib/env'
 import { SegmentChart } from '@/components/segment-chart'
 import { RevenueChart } from '@/components/revenue-chart'
+import { InfoPopover } from '@/components/info-popover'
 import Link from 'next/link'
 import Decimal from 'decimal.js'
 
@@ -140,39 +141,21 @@ export default async function DashboardPage() {
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-sm font-semibold">Segment Distribution</h2>
-            {/* CSS-only info tooltip */}
-            <div className="group relative inline-flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-3.5 w-3.5 text-muted-foreground cursor-help"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-80 rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
-                <p className="font-medium mb-2">How segments work</p>
-                <p className="text-muted-foreground mb-2">
-                  Customers are scored 1–5 on Recency (R), Frequency (F), and Monetary (M) via quintile ranking, then assigned a segment:
-                </p>
-                <ul className="flex flex-col gap-1">
-                  <li><span className="font-medium">Champion</span> <span className="text-muted-foreground">— R≥4, F≥4, M≥4. Best customers: recent, frequent, high-spend.</span></li>
-                  <li><span className="font-medium">Loyal</span> <span className="text-muted-foreground">— R≥3, F≥3, M≥3. Consistent buyers with solid spend.</span></li>
-                  <li><span className="font-medium">New</span> <span className="text-muted-foreground">— R≥4, F≤1. Bought recently for the first time.</span></li>
-                  <li><span className="font-medium">Potential</span> <span className="text-muted-foreground">— R≥3, other criteria. Recent but not yet loyal.</span></li>
-                  <li><span className="font-medium">At Risk</span> <span className="text-muted-foreground">— R≤2, F≥2. Used to buy regularly but drifting away.</span></li>
-                  <li><span className="font-medium">Hibernating</span> <span className="text-muted-foreground">— R≤2, F≤2, M≥2. Long inactive with decent lifetime spend.</span></li>
-                  <li><span className="font-medium">Lost</span> <span className="text-muted-foreground">— Everything else. Low recency, frequency, and spend.</span></li>
-                </ul>
-                {/* Tooltip arrow */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-border" />
-              </div>
-            </div>
+            <InfoPopover side="bottom" align="start" width="w-80">
+              <p className="font-medium mb-2">How segments work</p>
+              <p className="text-muted-foreground mb-2">
+                Customers with orders are scored 1–5 on Recency (R), Frequency (F), and Monetary (M) via quintile ranking, then assigned a segment:
+              </p>
+              <ul className="flex flex-col gap-1">
+                <li><span className="font-medium">Champion</span> <span className="text-muted-foreground">— R≥4, F≥4, M≥4. Best customers: recent, frequent, high-spend.</span></li>
+                <li><span className="font-medium">Loyal</span> <span className="text-muted-foreground">— R≥3, F≥3, M≥3. Consistent buyers with solid spend.</span></li>
+                <li><span className="font-medium">New</span> <span className="text-muted-foreground">— R≥4, F≤1. Bought recently for the first time.</span></li>
+                <li><span className="font-medium">Potential</span> <span className="text-muted-foreground">— R≥3, other criteria. Recent but not yet loyal.</span></li>
+                <li><span className="font-medium">At Risk</span> <span className="text-muted-foreground">— R≤2, F≥2. Used to buy regularly but drifting away.</span></li>
+                <li><span className="font-medium">Hibernating</span> <span className="text-muted-foreground">— R≤2, F≤2, M≥2. Long inactive with decent lifetime spend.</span></li>
+                <li><span className="font-medium">Lost</span> <span className="text-muted-foreground">— Everything else. Low recency, frequency, and spend.</span></li>
+              </ul>
+            </InfoPopover>
           </div>
           <SegmentChart data={segmentData} />
         </div>

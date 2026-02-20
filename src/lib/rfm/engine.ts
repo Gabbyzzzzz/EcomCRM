@@ -94,7 +94,26 @@ interface CustomerUpdate {
  * actually changed as a result of this recalculation.
  */
 export async function recalculateAllRfmScores(shopId: string): Promise<SegmentChange[]> {
-  // ── Step 1: compute NTILE scores in PostgreSQL ──────────────────────────────
+  // ── Step 1: clear scores for zero-purchase customers ────────────────────────
+  // Customers with no orders must not participate in NTILE ranking — if they did,
+  // NTILE would distribute them across quintiles 1–N based purely on row position,
+  // assigning mid-range scores (e.g. 3) to customers with $0 spend and 0 orders.
+  // Clearing first ensures they show "Not scored" in the UI.
+  await db
+    .update(customers)
+    .set({ rfmR: null, rfmF: null, rfmM: null, segment: null })
+    .where(
+      sql`shop_id = ${shopId}
+        AND deleted_at IS NULL
+        AND (order_count = 0 OR order_count IS NULL)`
+    )
+
+  // ── Step 2: compute NTILE scores — purchasers only ──────────────────────────
+  // Only customers with at least one order participate in the quintile ranking.
+  // NTILE ordering:
+  //   R: ASC NULLS FIRST on last_order_at  → most recent buyer = quintile 5
+  //   F: ASC NULLS FIRST on order_count    → most frequent buyer = quintile 5
+  //   M: ASC NULLS FIRST on total_spent    → highest spender = quintile 5
   const rows = await db.execute<ScoreRow>(sql`
     SELECT
       id,
@@ -105,13 +124,14 @@ export async function recalculateAllRfmScores(shopId: string): Promise<SegmentCh
     FROM ${customers}
     WHERE shop_id = ${shopId}
       AND deleted_at IS NULL
+      AND order_count > 0
   `)
 
   if (!rows || rows.length === 0) {
     return []
   }
 
-  // ── Step 2: compute new segments in application memory ─────────────────────
+  // ── Step 3: compute new segments in application memory ─────────────────────
   // (NTILE values already resolved by postgres; segment mapping is a pure function)
   const updates: CustomerUpdate[] = rows.map((row: ScoreRow) => ({
     id: row.id,
@@ -122,7 +142,7 @@ export async function recalculateAllRfmScores(shopId: string): Promise<SegmentCh
     oldSegment: row.old_segment ?? null,
   }))
 
-  // ── Step 3: batch-update customers in chunks of 100 ──────────────────────
+  // ── Step 4: batch-update purchaser customers in chunks of 100 ───────────────
   const CHUNK_SIZE = 100
 
   for (let i = 0; i < updates.length; i += CHUNK_SIZE) {
@@ -156,7 +176,7 @@ export async function recalculateAllRfmScores(shopId: string): Promise<SegmentCh
     `)
   }
 
-  // ── Step 4: collect segment changes ─────────────────────────────────────────
+  // ── Step 5: collect segment changes ─────────────────────────────────────────
   const changes: SegmentChange[] = updates
     .filter((u) => u.oldSegment !== u.newSegment)
     .map((u) => ({

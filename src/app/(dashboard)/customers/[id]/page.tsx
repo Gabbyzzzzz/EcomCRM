@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { env } from '@/lib/env'
 import { getCustomerProfile, getCustomerOrders, getCustomerMessages } from '@/lib/db/queries'
+import { InfoPopover } from '@/components/info-popover'
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
@@ -182,36 +183,18 @@ export default async function CustomerProfilePage({
         <div className="rounded-lg border bg-card p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">RFM Scores</h2>
-            {/* CSS-only info tooltip */}
-            <div className="group relative inline-flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-3.5 w-3.5 text-muted-foreground cursor-help"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-72 rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
-                <p className="font-medium mb-1.5">How RFM scoring works</p>
-                <p className="text-muted-foreground mb-2">
-                  Each score ranks this customer against all others in your store on a 1–5 scale (5 = best).
-                </p>
-                <ul className="flex flex-col gap-1 text-muted-foreground">
-                  <li><span className="font-medium text-foreground">R (Recency)</span> — how recently they bought. 5 = most recent purchaser.</li>
-                  <li><span className="font-medium text-foreground">F (Frequency)</span> — how often they buy. 5 = most frequent buyer.</li>
-                  <li><span className="font-medium text-foreground">M (Monetary)</span> — how much they spend. 5 = highest spender.</li>
-                </ul>
-                <p className="text-muted-foreground mt-2">Scores update daily via the RFM recalculation cron.</p>
-                {/* Tooltip arrow */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-border" />
-              </div>
-            </div>
+            <InfoPopover side="bottom" align="start" width="w-72">
+              <p className="font-medium mb-1.5">How RFM scoring works</p>
+              <p className="text-muted-foreground mb-2">
+                Each score ranks this customer against all others in your store on a 1–5 scale (5 = best). Only customers with purchase history are scored.
+              </p>
+              <ul className="flex flex-col gap-1 text-muted-foreground">
+                <li><span className="font-medium text-foreground">R (Recency)</span> — how recently they bought. 5 = most recent purchaser.</li>
+                <li><span className="font-medium text-foreground">F (Frequency)</span> — how often they buy. 5 = most frequent buyer.</li>
+                <li><span className="font-medium text-foreground">M (Monetary)</span> — how much they spend. 5 = highest spender.</li>
+              </ul>
+              <p className="text-muted-foreground mt-2">Scores update daily via the RFM recalculation cron.</p>
+            </InfoPopover>
           </div>
           {customer.rfmR == null && customer.rfmF == null && customer.rfmM == null ? (
             <p className="text-sm text-muted-foreground">Not scored yet</p>
