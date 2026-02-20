@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 ## Current Position
 
 Phase: 7 of 7 (AI Insights) — Active
-Plan: 1 of 2 — plan 01 complete
-Status: Active — Phase 7 plan 01 complete
-Last activity: 2026-02-20 — Phase 7 plan 01 complete: Vercel AI SDK provider abstraction, generateCustomerInsight, /api/customers/[id]/insights, CustomerAiInsight component, customer 360 profile integration
+Plan: 2 of 2 — plan 02 checkpoint pending (human-verify)
+Status: Active — Phase 7 plan 02 task 1 complete; awaiting human verification (Task 2)
+Last activity: 2026-02-20 — Phase 7 plan 02 task 1 complete: generate-copy API endpoint, EmailCopyGenerator component, automation detail page, clickable list names
 
 Progress: [██████████] 99%
 
@@ -103,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 07-ai-insights]: Provider factory getModel() selects google('gemini-1.5-flash') by default, anthropic('claude-sonnet-4-20250514') when AI_PROVIDER=anthropic — no code changes needed to switch providers
 - [Phase 07-ai-insights]: GOOGLE_GENERATIVE_AI_API_KEY is required, ANTHROPIC_API_KEY is optional — matches primary/fallback provider model
 - [Phase 07-ai-insights]: generateCustomerInsight and generateEmailCopy wrap entire body in try/catch returning fallback values — AI errors never propagate to profile page or automation builder
+- [Phase 07-ai-insights]: params typed as Promise<{ id: string }> in API route and detail page — Next.js 15 async params convention, consistent with customers/[id] pattern
+- [Phase 07-ai-insights]: noTemplate guard on EmailCopyGenerator disables Generate Suggestions when emailTemplateId is null — prevents API calls for non-email automations (tag-only)
 
 ### Pending Todos
 
@@ -116,5 +118,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed 07-01-PLAN.md — Vercel AI SDK integration, generateCustomerInsight, /api/customers/[id]/insights, CustomerAiInsight component
+Stopped at: 07-02-PLAN.md Task 2 (checkpoint:human-verify) — awaiting end-to-end verification of AI-01 (customer insight) and AI-02 (email copy generation)
 Resume file: None
