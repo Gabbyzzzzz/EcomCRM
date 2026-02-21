@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 7 — AI Insights
+**Current focus:** Milestone v1.1 — Make It Real - Production-Ready Automations
 
 ## Current Position
 
-Phase: 7 of 7 (AI Insights) — Complete
-Plan: 2 of 2 — complete
-Status: ALL PHASES COMPLETE — human verification approved 2026-02-21
-Last activity: 2026-02-21 — Phase 7 plan 02 task 2 verified: AI-01 (customer insight) and AI-02 (email copy generation) confirmed working end-to-end
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-21 — Milestone v1.1 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 

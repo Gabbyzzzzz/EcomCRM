@@ -8,29 +8,47 @@ A lightweight CRM + marketing automation tool for Shopify small-team merchants. 
 
 Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
 
+## Current Milestone: v1.1 Make It Real - Production-Ready Automations
+
+**Goal:** Make the automation pipeline actually fire end-to-end, add configuration and email customization UI, and polish the whole app for demo-readiness.
+
+**Target features:**
+- End-to-end pipeline debug and verification (webhook → Inngest → engine → email)
+- Editable automation flow configuration (delay, thresholds, discount code, subject, body)
+- Email content customization with live preview
+- Test send capability with customized content
+- UI polish across dashboard, customer list, and automation pages
+- Fix automation toggle persistence and badge sync
+
 ## Requirements
 
 ### Validated
 
-- ✓ Next.js 14 (App Router) + TypeScript scaffolding — existing
-- ✓ Tailwind CSS + shadcn/ui configured — existing
-- ✓ All dependencies installed (Drizzle, Supabase, Inngest, Resend, Recharts, Claude SDK) — existing
+- ✓ Next.js 14 (App Router) + TypeScript scaffolding — v1.0
+- ✓ Tailwind CSS + shadcn/ui configured — v1.0
+- ✓ All dependencies installed (Drizzle, Supabase, Inngest, Resend, Recharts, Claude SDK) — v1.0
+- ✓ PostgreSQL schema (Customer, Order, Automation, MessageLog) via Drizzle + Supabase — v1.0
+- ✓ Shopify OAuth integration (GraphQL client with rate limit handling) — v1.0
+- ✓ Full customer + order sync (bulk + incremental via webhooks) — v1.0
+- ✓ RFM scoring engine (quintile-based, auto-segments into 7 labels) — v1.0
+- ✓ Dashboard with KPIs (total customers, revenue, churn alerts, segment distribution) — v1.0
+- ✓ Customer list with segment filters and search — v1.0
+- ✓ Customer 360° profile (order timeline, RFM scores, tags, lifecycle stage) — v1.0
+- ✓ 5 preset email automation flows (welcome, abandoned cart, repurchase, winback, VIP) — v1.0
+- ✓ Automation engine (trigger evaluation, delay handling, action execution) — v1.0
+- ✓ Email sending via Resend + React Email templates — v1.0
+- ✓ AI-powered customer insights via Claude API — v1.0
+- ✓ Inngest cron jobs (daily RFM recalculation, automation checks) — v1.0
+- ✓ Webhook ingestion (orders/create, orders/updated, customers/create, customers/update) — v1.0
 
 ### Active
 
-- [ ] PostgreSQL schema (Customer, Order, Automation, MessageLog) via Drizzle + Supabase
-- [ ] Shopify Custom App integration (GraphQL client with rate limit handling)
-- [ ] Full customer + order sync (bulk + incremental via webhooks)
-- [ ] RFM scoring engine (quintile-based, auto-segments into 7 labels)
-- [ ] Dashboard with KPIs (total customers, revenue, churn alerts, segment distribution)
-- [ ] Customer list with segment filters and search
-- [ ] Customer 360° profile (order timeline, RFM scores, tags, lifecycle stage)
-- [ ] 5 preset email automation flows (welcome, abandoned cart, repurchase, winback, VIP)
-- [ ] Automation engine (trigger evaluation, delay handling, action execution)
-- [ ] Email sending via Resend + React Email templates
-- [ ] AI-powered customer insights via Claude API
-- [ ] Inngest cron jobs (daily RFM recalculation, automation checks)
-- [ ] Webhook ingestion (orders/create, orders/updated, customers/create, customers/update)
+- [ ] End-to-end automation pipeline verified working with real Shopify data
+- [ ] Automation flow configuration editable in UI (delay, thresholds, discount, subject, body)
+- [ ] Email content customization with live preview on automation detail page
+- [ ] Test send capability with customized email content
+- [ ] UI polish for demo-readiness (dashboard, customer list, automations)
+- [ ] Automation toggle state persists to database and badge syncs
 
 ### Out of Scope
 
@@ -69,4 +87,4 @@ Shopify customers auto-segmented by RFM score, with triggered email flows that a
 | Claude API for insights | Portfolio differentiator, AI layer on top of CRM data | — Pending |
 
 ---
-*Last updated: 2026-02-19 after initialization*
+*Last updated: 2026-02-21 after milestone v1.1 started*
