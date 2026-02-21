@@ -97,28 +97,37 @@ All 50 requirements shipped in v1.0 (Phases 1–7). See MILESTONES.md for detail
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | — | Pending |
-| PIPE-02 | — | Pending |
-| PIPE-03 | — | Pending |
-| PIPE-04 | — | Pending |
-| CFG-01 | — | Pending |
-| CFG-02 | — | Pending |
-| CFG-03 | — | Pending |
-| CFG-04 | — | Pending |
-| CFG-05 | — | Pending |
-| ECUST-01 | — | Pending |
-| ECUST-02 | — | Pending |
-| TSEND-01 | — | Pending |
-| TSEND-02 | — | Pending |
-| POLISH-01 | — | Pending |
-| POLISH-02 | — | Pending |
-| POLISH-03 | — | Pending |
+| FOUND-01 through FOUND-06 | Phase 1 | Complete |
+| SHOP-01 through SHOP-09 | Phase 2 | Complete |
+| RFM-01 through RFM-06 | Phase 3 | Complete |
+| EMAIL-01 through EMAIL-06 | Phase 4 | Complete |
+| AUTO-01 through AUTO-07 | Phase 5 | Complete |
+| FLOW-01 through FLOW-05 | Phase 5 | Complete |
+| CRM-01 through CRM-04 | Phase 6 | Complete |
+| DASH-01 through DASH-05 | Phase 6 | Complete |
+| AI-01 through AI-02 | Phase 7 | Complete |
+| PIPE-01 | Phase 8 | Pending |
+| PIPE-02 | Phase 8 | Pending |
+| PIPE-03 | Phase 8 | Pending |
+| PIPE-04 | Phase 8 | Pending |
+| CFG-01 | Phase 9 | Pending |
+| CFG-02 | Phase 9 | Pending |
+| CFG-03 | Phase 9 | Pending |
+| CFG-04 | Phase 9 | Pending |
+| CFG-05 | Phase 9 | Pending |
+| ECUST-01 | Phase 9 | Pending |
+| ECUST-02 | Phase 9 | Pending |
+| TSEND-01 | Phase 10 | Pending |
+| TSEND-02 | Phase 10 | Pending |
+| POLISH-01 | Phase 11 | Pending |
+| POLISH-02 | Phase 11 | Pending |
+| POLISH-03 | Phase 11 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16 (roadmap pending)
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-21 after milestone v1.1 requirements defined*
+*Last updated: 2026-02-21 after v1.1 roadmap phases 8-11 defined*

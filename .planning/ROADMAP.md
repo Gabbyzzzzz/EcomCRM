@@ -1,26 +1,14 @@
 # Roadmap: EcomCRM
 
-## Overview
+## Milestones
 
-EcomCRM builds a complete Shopify CRM and marketing automation loop across 7 phases, each delivering a distinct, verifiable capability. The dependency chain is strict: schema must exist before sync can run, sync must have real data before RFM can score, email compliance must be in place before automations can send, and the UI has meaningful data only after all backend phases are complete. Each phase is independently verifiable before the next begins.
+- ✅ **v1.0 Full CRM Loop** - Phases 1-7 (shipped 2026-02-21)
+- 🚧 **v1.1 Make It Real - Production-Ready Automations** - Phases 8-11 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [ ] **Phase 1: Foundation** - Schema, DB connection, env, and Inngest registered
-- [x] **Phase 2: Shopify Integration** - Real customer and order data flowing into the DB
-- [x] **Phase 3: RFM Engine** - Customers auto-segmented into 7 labeled groups
-- [x] **Phase 4: Email Infrastructure** - Compliant email sending with suppression and templates
-- [ ] **Phase 5: Automation Engine** - Triggered email flows firing on real customer events
-- [ ] **Phase 6: Dashboard and Customer UI** - Full CRM interface over live data
-- [ ] **Phase 7: AI Insights** - Per-customer narratives and copy generation via Claude
-
-## Phase Details
+<details>
+<summary>✅ v1.0 Full CRM Loop (Phases 1-7) - SHIPPED 2026-02-21</summary>
 
 ### Phase 1: Foundation
 **Goal**: The data layer and configuration baseline exists — every subsequent phase can build without rework
@@ -34,8 +22,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Drizzle schema (4 tables + 6 enums), db singleton with prepare: false, drizzle.config.ts, generate migration SQL
-- [ ] 01-02-PLAN.md — Install @react-email/render + decimal.js, next.config serverExternalPackages, Zod env validation, .env.local.example, Inngest client + serve handler
+- [x] 01-01-PLAN.md — Drizzle schema (4 tables + 6 enums), db singleton with prepare: false, drizzle.config.ts, generate migration SQL
+- [x] 01-02-PLAN.md — Install @react-email/render + decimal.js, next.config serverExternalPackages, Zod env validation, .env.local.example, Inngest client + serve handler
 
 ### Phase 2: Shopify Integration
 **Goal**: Real Shopify customer and order data is in the database, kept current via webhooks
@@ -50,11 +38,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Schema extensions (sync_logs, webhook_deliveries, is_historical, soft-delete) and Shopify GraphQL client with cost-based rate limiting
-- [ ] 02-02-PLAN.md — Bulk sync pipeline, webhook endpoint with HMAC + idempotency, incremental handlers, Inngest functions
-- [ ] 02-03-PLAN.md — Sync status nav indicator (idle/spinning/stale), settings/sync page, live progress, force sync
-- [ ] 02-04-PLAN.md — Gap closure: fix bulk_operations/finish failure path (syncLog marked failed) + add onFailure dead-letter handler + fix last-write-wins timestamp comparison in upsert queries
-- [ ] 02-05-PLAN.md — Gap closure: update documentation (CLAUDE.md, REQUIREMENTS.md, codebase map) to reflect SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET replacing SHOPIFY_ACCESS_TOKEN
+- [x] 02-01-PLAN.md — Schema extensions (sync_logs, webhook_deliveries, is_historical, soft-delete) and Shopify GraphQL client with cost-based rate limiting
+- [x] 02-02-PLAN.md — Bulk sync pipeline, webhook endpoint with HMAC + idempotency, incremental handlers, Inngest functions
+- [x] 02-03-PLAN.md — Sync status nav indicator (idle/spinning/stale), settings/sync page, live progress, force sync
+- [x] 02-04-PLAN.md — Gap closure: fix bulk_operations/finish failure path (syncLog marked failed) + add onFailure dead-letter handler + fix last-write-wins timestamp comparison in upsert queries
+- [x] 02-05-PLAN.md — Gap closure: update documentation (CLAUDE.md, REQUIREMENTS.md, codebase map) to reflect SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET replacing SHOPIFY_ACCESS_TOKEN
 
 ### Phase 3: RFM Engine
 **Goal**: Every customer in the database has an RFM score and a named segment that updates automatically
@@ -69,8 +57,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — RFM scoring engine with PostgreSQL NTILE(5) window functions and segment mapping, customer counter recalculation query
-- [ ] 03-02-PLAN.md — Daily Inngest cron for full RFM recalculation, per-order customer counter updates, segment-change event emission
+- [x] 03-01-PLAN.md — RFM scoring engine with PostgreSQL NTILE(5) window functions and segment mapping, customer counter recalculation query
+- [x] 03-02-PLAN.md — Daily Inngest cron for full RFM recalculation, per-order customer counter updates, segment-change event emission
 
 ### Phase 4: Email Infrastructure
 **Goal**: Email can be sent to opted-in customers with full compliance — no unsubscribes honored, no sends to bounced addresses
@@ -85,8 +73,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Schema extensions (suppressions table, marketing_opted_out column, messageStatus enum), env vars, unsubscribe token utility, 5 React Email templates, Resend send wrapper with idempotency + compliance headers + suppression gate
-- [ ] 04-02-PLAN.md — Resend bounce/complaint webhook endpoint, unsubscribe API with Shopify tag sync, unsubscribe confirmation page with undo/resubscribe
+- [x] 04-01-PLAN.md — Schema extensions (suppressions table, marketing_opted_out column, messageStatus enum), env vars, unsubscribe token utility, 5 React Email templates, Resend send wrapper with idempotency + compliance headers + suppression gate
+- [x] 04-02-PLAN.md — Resend bounce/complaint webhook endpoint, unsubscribe API with Shopify tag sync, unsubscribe confirmation page with undo/resubscribe
 
 ### Phase 5: Automation Engine
 **Goal**: All 5 preset flows evaluate triggers, wait delays, and execute actions on real customer events — with no duplicate sends and no fires on historical data
@@ -102,8 +90,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Automation engine core: engine.ts + actions.ts + presets.ts + DB query helpers + event-driven Inngest functions (first_order, segment_change, cart_abandoned)
-- [ ] 05-02-PLAN.md — Days-since-order daily cron + preset seed API + automation PATCH toggle API + automation list page (with human-verify checkpoint)
+- [x] 05-01-PLAN.md — Automation engine core: engine.ts + actions.ts + presets.ts + DB query helpers + event-driven Inngest functions (first_order, segment_change, cart_abandoned)
+- [x] 05-02-PLAN.md — Days-since-order daily cron + preset seed API + automation PATCH toggle API + automation list page (with human-verify checkpoint)
 
 ### Phase 6: Dashboard and Customer UI
 **Goal**: The CRM interface surfaces all data — KPIs, segment health, customer profiles, and automation status — over live data from the database
@@ -118,9 +106,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Dashboard page: KPI cards, segment distribution chart, revenue over time chart, churn alert widget, recent activity feed
-- [ ] 06-02-PLAN.md — Customer list page: paginated table with search by name/email, segment filter, API endpoint
-- [ ] 06-03-PLAN.md — Customer 360 profile page: customer info, RFM scores, order timeline, tags, message history (with human-verify checkpoint)
+- [x] 06-01-PLAN.md — Dashboard page: KPI cards, segment distribution chart, revenue over time chart, churn alert widget, recent activity feed
+- [x] 06-02-PLAN.md — Customer list page: paginated table with search by name/email, segment filter, API endpoint
+- [x] 06-03-PLAN.md — Customer 360 profile page: customer info, RFM scores, order timeline, tags, message history (with human-verify checkpoint)
 
 ### Phase 7: AI Insights
 **Goal**: The Claude API adds per-customer intelligence and email copy generation on top of the complete data layer
@@ -132,20 +120,91 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — AI insights library (generateCustomerInsight + generateEmailCopy), customer profile insight API + async client component
-- [ ] 07-02-PLAN.md — Automation detail page with AI email copy generator, clickable automation list rows (with human-verify checkpoint)
+- [x] 07-01-PLAN.md — AI insights library (generateCustomerInsight + generateEmailCopy), customer profile insight API + async client component
+- [x] 07-02-PLAN.md — Automation detail page with AI email copy generator, clickable automation list rows (with human-verify checkpoint)
+
+</details>
+
+---
+
+### 🚧 v1.1 Make It Real - Production-Ready Automations (In Progress)
+
+**Milestone Goal:** Make the automation pipeline actually fire end-to-end, add configuration and email customization UI, and polish the whole app for demo-readiness.
+
+#### Phase 8: Pipeline Verification and Toggle Fix
+**Goal**: The full automation pipeline is verified working with real Shopify data and toggle state persists correctly to the database
+**Depends on**: Phase 7
+**Requirements**: PIPE-01, PIPE-02, PIPE-03, PIPE-04
+**Success Criteria** (what must be TRUE):
+  1. A real Shopify order event flows through the full chain — webhook receives it, Inngest picks it up, the automation engine evaluates it, and the email arrives in the recipient inbox
+  2. All 5 preset flows (welcome, abandoned cart, repurchase, winback, VIP) can be triggered manually with test event data and produce the correct email send
+  3. Toggling an automation off and reloading the page shows it still off — the enabled state persists to the database row, not only local UI state
+  4. The automation badge shows "Active" when the toggle is ON and "Inactive" when OFF, reflecting the persisted database value on every page load
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01: Pipeline trace and debug — trace each flow trigger, fix any broken Inngest event wiring, verify email delivery end-to-end with real store data
+- [ ] 08-02: Toggle persistence fix — patch PATCH /api/automations/[id] to write enabled field to DB and update badge to read from server state
+
+#### Phase 9: Configuration and Email Customization UI
+**Goal**: Users can edit every meaningful automation parameter in the UI and see a live preview of the resulting email before saving
+**Depends on**: Phase 8
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04, CFG-05, ECUST-01, ECUST-02
+**Success Criteria** (what must be TRUE):
+  1. On the automation detail page, user can change delay value/unit, trigger threshold, discount code, email subject, and body text — all fields are editable inline
+  2. Clicking Save commits all changes to trigger_config and action_config JSON columns in the database; clicking Cancel reverts to the last saved state; a success toast confirms the save
+  3. The live email preview panel on the automation detail page re-renders in real time as the user edits subject, body, or discount fields — no save required to see the preview
+  4. When an automation fires after configuration changes, the sent email uses the customized subject, headline, body text, CTA, and discount code — not the original template defaults
+**Plans**: TBD
+
+Plans:
+- [ ] 09-01: Automation config form — inline editable fields (delay, threshold, discount, subject, body) with Save/Cancel and zod-validated PATCH API
+- [ ] 09-02: Live email preview panel — server-rendered React Email component preview that updates on field change; wire customized content into automation send path
+
+#### Phase 10: Test Send
+**Goal**: Users can send the customized email to their own inbox directly from the automation detail page
+**Depends on**: Phase 9
+**Requirements**: TSEND-01, TSEND-02
+**Success Criteria** (what must be TRUE):
+  1. Clicking "Send Test Email" on the automation detail page delivers a real email to the logged-in user's inbox within seconds — no automation trigger or delay required
+  2. The test email uses the current in-form content (subject, body, discount code) rather than the last saved values — edits in progress are reflected without requiring a save first
+**Plans**: TBD
+
+Plans:
+- [ ] 10-01: Test send API and button — POST /api/automations/[id]/test-send accepts current form content, renders the template with those values, and sends via Resend to the user's email address
+
+#### Phase 11: UI Polish
+**Goal**: Every page the user sees during a demo is clean, handles loading states gracefully, and has clear empty states when no data exists
+**Depends on**: Phase 8
+**Requirements**: POLISH-01, POLISH-02, POLISH-03
+**Success Criteria** (what must be TRUE):
+  1. The dashboard page shows skeleton loaders during data fetch, a clear empty state when no customers exist, and all KPI cards render without layout shifts
+  2. The customer list page shows a skeleton table during load, a "No customers found" empty state with guidance, and segment filter chips have consistent active/inactive styling
+  3. The automation pages (list and detail) show loading skeletons, have consistent card styling, and display empty states when no automations are seeded
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: Dashboard and customer list polish — skeleton loaders, empty states, consistent badge/chip styles across both pages
+- [ ] 11-02: Automation pages polish — skeleton loaders, empty states, card layout consistency on list and detail pages
+
+---
 
 ## Progress
 
 **Execution Order:**
-Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5 -> 6 -> 7
+v1.0: 1 → 2 → 3 → 4 → 5 → 6 → 7 (complete)
+v1.1: 8 → 9 → 10, 8 → 11 (Phase 11 can run in parallel with 9-10)
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 2/2 | ✓ Complete | 2026-02-19 |
-| 2. Shopify Integration | 5/5 | ✓ Complete | 2026-02-19 |
-| 3. RFM Engine | 2/2 | ✓ Complete | 2026-02-19 |
-| 4. Email Infrastructure | 2/2 | ✓ Complete | 2026-02-19 |
-| 5. Automation Engine | 2/2 | ✓ Complete | 2026-02-19 |
-| 6. Dashboard and Customer UI | 3/3 | ✓ Complete | 2026-02-19 |
-| 7. AI Insights | 2/2 | ✓ Complete | 2026-02-21 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v1.0 | 2/2 | Complete | 2026-02-19 |
+| 2. Shopify Integration | v1.0 | 5/5 | Complete | 2026-02-19 |
+| 3. RFM Engine | v1.0 | 2/2 | Complete | 2026-02-19 |
+| 4. Email Infrastructure | v1.0 | 2/2 | Complete | 2026-02-19 |
+| 5. Automation Engine | v1.0 | 2/2 | Complete | 2026-02-19 |
+| 6. Dashboard and Customer UI | v1.0 | 3/3 | Complete | 2026-02-19 |
+| 7. AI Insights | v1.0 | 2/2 | Complete | 2026-02-21 |
+| 8. Pipeline Verification and Toggle Fix | v1.1 | 0/2 | Not started | - |
+| 9. Configuration and Email Customization UI | v1.1 | 0/2 | Not started | - |
+| 10. Test Send | v1.1 | 0/1 | Not started | - |
+| 11. UI Polish | v1.1 | 0/2 | Not started | - |
