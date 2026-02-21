@@ -9,7 +9,7 @@ function getModel() {
   if (env.AI_PROVIDER === 'anthropic') {
     return anthropic('claude-sonnet-4-20250514')
   }
-  return google('gemini-1.5-flash')
+  return google('gemini-2.0-flash')
 }
 
 // ─── Customer insight ─────────────────────────────────────────────────────────
@@ -111,7 +111,8 @@ export async function generateEmailCopy(params: EmailCopyParams): Promise<EmailC
       maxOutputTokens: 600,
     })
 
-    return JSON.parse(text) as EmailCopySuggestions
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+    return JSON.parse(cleaned) as EmailCopySuggestions
   } catch (error) {
     console.error('[AI insights] generateEmailCopy failed:', error)
     return { suggestions: [] }
