@@ -127,7 +127,7 @@ Plans:
 
 ---
 
-### 🚧 v1.1 Make It Real - Production-Ready Automations (In Progress)
+### v1.1 Make It Real - Production-Ready Automations (In Progress)
 
 **Milestone Goal:** Make the automation pipeline actually fire end-to-end, add configuration and email customization UI, and polish the whole app for demo-readiness.
 
@@ -140,11 +140,11 @@ Plans:
   2. All 5 preset flows (welcome, abandoned cart, repurchase, winback, VIP) can be triggered manually with test event data and produce the correct email send
   3. Toggling an automation off and reloading the page shows it still off — the enabled state persists to the database row, not only local UI state
   4. The automation badge shows "Active" when the toggle is ON and "Inactive" when OFF, reflecting the persisted database value on every page load
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Pipeline trace and debug — trace each flow trigger, fix any broken Inngest event wiring, verify email delivery end-to-end with real store data
-- [ ] 08-02: Toggle persistence fix — patch PATCH /api/automations/[id] to write enabled field to DB and update badge to read from server state
+- [ ] 08-01-PLAN.md — Pipeline wiring audit, payload format fixes, and manual test-trigger API endpoint for all 5 automation flows
+- [ ] 08-02-PLAN.md — Badge text fix (Active/Inactive), PATCH endpoint enhancement, toggle persistence verification with human checkpoint
 
 #### Phase 9: Configuration and Email Customization UI
 **Goal**: Users can edit every meaningful automation parameter in the UI and see a live preview of the resulting email before saving
@@ -192,8 +192,8 @@ Plans:
 ## Progress
 
 **Execution Order:**
-v1.0: 1 → 2 → 3 → 4 → 5 → 6 → 7 (complete)
-v1.1: 8 → 9 → 10, 8 → 11 (Phase 11 can run in parallel with 9-10)
+v1.0: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 (complete)
+v1.1: 8 -> 9 -> 10, 8 -> 11 (Phase 11 can run in parallel with 9-10)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -204,7 +204,7 @@ v1.1: 8 → 9 → 10, 8 → 11 (Phase 11 can run in parallel with 9-10)
 | 5. Automation Engine | v1.0 | 2/2 | Complete | 2026-02-19 |
 | 6. Dashboard and Customer UI | v1.0 | 3/3 | Complete | 2026-02-19 |
 | 7. AI Insights | v1.0 | 2/2 | Complete | 2026-02-21 |
-| 8. Pipeline Verification and Toggle Fix | v1.1 | 0/2 | Not started | - |
+| 8. Pipeline Verification and Toggle Fix | v1.1 | 0/2 | In progress | - |
 | 9. Configuration and Email Customization UI | v1.1 | 0/2 | Not started | - |
 | 10. Test Send | v1.1 | 0/1 | Not started | - |
 | 11. UI Polish | v1.1 | 0/2 | Not started | - |
