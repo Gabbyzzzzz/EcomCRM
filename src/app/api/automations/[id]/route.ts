@@ -8,13 +8,14 @@ const patchSchema = z.object({
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const body = await req.json()
   const parsed = patchSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
   }
-  await setAutomationEnabled(params.id, parsed.data.enabled)
+  await setAutomationEnabled(id, parsed.data.enabled)
   return NextResponse.json({ ok: true })
 }
