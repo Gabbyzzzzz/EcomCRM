@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 3 — RFM Engine
+**Current focus:** Phase 7 — AI Insights
 
 ## Current Position
 
-Phase: 3 of 7 (RFM Engine)
-Plan: 0 of 2 — ready to plan
-Status: Active — Phase 2 fully verified (5/5, human approved), ready for Phase 3
-Last activity: 2026-02-19 — Phase 2 complete: gap closure plans 02-04/02-05 executed, verification passed
+Phase: 7 of 7 (AI Insights) — Complete
+Plan: 2 of 2 — complete
+Status: ALL PHASES COMPLETE — human verification approved 2026-02-21
+Last activity: 2026-02-21 — Phase 7 plan 02 task 2 verified: AI-01 (customer insight) and AI-02 (email copy generation) confirmed working end-to-end
 
-Progress: [█████░░░░░] 40%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 4 min
-- Total execution time: 0.30 hours
+- Total plans completed: 10
+- Average duration: 3.8 min
+- Total execution time: 0.57 hours
 
 **By Phase:**
 
@@ -29,10 +29,15 @@ Progress: [█████░░░░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 6 min | 3 min |
 | 02-shopify-integration | 5/5 | 18 min | 3.6 min |
+| 03-rfm-engine | 2/2 | 6 min | 3 min |
+| 04-email-infrastructure | 2/2 | 9 min | 4.5 min |
+| 05-automation-engine | 2/2 | 7 min | 3.5 min |
+| 06-dashboard-and-customer-ui | 3/3 | 17 min | 5.7 min |
+| 07-ai-insights | 2/2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 02-01 (3 min), 02-02 (6 min), 02-03 (8 min), 02-04 (2 min)
-- Trend: Stable
+- Last 5 plans: 06-01 (8 min), 06-02 (5 min), 06-03 (4 min), 07-01 (3 min), 07-02 (2 min)
+- Trend: Stable — all 7 phases complete
 
 *Updated after each plan completion*
 
@@ -66,6 +71,40 @@ Recent decisions affecting current work:
 - SyncActions extracted as separate client component from settings page to keep page.tsx as Server Component
 - [Phase 02-shopify-integration]: upsertCustomer/upsertOrder setWhere uses or(isNull, lte) timestamp guards — older webhook replays cannot overwrite newer stored data
 - [Phase 02-shopify-integration]: updateWebhookDeliveryStatus uses plain .update() (not insert-or-ignore) to flip existing processing row to dead_letter after Inngest retries exhausted
+- [Phase 03-rfm-engine]: db.execute<T>() returns RowList<T[]> which IS the array directly — no .rows property; T must extend Record<string,unknown> per drizzle-orm postgres-js constraint
+- [Phase 03-rfm-engine]: NTILE ordering ASC NULLS FIRST for all three RFM dimensions ensures NULL/zero customers receive quintile 1 (lowest score)
+- [Phase 03-rfm-engine]: mapRfmToSegment priority order: champion > loyal > new > potential > at_risk > hibernating > lost; covers all 125 R/F/M combinations
+- [Phase 03-rfm-engine]: dailyRfmRecalculation uses step.run() for two distinct Inngest steps — scoring and event-emission are independently resumable on retry
+- [Phase 03-rfm-engine]: Counter updates (per-event) use updateCustomerCountersFromOrders; full NTILE quintile recalculation (daily cron) kept separate to avoid expensive window queries on every webhook
+- [Phase 04-email-infrastructure]: templateFactory pattern for sendMarketingEmail — (unsubscribeUrl: string) => ReactElement ensures List-Unsubscribe header URL == email body URL
+- [Phase 04-email-infrastructure]: SHOPIFY_CLIENT_SECRET used as HMAC signing key for unsubscribe tokens — no new secret needed, key already scoped to shop
+- [Phase 04-email-infrastructure]: Unsubscribe tokens do not expire — links in sent emails must always work regardless of age
+- [Phase 04-email-infrastructure]: All email send failures return SendResult (never throw) — email errors are non-fatal to automation engine
+- [Phase 04-email-infrastructure]: resend.emails.send(options, { idempotencyKey }) — second argument pattern per Resend SDK v6+
+- [Phase 04-email-infrastructure]: Single /api/unsubscribe route handles GET link-click, POST one-click RFC 8058, and POST resubscribe flows — distinguished by method + form body
+- [Phase 04-email-infrastructure]: Shopify tagsAdd/tagsRemove is best-effort on unsubscribe — tag sync failure must not block compliance opt-out
+- [Phase 04-email-infrastructure]: svix webhook verification for Resend is a known gap — accepted per plan spec, TODO comment in route
+- [Phase 05-automation-engine]: eventTimestamp read from event.data in processSegmentChange — never new Date() — prevents duplicate sends on Inngest retry by keeping idempotency key stable
+- [Phase 05-automation-engine]: recalcTimestamp generated ONCE before segmentChanges loop in dailyRfmRecalculation — all events in a batch share the same timestamp for consistent idempotency
+- [Phase 05-automation-engine]: executeTagAction is best-effort (catch+log, no rethrow) — Shopify tag sync failure must not block automation engine
+- [Phase 05-automation-engine]: automation/first_order emit wrapped in try/catch in processShopifyWebhook — event emission failure must not break webhook processing
+- [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run instead of evaluateSegmentFilter — avoids JsonifyObject type incompatibility when Inngest serializes AutomationRow dates
+- [Phase 05-automation-engine]: Automations page at (dashboard)/automations/page.tsx to inherit dashboard sidebar layout via Next.js route group
+- [Phase 06-dashboard-and-customer-ui]: db.execute<T>() with single correlated-subquery SQL for getDashboardKpis — one round-trip for 4 KPIs instead of 4 separate queries
+- [Phase 06-dashboard-and-customer-ui]: shopifyUpdatedAt used as proxy for "recently moved to churn segment" in getChurnAlerts — acceptable approximation since daily RFM cron updates customers when segment changes
+- [Phase 06-dashboard-and-customer-ui]: Revenue strings converted to parseFloat only inside chart component — DB/API layers always remain Decimal/string
+- [Phase 06-dashboard-and-customer-ui]: Tooltip content={<CustomTooltip />} pattern for RevenueChart — avoids Recharts generic Tooltip type complexity
+- [Phase 06-dashboard-and-customer-ui]: Segment filter validation uses VALID_SEGMENTS string array guard (not z.enum with empty string) — avoids TS2367 narrowing error
+- [Phase 06-dashboard-and-customer-ui]: searchRef useRef tracks search alongside useState so debounce closure reads current value without stale capture
+- [Phase 06-dashboard-and-customer-ui]: lastOrderAt serialized as ISO string in server component initialData — Date objects cannot cross server/client boundary in Next.js
+- [Phase 06-dashboard-and-customer-ui]: RFM score bars use widthClasses[score-1] array (w-1/5 through w-full) — avoids dynamic Tailwind class generation, all classes statically present for purging
+- [Phase 06-dashboard-and-customer-ui]: getCustomerMessages uses leftJoin(automations) for automation name in single query — avoids N+1 queries per message
+- [Phase 07-ai-insights]: Vercel AI SDK v4 (ai@6.x) uses maxOutputTokens not maxTokens — API rename from earlier SDK versions
+- [Phase 07-ai-insights]: Provider factory getModel() selects google('gemini-1.5-flash') by default, anthropic('claude-sonnet-4-20250514') when AI_PROVIDER=anthropic — no code changes needed to switch providers
+- [Phase 07-ai-insights]: GOOGLE_GENERATIVE_AI_API_KEY is required, ANTHROPIC_API_KEY is optional — matches primary/fallback provider model
+- [Phase 07-ai-insights]: generateCustomerInsight and generateEmailCopy wrap entire body in try/catch returning fallback values — AI errors never propagate to profile page or automation builder
+- [Phase 07-ai-insights]: params typed as Promise<{ id: string }> in API route and detail page — Next.js 15 async params convention, consistent with customers/[id] pattern
+- [Phase 07-ai-insights]: noTemplate guard on EmailCopyGenerator disables Generate Suggestions when emailTemplateId is null — prevents API calls for non-email automations (tag-only)
 
 ### Pending Todos
 
@@ -74,10 +113,10 @@ None yet.
 ### Blockers/Concerns
 
 - Phase 2: Shopify `bulkOperationRunQuery` async model should be verified against current Shopify docs before implementation (research flagged as needs validation)
-- Phase 4: Resend idempotency key API support and Gmail/Yahoo `List-Unsubscribe-Post` enforcement should be verified before implementation
+- (Resolved Phase 4) Resend idempotency key and List-Unsubscribe-Post: verified — idempotencyKey is a first-class option in Resend SDK v6+, List-Unsubscribe-Post header can be set via custom headers
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Completed 02-04-PLAN.md — gap closure for sync failure path and last-write-wins fixes
+Last session: 2026-02-21
+Stopped at: ALL PHASES COMPLETE — 07-02-PLAN.md Task 2 human verification approved
 Resume file: None

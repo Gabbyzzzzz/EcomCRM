@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Schema, DB connection, env, and Inngest registered
 - [x] **Phase 2: Shopify Integration** - Real customer and order data flowing into the DB
-- [ ] **Phase 3: RFM Engine** - Customers auto-segmented into 7 labeled groups
-- [ ] **Phase 4: Email Infrastructure** - Compliant email sending with suppression and templates
+- [x] **Phase 3: RFM Engine** - Customers auto-segmented into 7 labeled groups
+- [x] **Phase 4: Email Infrastructure** - Compliant email sending with suppression and templates
 - [ ] **Phase 5: Automation Engine** - Triggered email flows firing on real customer events
 - [ ] **Phase 6: Dashboard and Customer UI** - Full CRM interface over live data
 - [ ] **Phase 7: AI Insights** - Per-customer narratives and copy generation via Claude
@@ -66,11 +66,11 @@ Plans:
   3. When a new order webhook arrives, the affected customer's order_count, total_spent, and last_order_at update within the same Inngest step that processes the event
   4. The daily Inngest cron runs, recomputes quintile boundaries across all customers, and persists updated segment assignments without manual intervention
   5. When a customer's segment changes (e.g., loyal to at_risk), a `segment_change` event is emitted that automation triggers can consume
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: RFM scoring engine with PostgreSQL window functions and segment mapping
-- [ ] 03-02: Daily cron, per-event rescoring, segment-change event emission
+- [ ] 03-01-PLAN.md — RFM scoring engine with PostgreSQL NTILE(5) window functions and segment mapping, customer counter recalculation query
+- [ ] 03-02-PLAN.md — Daily Inngest cron for full RFM recalculation, per-order customer counter updates, segment-change event emission
 
 ### Phase 4: Email Infrastructure
 **Goal**: Email can be sent to opted-in customers with full compliance — no unsubscribes honored, no sends to bounced addresses
@@ -82,11 +82,11 @@ Plans:
   3. When a customer clicks unsubscribe, the Resend webhook fires and sets `marketing_opted_out = true` on that customer within seconds — subsequent send attempts for that customer are blocked at the send layer
   4. When a hard bounce occurs, the customer is added to a suppression list and no further emails are dispatched to that address
   5. Calling `sendEmail()` twice with the same idempotency key results in exactly one email delivered — Resend deduplicates on the key
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: React Email templates (all 5), Resend send wrapper with idempotency
-- [ ] 04-02: Unsubscribe webhook, bounce suppression, compliance headers, subdomain config
+- [ ] 04-01-PLAN.md — Schema extensions (suppressions table, marketing_opted_out column, messageStatus enum), env vars, unsubscribe token utility, 5 React Email templates, Resend send wrapper with idempotency + compliance headers + suppression gate
+- [ ] 04-02-PLAN.md — Resend bounce/complaint webhook endpoint, unsubscribe API with Shopify tag sync, unsubscribe confirmation page with undo/resubscribe
 
 ### Phase 5: Automation Engine
 **Goal**: All 5 preset flows evaluate triggers, wait delays, and execute actions on real customer events — with no duplicate sends and no fires on historical data
@@ -99,12 +99,11 @@ Plans:
   4. When a customer transitions to the `champion` segment, they receive the VIP email and the "vip" tag is added back to their Shopify customer record
   5. No automation fires on orders that arrived during the initial historical backfill (is_historical = true orders are excluded from trigger evaluation)
   6. The automation list page shows all 5 preset flows; toggling enable/disable takes effect on the next evaluation cycle
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Automation trigger evaluation engine and Inngest wiring
-- [ ] 05-02: Delay handling via step.sleep(), action executors (send_email, add_tag, remove_tag)
-- [ ] 05-03: All 5 preset flow configurations, MessageLog writes, automation list page
+- [ ] 05-01-PLAN.md — Automation engine core: engine.ts + actions.ts + presets.ts + DB query helpers + event-driven Inngest functions (first_order, segment_change, cart_abandoned)
+- [ ] 05-02-PLAN.md — Days-since-order daily cron + preset seed API + automation PATCH toggle API + automation list page (with human-verify checkpoint)
 
 ### Phase 6: Dashboard and Customer UI
 **Goal**: The CRM interface surfaces all data — KPIs, segment health, customer profiles, and automation status — over live data from the database
@@ -116,12 +115,12 @@ Plans:
   3. A customer 360 profile shows order timeline, RFM scores with segment label, Shopify tags, lifecycle stage, and message history (subject, sent date, open/click status) for that customer
   4. The churn alert widget on the dashboard shows the count and names of customers who moved to at_risk, hibernating, or lost in the last 7 days
   5. The recent activity feed shows the latest automation sends and Shopify order events in reverse chronological order
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: Dashboard page (KPIs, segment chart, revenue chart, churn widget, activity feed)
-- [ ] 06-02: Customer list page (pagination, search, segment filter)
-- [ ] 06-03: Customer 360 profile page (order timeline, RFM, tags, message history)
+- [ ] 06-01-PLAN.md — Dashboard page: KPI cards, segment distribution chart, revenue over time chart, churn alert widget, recent activity feed
+- [ ] 06-02-PLAN.md — Customer list page: paginated table with search by name/email, segment filter, API endpoint
+- [ ] 06-03-PLAN.md — Customer 360 profile page: customer info, RFM scores, order timeline, tags, message history (with human-verify checkpoint)
 
 ### Phase 7: AI Insights
 **Goal**: The Claude API adds per-customer intelligence and email copy generation on top of the complete data layer
@@ -130,10 +129,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Opening a customer 360 profile generates and displays a plain-language insight narrative (e.g., "Customer is at risk: last ordered 90 days ago, down from monthly cadence. Suggest win-back offer.") using live RFM scores and order data
   2. On the automation template editor, clicking "Generate suggestions" produces AI-written subject line and body copy options that can be accepted or discarded before saving
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: AI insights library, customer profile integration, automation editor copy generation
+- [ ] 07-01-PLAN.md — AI insights library (generateCustomerInsight + generateEmailCopy), customer profile insight API + async client component
+- [ ] 07-02-PLAN.md — Automation detail page with AI email copy generator, clickable automation list rows (with human-verify checkpoint)
 
 ## Progress
 
@@ -144,8 +144,8 @@ Phases execute in dependency order: 1 -> 2 -> 3 -> 4 (can overlap with 2-3) -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | ✓ Complete | 2026-02-19 |
 | 2. Shopify Integration | 5/5 | ✓ Complete | 2026-02-19 |
-| 3. RFM Engine | 0/2 | Not started | - |
-| 4. Email Infrastructure | 0/2 | Not started | - |
-| 5. Automation Engine | 0/3 | Not started | - |
-| 6. Dashboard and Customer UI | 0/3 | Not started | - |
-| 7. AI Insights | 0/1 | Not started | - |
+| 3. RFM Engine | 2/2 | ✓ Complete | 2026-02-19 |
+| 4. Email Infrastructure | 2/2 | ✓ Complete | 2026-02-19 |
+| 5. Automation Engine | 2/2 | ✓ Complete | 2026-02-19 |
+| 6. Dashboard and Customer UI | 3/3 | ✓ Complete | 2026-02-19 |
+| 7. AI Insights | 2/2 | ✓ Complete | 2026-02-21 |

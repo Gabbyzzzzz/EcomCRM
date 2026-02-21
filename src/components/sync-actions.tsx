@@ -36,6 +36,7 @@ import { toast } from 'sonner'
 export function SyncActions() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isForceSyncing, setIsForceSyncing] = useState(false)
+  const [isRecalculating, setIsRecalculating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   // ─── Incremental sync ────────────────────────────────────────────
@@ -60,6 +61,28 @@ export function SyncActions() {
       toast.error('Failed to connect to the sync service.')
     } finally {
       setIsSyncing(false)
+    }
+  }
+
+  // ─── RFM recalculation ───────────────────────────────────────────
+
+  async function handleRecalculateRfm() {
+    setIsRecalculating(true)
+    try {
+      const res = await fetch('/api/rfm/recalculate', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast.success(
+          `RFM scores recalculated. ${data.segmentChanges ?? 0} segment change${data.segmentChanges !== 1 ? 's' : ''} detected.`
+        )
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(`Failed to recalculate RFM: ${data.error ?? 'Unknown error'}`)
+      }
+    } catch {
+      toast.error('Failed to connect to the RFM service.')
+    } finally {
+      setIsRecalculating(false)
     }
   }
 
@@ -116,6 +139,32 @@ export function SyncActions() {
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Sync Now
             </>
+          )}
+        </Button>
+      </div>
+
+      {/* RFM Recalculation */}
+      <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+        <div className="flex-1">
+          <p className="text-sm font-medium">Recalculate RFM Scores</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Recompute RFM quintile scores and segments for all customers. Run
+            this after a full sync to populate segment data.
+          </p>
+        </div>
+        <Button
+          onClick={handleRecalculateRfm}
+          disabled={isSyncing || isForceSyncing || isRecalculating}
+          variant="outline"
+          size="sm"
+        >
+          {isRecalculating ? (
+            <>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              Recalculating...
+            </>
+          ) : (
+            'Recalculate RFM'
           )}
         </Button>
       </div>

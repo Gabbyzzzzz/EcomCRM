@@ -17,9 +17,20 @@ const envSchema = z.object({
 
   // Resend (email sending)
   RESEND_API_KEY: z.string().min(1),
+  RESEND_FROM_NAME: z.string().min(1).optional().default('EcomCRM'),
+  RESEND_FROM_EMAIL: z.string().min(1).optional().default('noreply@example.com'),
+  RESEND_REPLY_TO: z.string().optional(),
 
-  // Anthropic (AI insights)
-  ANTHROPIC_API_KEY: z.string().min(1),
+  // App base URL (for unsubscribe links)
+  APP_URL: z.string().min(1).optional().default('http://localhost:3000'),
+
+  // AI Provider (Vercel AI SDK)
+  // Primary provider: Google Gemini Flash (default)
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+  // Optional fallback: Anthropic Claude
+  ANTHROPIC_API_KEY: z.string().optional(),
+  // Switch provider: 'google' (default) or 'anthropic'
+  AI_PROVIDER: z.enum(['google', 'anthropic']).default('google'),
 
   // Inngest (background jobs)
   INNGEST_EVENT_KEY: z.string().min(1),

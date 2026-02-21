@@ -84,6 +84,7 @@ function mapCustomerLine(raw: ShopifyCustomer) {
     avgOrderValue,
     firstOrderAt: null, // not available in bulk export; populated incrementally
     lastOrderAt: null,
+    shopifyCreatedAt: raw.createdAt ? new Date(raw.createdAt) : null,
     shopifyUpdatedAt: raw.updatedAt ? new Date(raw.updatedAt) : null,
   }
 }

@@ -22,6 +22,27 @@
       "when": 1771482755355,
       "tag": "0002_giant_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771506561552,
+      "tag": "0003_naive_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771510549690,
+      "tag": "0004_spooky_talisman",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771598438010,
+      "tag": "0005_add_shopify_created_at_to_customers",
+      "breakpoints": true
     }
   ]
 }
