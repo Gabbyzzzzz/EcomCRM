@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:templates": "npx tsx --env-file .env.local scripts/seed-preset-templates.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.46",
