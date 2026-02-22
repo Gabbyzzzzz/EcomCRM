@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 Full CRM Loop** — Phases 1-7 (shipped 2026-02-21)
 - ✅ **v1.1 Make It Real - Production-Ready Automations** — Phases 8-11 (shipped 2026-02-22)
-- 🚧 **v2.0 Email Intelligence + Template Editor** — Phases 12-15 (in progress)
+- ✅ **v2.0 Email Intelligence + Template Editor** — Phases 12-15 (shipped 2026-02-22)
 - 📋 **v3.0 Public App + Multi-Tenant** — Phases 16-20 (planned)
 
 ## Phases
@@ -102,8 +102,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Aggregate email performance queries, dashboard Email Performance section (PERF-01), automation list open/click rate columns (PERF-02)
-- [ ] 15-02-PLAN.md — Automation detail time-series line chart (PERF-03), verify customer profile status icons (PERF-04, already done in Phase 12)
+- [x] 15-01-PLAN.md — Aggregate email performance queries, dashboard Email Performance section (PERF-01), automation list open/click rate columns (PERF-02)
+- [x] 15-02-PLAN.md — Automation detail time-series line chart (PERF-03), verify customer profile status icons (PERF-04, already done in Phase 12)
 
 ---
 
@@ -167,7 +167,7 @@ v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 | 12. Open & Click Tracking | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 13. Email Template Editor | v2.0 | 3/3 | Complete | 2026-02-22 |
 | 14. Template ↔ Automation Linking | v2.0 | 2/2 | Complete | 2026-02-22 |
-| 15. Email Performance Dashboard | v2.0 | 0/2 | Not started | - |
+| 15. Email Performance Dashboard | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 16. OAuth 2.0 Authorization Flow | v3.0 | 0/? | Not started | - |
 | 17. Multi-Tenant Data Isolation | v3.0 | 0/? | Not started | - |
 | 18. Shopify Billing API | v3.0 | 0/? | Not started | - |
