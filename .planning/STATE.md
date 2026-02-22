@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 12 complete. Ready to plan Phase 13 (Email Template Editor)
+**Current focus:** Phase 13 in progress (Plan 01 complete — email_templates table, API routes, /emails list page)
 
 ## Current Position
 
-Phase: 12 of 20 (Open & Click Tracking — complete)
-Status: Phase 12 complete — tracking pixel injection, link rewriting, customer engagement column, and automation email performance stats implemented.
-Last activity: 2026-02-22 — Phase 12 Plan 02 executed (tracking pipeline + UI engagement)
+Phase: 13 of 20 (Email Template Editor — in progress, Plan 01/3 complete)
+Status: Phase 13 Plan 01 complete — email_templates table, CRUD query functions, REST API routes, and DB-backed /emails list page with Create/Duplicate/Delete.
+Last activity: 2026-02-22 — Phase 13 Plan 01 executed (email templates foundation)
 
 Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
+- Total plans completed: 21
 - Average duration: 3.8 min
-- Total execution time: 0.57 hours
+- Total execution time: 0.64 hours
 
 **By Phase:**
 
@@ -40,6 +40,7 @@ Progress: [██████████████░░░░░░] 60% (12
 - Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
 
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
+| 13-email-template-editor | 1/3 | 4 min | 4 min |
 
 *Updated after each plan completion*
 
@@ -62,6 +63,9 @@ Recent decisions affecting current work:
 - [Phase 12-01]: Tracking endpoints are best-effort (try/catch, never throw) — tracking should never break email delivery
 - [Phase 12-02]: MessageLog pre-inserted before Resend call so messageLogId is available for tracking URLs; on failure UPDATE pre-inserted row (no second INSERT)
 - [Phase 12-02]: Unsubscribe links skipped by rewriteLinks via url.includes('/unsubscribe') — compliance requirement
+- [Phase 13]: drizzle-kit push bug workaround: applied migration directly via postgres.js client (drizzle-kit push fails with TypeError on pg_check constraints)
+- [Phase 13]: Duplicate action uses POST /api/email-templates/[id]?action=duplicate — keeps route structure simple for single action
+- [Phase 13]: _components/ subdirectory pattern: client components collocated with their server-component page under emails/_components/
 
 ### Pending Todos
 
@@ -75,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 12-02 complete (a1bdc02) — tracking pixel injection, link rewriting, customer engagement column, and automation email performance stats implemented
+Stopped at: 13-01 complete (04d3da2) — email_templates table, 6 CRUD queries, REST API routes, /emails DB-backed list page
 Resume file: None
