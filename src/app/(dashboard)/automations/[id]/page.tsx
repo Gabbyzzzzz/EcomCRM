@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { automations } from '@/lib/db/schema'
 import { env } from '@/lib/env'
+import { getAutomationEmailStats } from '@/lib/db/queries'
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
 import { AutomationDetailClient } from '@/components/automation-detail-client'
 
@@ -43,11 +44,11 @@ export default async function AutomationDetailPage({
   const { id } = await params
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
 
-  const [automation] = await db
-    .select()
-    .from(automations)
-    .where(and(eq(automations.id, id), eq(automations.shopId, shopId)))
-    .limit(1)
+  const [automationRows, stats] = await Promise.all([
+    db.select().from(automations).where(and(eq(automations.id, id), eq(automations.shopId, shopId))).limit(1),
+    getAutomationEmailStats(shopId, id),
+  ])
+  const automation = automationRows[0]
 
   if (!automation) {
     notFound()
@@ -77,6 +78,36 @@ export default async function AutomationDetailPage({
         >
           {automation.enabled ? 'Active' : 'Inactive'}
         </span>
+      </div>
+
+      {/* Email Performance section */}
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="text-lg font-medium mb-4">Email Performance</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          Open rates may be inflated by Apple Mail Privacy Protection (MPP). Click rate is the more reliable metric.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Total Sent</p>
+            <p className="text-2xl font-semibold tabular-nums">{stats.totalSent}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Opened</p>
+            <p className="text-2xl font-semibold tabular-nums">{stats.totalOpened}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Clicked</p>
+            <p className="text-2xl font-semibold tabular-nums">{stats.totalClicked}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Open Rate</p>
+            <p className="text-2xl font-semibold tabular-nums">{stats.openRate}%</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Click Rate</p>
+            <p className="text-2xl font-semibold tabular-nums">{stats.clickRate}%</p>
+          </div>
+        </div>
       </div>
 
       {/* Configuration section — editable via AutomationDetailClient */}

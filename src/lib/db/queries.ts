@@ -885,6 +885,56 @@ export async function getRecentActivity(
   }
 }
 
+// ─── Automation email stats query ─────────────────────────────────────────────
+
+export interface AutomationEmailStats {
+  totalSent: number
+  totalOpened: number
+  totalClicked: number
+  openRate: number    // 0-100 percentage
+  clickRate: number   // 0-100 percentage
+}
+
+/**
+ * Aggregate open and click stats for a single automation.
+ * Uses SQL FILTER clause for efficient single-pass aggregation.
+ * Returns 0 for all metrics when no messages have been sent.
+ */
+export async function getAutomationEmailStats(
+  shopId: string,
+  automationId: string
+): Promise<AutomationEmailStats> {
+  interface StatsRow extends Record<string, unknown> {
+    total_sent: string | number
+    total_opened: string | number
+    total_clicked: string | number
+  }
+
+  const rows = await db.execute<StatsRow>(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS total_sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL) AS total_opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL) AS total_clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND automation_id = ${automationId}::uuid
+      AND status IN ('sent', 'opened', 'clicked', 'converted')
+  `)
+
+  const row = rows[0]
+  const totalSent = Number(row?.total_sent ?? 0)
+  const totalOpened = Number(row?.total_opened ?? 0)
+  const totalClicked = Number(row?.total_clicked ?? 0)
+
+  return {
+    totalSent,
+    totalOpened,
+    totalClicked,
+    openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
+    clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+  }
+}
+
 // ─── Email tracking query functions ────────────────────────────────────────────
 
 /**
