@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 13 in progress (Plan 02 complete — Unlayer editor at /emails/[id]/edit with save/load/image upload)
+**Current focus:** Phase 13 complete (3/3 plans done — email template editor, Unlayer drag-and-drop, 5 preset templates seeded)
 
 ## Current Position
 
-Phase: 13 of 20 (Email Template Editor — in progress, Plan 02/3 complete)
-Status: Phase 13 Plan 02 complete — Unlayer drag-and-drop editor at /emails/[id]/edit, image upload API, /emails/[id] redirect.
-Last activity: 2026-02-22 — Phase 13 Plan 02 executed (Unlayer editor integration)
+Phase: 13 of 20 (Email Template Editor — COMPLETE, 3/3 plans done)
+Status: Phase 13 complete — email_templates table, Unlayer editor at /emails/[id]/edit, 5 preset templates seeded with is_preset=true.
+Last activity: 2026-02-22 — Phase 13 Plan 03 executed (preset template seeder)
 
 Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
@@ -40,7 +40,7 @@ Progress: [██████████████░░░░░░] 60% (12
 - Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
 
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
-| 13-email-template-editor | 2/3 | 7 min | 3.5 min |
+| 13-email-template-editor | 3/3 | 9 min | 3 min |
 
 *Updated after each plan completion*
 
@@ -68,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 13]: _components/ subdirectory pattern: client components collocated with their server-component page under emails/_components/
 - [Phase 13]: Unlayer engine pinned to version 1.157.0 — registerCallback image only works on free tier with pinned version
 - [Phase 13]: Image upload API uses service-role Supabase key (server-side only) for email-assets bucket uploads
+- [Phase 13]: seed:templates script uses tsx --env-file .env.local — zero-config, loads .env.local without extra deps
+- [Phase 13]: Preset seeding uses pre-query + existingNames Set for idempotency, not onConflictDoNothing — email_templates has no unique(shopId, name) constraint
 
 ### Pending Todos
 
@@ -81,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 13-02 complete (683dcaf) — Unlayer editor at /emails/[id]/edit, image upload API, /emails/[id] redirect
+Stopped at: 13-03 complete (45d0b25) — Phase 13 complete: 5 preset templates seeded (Welcome, Abandoned Cart, Repurchase, Win-back, VIP)
 Resume file: None
