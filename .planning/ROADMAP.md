@@ -143,8 +143,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Pipeline wiring audit, payload format fixes, and manual test-trigger API endpoint for all 5 automation flows
-- [ ] 08-02-PLAN.md — Badge text fix (Active/Inactive), PATCH endpoint enhancement, toggle persistence verification with human checkpoint
+- [x] 08-01-PLAN.md — Pipeline wiring audit, payload format fixes, and manual test-trigger API endpoint for all 5 automation flows
+- [x] 08-02-PLAN.md — Badge text fix (Active/Inactive), PATCH endpoint enhancement, toggle persistence verification with human checkpoint
 
 #### Phase 9: Configuration and Email Customization UI
 **Goal**: Users can edit every meaningful automation parameter in the UI and see a live preview of the resulting email before saving
@@ -155,11 +155,12 @@ Plans:
   2. Clicking Save commits all changes to trigger_config and action_config JSON columns in the database; clicking Cancel reverts to the last saved state; a success toast confirms the save
   3. The live email preview panel on the automation detail page re-renders in real time as the user edits subject, body, or discount fields — no save required to see the preview
   4. When an automation fires after configuration changes, the sent email uses the customized subject, headline, body text, CTA, and discount code — not the original template defaults
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 09-01: Automation config form — inline editable fields (delay, threshold, discount, subject, body) with Save/Cancel and zod-validated PATCH API
-- [ ] 09-02: Live email preview panel — server-rendered React Email component preview that updates on field change; wire customized content into automation send path
+- [ ] 09-01-PLAN.md — Expand PATCH API for full automation config + AutomationConfigForm controlled component with Save/Cancel and success toast
+- [ ] 09-02-PLAN.md — Add custom content props to email templates, live email preview panel, AutomationDetailClient wrapper sharing state between form and preview
+- [ ] 09-03-PLAN.md — Wire customized action_config into executeEmailAction, Inngest callers, and test-send path
 
 #### Phase 10: Test Send
 **Goal**: Users can send the customized email to their own inbox directly from the automation detail page
@@ -204,7 +205,7 @@ v1.1: 8 -> 9 -> 10, 8 -> 11 (Phase 11 can run in parallel with 9-10)
 | 5. Automation Engine | v1.0 | 2/2 | Complete | 2026-02-19 |
 | 6. Dashboard and Customer UI | v1.0 | 3/3 | Complete | 2026-02-19 |
 | 7. AI Insights | v1.0 | 2/2 | Complete | 2026-02-21 |
-| 8. Pipeline Verification and Toggle Fix | v1.1 | 0/2 | In progress | - |
-| 9. Configuration and Email Customization UI | v1.1 | 0/2 | Not started | - |
+| 8. Pipeline Verification and Toggle Fix | v1.1 | 2/2 | Complete | 2026-02-21 |
+| 9. Configuration and Email Customization UI | v1.1 | 0/3 | Not started | - |
 | 10. Test Send | v1.1 | 0/1 | Not started | - |
 | 11. UI Polish | v1.1 | 0/2 | Not started | - |

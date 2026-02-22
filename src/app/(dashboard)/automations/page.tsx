@@ -125,7 +125,7 @@ export default async function AutomationsPage() {
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
-                      {automation.enabled ? 'Active' : 'Disabled'}
+                      {automation.enabled ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">

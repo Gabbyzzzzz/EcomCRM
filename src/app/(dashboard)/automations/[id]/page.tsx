@@ -82,7 +82,7 @@ export default async function AutomationDetailPage({
               : 'bg-muted text-muted-foreground'
           }`}
         >
-          {automation.enabled ? 'Active' : 'Disabled'}
+          {automation.enabled ? 'Active' : 'Inactive'}
         </span>
       </div>
 

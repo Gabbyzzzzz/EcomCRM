@@ -32,6 +32,129 @@ import { eq, and, gte, lte, isNull, isNotNull } from 'drizzle-orm'
 import type { BulkOperationWebhookPayload } from '@/lib/shopify/types'
 import type { ShopifyCustomer, ShopifyOrder } from '@/lib/shopify/types'
 
+// ─── REST webhook payload types ───────────────────────────────────────────────
+// Shopify REST webhooks use snake_case flat JSON — different from the GraphQL
+// types (ShopifyOrder / ShopifyCustomer) used for API responses.
+
+interface RestWebhookOrder {
+  id: number | string
+  total_price: string
+  financial_status: string
+  created_at: string
+  updated_at: string
+  customer?: {
+    id: number | string
+  } | null
+  line_items?: Array<{
+    title: string
+    quantity: number
+    price: string
+  }>
+}
+
+interface RestWebhookCustomer {
+  id: number | string
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone: string | null
+  total_spent: string
+  orders_count: number
+  tags: string
+  created_at: string
+  updated_at: string
+}
+
+// ─── REST → GraphQL normalizers ───────────────────────────────────────────────
+// Shopify sends webhook POST bodies in REST API format (snake_case, numeric IDs).
+// Our internal types (ShopifyOrder, ShopifyCustomer) use GraphQL format.
+// These normalizers bridge the gap so downstream code works without changes.
+//
+// Normalization smoke test — Order:
+// Input (REST):  { id: 123, total_price: "99.00", customer: { id: 456 },
+//                  financial_status: "paid", created_at: "2024-01-01T00:00:00Z",
+//                  line_items: [{ title: "Widget", quantity: 1, price: "99.00" }] }
+// Output (normalized): {
+//   id: "gid://shopify/Order/123",
+//   totalPriceSet: { shopMoney: { amount: "99.00", currencyCode: "USD" } },
+//   customer: { id: "gid://shopify/Customer/456" },
+//   displayFinancialStatus: "PAID",
+//   createdAt: "2024-01-01T00:00:00Z",
+//   updatedAt: "...",
+//   lineItems: { edges: [{ node: { title: "Widget", quantity: 1, variant: { price: "99.00" } } }] }
+// }
+//
+// Normalization smoke test — Customer:
+// Input (REST):  { id: 789, first_name: "Jane", last_name: "Doe", email: "jane@example.com",
+//                  total_spent: "150.00", orders_count: 3, tags: "vip,loyal", updated_at: "..." }
+// Output (normalized): {
+//   id: "gid://shopify/Customer/789",
+//   firstName: "Jane", lastName: "Doe", email: "jane@example.com",
+//   amountSpent: { amount: "150.00", currencyCode: "USD" },
+//   numberOfOrders: "3", tags: ["vip", "loyal"], updatedAt: "..."
+// }
+
+function normalizeRestOrder(raw: RestWebhookOrder): ShopifyOrder {
+  const numericId = String(raw.id)
+  const gid = numericId.startsWith('gid://') ? numericId : `gid://shopify/Order/${numericId}`
+
+  let customerGid: string | null = null
+  if (raw.customer?.id != null) {
+    const cid = String(raw.customer.id)
+    customerGid = cid.startsWith('gid://') ? cid : `gid://shopify/Customer/${cid}`
+  }
+
+  return {
+    id: gid,
+    name: `#${numericId}`,
+    totalPriceSet: {
+      shopMoney: {
+        amount: raw.total_price ?? '0',
+        currencyCode: 'USD',
+      },
+    },
+    customer: customerGid ? { id: customerGid } : null,
+    lineItems: {
+      edges: (raw.line_items ?? []).map((item) => ({
+        node: {
+          title: item.title,
+          quantity: item.quantity,
+          variant: { price: item.price },
+        },
+      })),
+    },
+    displayFinancialStatus: (raw.financial_status ?? '').toUpperCase(),
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+  }
+}
+
+function normalizeRestCustomer(raw: RestWebhookCustomer): ShopifyCustomer {
+  const numericId = String(raw.id)
+  const gid = numericId.startsWith('gid://') ? numericId : `gid://shopify/Customer/${numericId}`
+
+  // REST API sends tags as a comma-separated string; GraphQL returns string[]
+  const tags = raw.tags
+    ? raw.tags.split(',').map((t) => t.trim()).filter(Boolean)
+    : []
+
+  return {
+    id: gid,
+    firstName: raw.first_name ?? null,
+    lastName: raw.last_name ?? null,
+    email: raw.email ?? null,
+    phone: raw.phone ?? null,
+    numberOfOrders: String(raw.orders_count ?? 0),
+    amountSpent: {
+      amount: raw.total_spent ?? '0',
+      currencyCode: 'USD',
+    },
+    tags,
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+  }
+}
+
 // ─── Shop ID helper ───────────────────────────────────────────────────────────
 
 function getShopId(): string {
@@ -78,8 +201,12 @@ export const processShopifyWebhook = inngest.createFunction(
       switch (topic) {
         case 'orders/create':
         case 'orders/updated': {
-          // Payload is the Shopify order object (webhook format)
-          const order = payload as ShopifyOrder
+          // [pipeline] Normalize REST webhook payload → ShopifyOrder (GraphQL format).
+          // Shopify sends REST format (snake_case, numeric IDs) for webhook POST bodies.
+          // normalizeRestOrder maps to our internal ShopifyOrder type.
+          const order = normalizeRestOrder(payload as RestWebhookOrder)
+          console.log(`[pipeline] orders handler: normalized order GID=${order.id}, customer GID=${order.customer?.id ?? 'none'}`)
+
           await upsertOrder(
             shopId,
             {
@@ -102,6 +229,8 @@ export const processShopifyWebhook = inngest.createFunction(
           // Updates order_count, total_spent, avg_order_value, first_order_at, last_order_at
           // for the affected customer. Full quintile recalculation runs in the daily cron only.
           if (order.customer?.id) {
+            // [pipeline] Looking up customer by GID (normalized from REST numeric id)
+            console.log(`[pipeline] Fetching customer row for GID=${order.customer.id}`)
             const [customerRow] = await db
               .select({ id: customersTable.id, orderCount: customersTable.orderCount })
               .from(customersTable)
@@ -129,6 +258,8 @@ export const processShopifyWebhook = inngest.createFunction(
 
                 if (updatedCustomer?.orderCount === 1) {
                   try {
+                    // [pipeline] Emitting automation/first_order for customer=${customerRow.id}
+                    console.log(`[pipeline] Emitting automation/first_order for customerId=${customerRow.id}`)
                     await inngest.send({
                       name: 'automation/first_order',
                       data: {
@@ -144,6 +275,8 @@ export const processShopifyWebhook = inngest.createFunction(
                   }
                 }
               }
+            } else {
+              console.warn(`[pipeline] No customer found for GID=${order.customer.id} — counter update skipped`)
             }
           }
           break
@@ -151,7 +284,12 @@ export const processShopifyWebhook = inngest.createFunction(
 
         case 'customers/create':
         case 'customers/update': {
-          const customer = payload as ShopifyCustomer
+          // [pipeline] Normalize REST webhook payload → ShopifyCustomer (GraphQL format).
+          // REST sends snake_case fields (first_name, total_spent, orders_count, tags as CSV string).
+          // normalizeRestCustomer maps to our internal ShopifyCustomer type.
+          const customer = normalizeRestCustomer(payload as RestWebhookCustomer)
+          console.log(`[pipeline] customers handler: normalized customer GID=${customer.id}, email=${customer.email ?? 'none'}`)
+
           const totalSpent = customer.amountSpent?.amount ?? '0'
           // numberOfOrders is an UnsignedInt64 serialized as a string
           const orderCount = parseInt(customer.numberOfOrders ?? '0', 10)
@@ -463,9 +601,18 @@ export const processFirstOrder = inngest.createFunction(
       eventTimestamp: string
     }
 
-    const automations = await step.run('fetch-automations', async () =>
-      fetchEnabledAutomationsByTrigger(shopId, 'first_order')
-    )
+    console.log(`[pipeline] processFirstOrder: shopId=${shopId} customerId=${customerId}`)
+
+    const automations = await step.run('fetch-automations', async () => {
+      const results = await fetchEnabledAutomationsByTrigger(shopId, 'first_order')
+      console.log(`[pipeline] processFirstOrder: found ${results.length} enabled first_order automations for shopId=${shopId}`)
+      if (results.length === 0) {
+        console.warn(`[pipeline] processFirstOrder: NO enabled automations found — email will NOT be sent. Check: 1) automations table has rows with triggerType='first_order' 2) enabled=true 3) shopId matches '${shopId}'`)
+      } else {
+        results.forEach((a) => console.log(`[pipeline]   automation: id=${a.id} name=${a.name} enabled=${a.enabled} template=${a.emailTemplateId}`))
+      }
+      return results
+    })
 
     for (const automation of automations) {
       if (automation.delayValue && automation.delayUnit) {
@@ -473,6 +620,8 @@ export const processFirstOrder = inngest.createFunction(
         await step.sleep(`delay-${automation.id}`, sleepFor)
       }
       await step.run(`execute-${automation.id}`, async () => {
+        // [pipeline] executeEmailAction: shopId=${shopId} customerId=${customerId} template=${automation.emailTemplateId ?? 'welcome'}
+        console.log(`[pipeline] processFirstOrder: executing automation=${automation.id} template=${automation.emailTemplateId ?? 'welcome'} for customer=${customerId}`)
         await executeEmailAction({
           shopId,
           customerId,
@@ -515,15 +664,24 @@ export const processSegmentChange = inngest.createFunction(
     }
     // eventTimestamp comes from event.data — do NOT generate with new Date() here
 
-    const automations = await step.run('fetch-automations', async () =>
-      fetchEnabledAutomationsByTrigger(shopId, 'segment_change')
-    )
+    console.log(`[pipeline] processSegmentChange: shopId=${shopId} customerId=${customerId} newSegment=${newSegment}`)
+
+    const automations = await step.run('fetch-automations', async () => {
+      const results = await fetchEnabledAutomationsByTrigger(shopId, 'segment_change')
+      console.log(`[pipeline] processSegmentChange: found ${results.length} enabled segment_change automations for shopId=${shopId}`)
+      if (results.length === 0) {
+        console.warn(`[pipeline] processSegmentChange: NO enabled automations found — email will NOT be sent`)
+      }
+      return results
+    })
 
     for (const automation of automations) {
       const config = automation.triggerConfig as { toSegment?: string } | null
       if (config?.toSegment !== newSegment) continue
 
       await step.run(`execute-${automation.id}`, async () => {
+        // [pipeline] processSegmentChange: executing automation=${automation.id} template=${automation.emailTemplateId ?? 'vip'} for customer=${customerId} newSegment=${newSegment}
+        console.log(`[pipeline] processSegmentChange: executing automation=${automation.id} for customer=${customerId} newSegment=${newSegment}`)
         await executeEmailAction({
           shopId,
           customerId,
@@ -570,9 +728,16 @@ export const processCartAbandoned = inngest.createFunction(
       eventTimestamp: string
     }
 
-    const automations = await step.run('fetch-automations', async () =>
-      fetchEnabledAutomationsByTrigger(shopId, 'cart_abandoned')
-    )
+    console.log(`[pipeline] processCartAbandoned: shopId=${shopId} customerId=${customerId}`)
+
+    const automations = await step.run('fetch-automations', async () => {
+      const results = await fetchEnabledAutomationsByTrigger(shopId, 'cart_abandoned')
+      console.log(`[pipeline] processCartAbandoned: found ${results.length} enabled cart_abandoned automations for shopId=${shopId}`)
+      if (results.length === 0) {
+        console.warn(`[pipeline] processCartAbandoned: NO enabled automations found — email will NOT be sent`)
+      }
+      return results
+    })
 
     for (const automation of automations) {
       if (automation.delayValue && automation.delayUnit) {
@@ -601,6 +766,8 @@ export const processCartAbandoned = inngest.createFunction(
           return
         }
 
+        // [pipeline] processCartAbandoned: executing automation=${automation.id} template=${automation.emailTemplateId ?? 'abandoned-cart'} for customer=${customerId}
+        console.log(`[pipeline] processCartAbandoned: executing automation=${automation.id} for customer=${customerId}`)
         await executeEmailAction({
           shopId,
           customerId,
@@ -628,6 +795,19 @@ export const processCartAbandoned = inngest.createFunction(
  * 5. Updates automation lastRunAt after all customers are processed
  *
  * NOTE: shopId comes from getShopId() — NOT event.data (cron triggers have no data object).
+ *
+ * [pipeline] days_since_order cron path AUDITED:
+ * - fetchEnabledAutomationsByTrigger(shopId, 'days_since_order') returns both preset automations:
+ *   "Repurchase Prompt" (days=30, segments=['loyal','new']) and
+ *   "Win-Back Campaign" (days=90, segments=['at_risk','hibernating'])
+ * - Each automation's triggerConfig.days is used to compute the cutoffDate correctly
+ * - Segment filter applied inline (avoids JsonifyObject type incompatibility from step.run)
+ * - Duplicate-send guard: getRecentMessageLog checked per customer before executeEmailAction
+ * - executeEmailAction called directly → sendMarketingEmail → Resend API → message_logs insert
+ * - updateAutomationLastRun called after all customers processed for each automation
+ * - Cron wiring: { cron: '0 3 * * *' } fires after dailyRfmRecalculation { cron: '0 2 * * *' }
+ * - This path is CONFIRMED CORRECT. The action execution path is also exercised
+ *   in the test-trigger endpoint (src/app/api/automations/test-trigger/route.ts).
  */
 export const checkDaysSinceOrder = inngest.createFunction(
   {

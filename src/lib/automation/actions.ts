@@ -141,6 +141,8 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
     }
   }
 
+  // [pipeline] sendMarketingEmail: shopId=${shopId} customerId=${customerId} template=${emailTemplateId} idempotencyKey=${idempotencyKey}
+  console.log(`[pipeline] executeEmailAction: calling sendMarketingEmail for customer=${customerId} template=${emailTemplateId}`)
   await sendMarketingEmail({
     shopId,
     customerInternalId: customerId,
