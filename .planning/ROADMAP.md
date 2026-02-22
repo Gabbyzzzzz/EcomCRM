@@ -51,11 +51,11 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   2. Every link in outgoing emails routes through `/api/track/click`; clicking records to `email_clicks` table then redirects to the real URL
   3. Customer 360 profile Message History shows open/click status icons and timestamps per message
   4. Automation detail page displays per-flow open rate and click rate
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Schema (email_clicks table, opened_at/clicked_at on message_logs), pixel endpoint, click-redirect endpoint
-- [ ] 12-02-PLAN.md — Inject tracking pixel + rewrite links in sendMarketingEmail, update customer profile message history UI, add open/click rate to automation detail
+- [ ] 12-01-PLAN.md — email_clicks table schema, tracking query helpers, open-pixel endpoint, click-redirect endpoint
+- [ ] 12-02-PLAN.md — Inject tracking pixel + rewrite links in sendMarketingEmail, customer profile engagement icons, automation detail open/click rates
 
 #### Phase 13: Email Template Editor
 **Goal**: Merchants can design custom email templates visually using Unlayer drag-and-drop editor.
