@@ -9,11 +9,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 14 of 20 (Template-Automation Linking — complete, 2 plans done)
-Status: Phase 14 Plan 02 complete — inline Unlayer editor with merge tags, Customize for this Flow button, Clear Customization, substituteVariables bug fix.
-Last activity: 2026-02-22 — Phase 14 Plan 02 executed (inline editor + merge tags)
+Phase: 15 of 20 (Email Performance Dashboard — in progress, 1/1 plans done)
+Status: Phase 15 Plan 01 complete — aggregate email KPIs on dashboard (total sent, open rate, click rate), open/click rate columns on automation list.
+Last activity: 2026-02-22 — Phase 15 Plan 01 executed (email performance dashboard)
 
-Progress: [███████████████░░░░░] 70% (14/20 phases complete)
+Progress: [████████████████░░░░] 75% (15/20 phases complete)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [███████████████░░░░░] 70% (14
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
 | 13-email-template-editor | 3/3 | 9 min | 3 min |
 | 14-template-automation-linking | 2/2 | 8 min | 4 min |
+| 15-email-performance-dashboard | 1/1 | 2 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase 14-02]: AutomationInlineEditor is inline (500px) not fullscreen — visually embedded in automation detail page below template selector
 - [Phase 14-02]: substituteVariables fallback changed from match to empty string — prevents literal merge tags appearing in sent emails
 - [Phase 14-02]: Customize for this Flow fetches linked template designJson on demand via GET /api/email-templates/[id] — not pre-loaded
+- [Phase 15-01]: getAutomationListWithRates uses LEFT JOIN subquery (db.execute) rather than N+1 per-row getAutomationEmailStats calls for automation list
+- [Phase 15-01]: Automation list shows "—" when rate is 0 (no sends) rather than "0%" — cleaner UX distinguishing no-data from actual 0% rate
+- [Phase 15-01]: Email Performance section placed inside kpis.totalCustomers > 0 branch — consistent with all other dashboard data sections
 
 ### Pending Todos
 
@@ -91,5 +95,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 14-02 complete (6152019) — inline Unlayer editor with merge tags, Customize for this Flow, Clear Customization buttons, substituteVariables bug fix
+Stopped at: 15-01 complete (82d3b03) — email performance KPIs on dashboard, open/click rate columns on automation list
 Resume file: None
