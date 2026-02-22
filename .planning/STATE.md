@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** v2.0 milestone defined — ready to plan Phase 12 (Open & Click Tracking)
+**Current focus:** Phase 12 complete. Ready to plan Phase 13 (Email Template Editor)
 
 ## Current Position
 
@@ -13,7 +13,7 @@ Phase: 12 of 20 (Open & Click Tracking — complete)
 Status: Phase 12 complete — tracking pixel injection, link rewriting, customer engagement column, and automation email performance stats implemented.
 Last activity: 2026-02-22 — Phase 12 Plan 02 executed (tracking pipeline + UI engagement)
 
-Progress: [█████████████░░░░░░░] 55% (11/20 phases complete)
+Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
 ## Performance Metrics
 

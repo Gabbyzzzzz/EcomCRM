@@ -54,8 +54,8 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — email_clicks table schema, tracking query helpers, open-pixel endpoint, click-redirect endpoint
-- [ ] 12-02-PLAN.md — Inject tracking pixel + rewrite links in sendMarketingEmail, customer profile engagement icons, automation detail open/click rates
+- [x] 12-01-PLAN.md — email_clicks table schema, tracking query helpers, open-pixel endpoint, click-redirect endpoint
+- [x] 12-02-PLAN.md — Inject tracking pixel + rewrite links in sendMarketingEmail, customer profile engagement icons, automation detail open/click rates
 
 #### Phase 13: Email Template Editor
 **Goal**: Merchants can design custom email templates visually using Unlayer drag-and-drop editor.
@@ -164,7 +164,7 @@ v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 | 9. Configuration and Email Customization UI | v1.1 | 3/3 | Complete | 2026-02-21 |
 | 10. Test Send | v1.1 | 1/1 | Complete | 2026-02-22 |
 | 11. UI Polish | v1.1 | 2/2 | Complete | 2026-02-22 |
-| 12. Open & Click Tracking | v2.0 | 0/2 | Not started | - |
+| 12. Open & Click Tracking | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 13. Email Template Editor | v2.0 | 0/3 | Not started | - |
 | 14. Template ↔ Automation Linking | v2.0 | 0/2 | Not started | - |
 | 15. Email Performance Dashboard | v2.0 | 0/2 | Not started | - |
