@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs, emailClicks } from './schema'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs, emailClicks, emailTemplates } from './schema'
 import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte, inArray } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
@@ -973,4 +973,111 @@ export async function recordEmailClick(
   } catch (err) {
     console.error('[recordEmailClick] failed to record click', { shopId, messageLogId, linkUrl, err })
   }
+}
+
+// ─── Email template type ───────────────────────────────────────────────────────
+
+type EmailTemplateRow = typeof emailTemplates.$inferSelect
+
+// ─── Email template CRUD query functions ──────────────────────────────────────
+
+/**
+ * List all email templates for a shop.
+ * Presets appear first (is_preset DESC), then sorted by updated_at DESC.
+ */
+export async function listEmailTemplates(shopId: string): Promise<EmailTemplateRow[]> {
+  return db
+    .select()
+    .from(emailTemplates)
+    .where(eq(emailTemplates.shopId, shopId))
+    .orderBy(desc(emailTemplates.isPreset), desc(emailTemplates.updatedAt))
+}
+
+/**
+ * Get a single email template by id and shopId.
+ * Returns null if not found or does not belong to this shop.
+ */
+export async function getEmailTemplate(
+  shopId: string,
+  id: string
+): Promise<EmailTemplateRow | null> {
+  const [row] = await db
+    .select()
+    .from(emailTemplates)
+    .where(and(eq(emailTemplates.id, id), eq(emailTemplates.shopId, shopId)))
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * Create a new blank email template for a shop.
+ * Returns the created row.
+ */
+export async function createEmailTemplate(
+  shopId: string,
+  data: { name: string }
+): Promise<EmailTemplateRow> {
+  const [row] = await db
+    .insert(emailTemplates)
+    .values({
+      shopId,
+      name: data.name,
+      isPreset: false,
+      html: null,
+      designJson: null,
+    })
+    .returning()
+
+  return row
+}
+
+/**
+ * Update name, html, and/or designJson on an email template.
+ * Also sets updatedAt = now().
+ */
+export async function updateEmailTemplate(
+  id: string,
+  data: { name?: string; html?: string; designJson?: unknown }
+): Promise<void> {
+  await db
+    .update(emailTemplates)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(emailTemplates.id, id))
+}
+
+/**
+ * Delete an email template by id.
+ */
+export async function deleteEmailTemplate(id: string): Promise<void> {
+  await db.delete(emailTemplates).where(eq(emailTemplates.id, id))
+}
+
+/**
+ * Duplicate an email template.
+ * Creates a new row with name = `${source.name} (Copy)`, same html + designJson, isPreset=false.
+ * Returns the new row.
+ */
+export async function duplicateEmailTemplate(
+  shopId: string,
+  id: string
+): Promise<EmailTemplateRow | null> {
+  const source = await getEmailTemplate(shopId, id)
+  if (!source) return null
+
+  const [row] = await db
+    .insert(emailTemplates)
+    .values({
+      shopId,
+      name: `${source.name} (Copy)`,
+      html: source.html,
+      designJson: source.designJson,
+      isPreset: false,
+    })
+    .returning()
+
+  return row
 }

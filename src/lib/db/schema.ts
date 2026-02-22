@@ -276,3 +276,21 @@ export const emailClicks = pgTable(
     index('email_clicks_clicked_at_idx').on(table.clickedAt),
   ]
 )
+
+export const emailTemplates = pgTable(
+  'email_templates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    html: text('html'),
+    designJson: jsonb('design_json'),
+    isPreset: boolean('is_preset').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('email_templates_shop_id_idx').on(table.shopId),
+    index('email_templates_is_preset_idx').on(table.isPreset),
+  ]
+)
