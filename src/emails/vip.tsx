@@ -21,6 +21,9 @@ interface VipEmailProps {
   shopUrl: string
   unsubscribeUrl: string
   logoUrl?: string
+  customHeadline?: string
+  customBody?: string
+  customCtaText?: string
 }
 
 const main = {
@@ -172,10 +175,15 @@ export default function VipEmail({
   shopUrl,
   unsubscribeUrl,
   logoUrl,
+  customHeadline,
+  customBody,
+  customCtaText,
 }: VipEmailProps) {
   const greeting = customerName
     ? `You're a VIP, ${customerName}!`
     : "You're a VIP!"
+  const defaultBody = `You're one of our most valued customers at ${storeName}. We wanted to take a moment to say thank you for your incredible loyalty and support.`
+  const defaultCtaText = 'Shop the VIP Collection'
 
   return (
     <Html lang="en">
@@ -195,11 +203,10 @@ export default function VipEmail({
             </div>
           </Section>
 
-          <Text style={heading}>{greeting}</Text>
+          <Text style={heading}>{customHeadline ?? greeting}</Text>
 
           <Text style={bodyText}>
-            You&apos;re one of our most valued customers at {storeName}. We wanted to take
-            a moment to say thank you for your incredible loyalty and support.
+            {customBody ?? defaultBody}
           </Text>
 
           <Section style={statsRow}>
@@ -226,7 +233,7 @@ export default function VipEmail({
 
           <Section style={buttonContainer}>
             <Button href={shopUrl} style={button}>
-              Shop the VIP Collection
+              {customCtaText ?? defaultCtaText}
             </Button>
           </Section>
 

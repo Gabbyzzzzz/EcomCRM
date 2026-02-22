@@ -6,6 +6,7 @@ import { automations } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
 import { SendTestEmailButton } from '@/components/send-test-email-button'
+import { AutomationDetailClient } from '@/components/automation-detail-client'
 
 // ─── Human-readable trigger label ─────────────────────────────────────────────
 
@@ -25,13 +26,6 @@ function triggerLabel(triggerType: string, triggerConfig: unknown): string {
     default:
       return triggerType
   }
-}
-
-// ─── Delay label ──────────────────────────────────────────────────────────────
-
-function delayLabel(delayValue: number | null, delayUnit: string | null): string {
-  if (!delayValue || !delayUnit) return 'No delay'
-  return `${delayValue} ${delayUnit}`
 }
 
 // ─── Action label ─────────────────────────────────────────────────────────────
@@ -86,21 +80,17 @@ export default async function AutomationDetailPage({
         </span>
       </div>
 
-      {/* Configuration section */}
+      {/* Configuration section — editable via AutomationDetailClient */}
       <div className="rounded-lg border bg-card p-6">
         <h2 className="text-lg font-medium mb-4">Configuration</h2>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Read-only metadata labels */}
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div>
             <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
               Trigger
             </dt>
             <dd className="text-sm">{triggerLabel(automation.triggerType, automation.triggerConfig)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-              Delay
-            </dt>
-            <dd className="text-sm">{delayLabel(automation.delayValue, automation.delayUnit)}</dd>
           </div>
           <div>
             <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
@@ -125,6 +115,17 @@ export default async function AutomationDetailPage({
             </dd>
           </div>
         </dl>
+
+        {/* Editable configuration form + live preview — client component */}
+        <AutomationDetailClient
+          automationId={automation.id}
+          triggerType={automation.triggerType}
+          emailTemplateId={automation.emailTemplateId ?? null}
+          initialDelayValue={automation.delayValue ?? null}
+          initialDelayUnit={automation.delayUnit ?? null}
+          initialTriggerConfig={(automation.triggerConfig as Record<string, unknown> | null) ?? null}
+          initialActionConfig={(automation.actionConfig as Record<string, unknown> | null) ?? null}
+        />
       </div>
 
       {/* Send Test Email section */}

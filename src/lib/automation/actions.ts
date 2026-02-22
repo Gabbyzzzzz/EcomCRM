@@ -18,6 +18,18 @@ export interface EmailActionParams {
   automationId: string
   emailTemplateId: string
   eventTimestamp: string   // ISO string, used in idempotency key
+  actionConfig?: Record<string, unknown> | null
+}
+
+// ─── ActionConfig override shape ──────────────────────────────────────────────
+
+interface ActionConfigOverrides {
+  subject?: string
+  headline?: string
+  body?: string
+  ctaText?: string
+  discountCode?: string
+  alsoAddTag?: string
 }
 
 // ─── Subject map ──────────────────────────────────────────────────────────────
@@ -39,11 +51,15 @@ const SUBJECT_MAP: Record<string, string> = {
  * - Builds the appropriate React Email template via templateFactory pattern
  * - Calls sendMarketingEmail with idempotency key = `${automationId}-${customerId}-${eventTimestamp}`
  * - All send failures are non-fatal (sendMarketingEmail never throws)
+ * - When actionConfig is provided, custom subject/headline/body/ctaText/discountCode override defaults
  */
 export async function executeEmailAction(params: EmailActionParams): Promise<void> {
-  const { shopId, customerId, automationId, emailTemplateId, eventTimestamp } = params
+  const { shopId, customerId, automationId, emailTemplateId, eventTimestamp, actionConfig } = params
 
-  const subject = SUBJECT_MAP[emailTemplateId] ?? 'A message from our store'
+  // Extract overrides from actionConfig — when null/undefined, all defaults apply
+  const config = actionConfig as ActionConfigOverrides | null
+
+  const subject = config?.subject ?? (SUBJECT_MAP[emailTemplateId] ?? 'A message from our store')
   const idempotencyKey = `${automationId}-${customerId}-${eventTimestamp}`
   const storeName = env.RESEND_FROM_NAME ?? 'EcomCRM'
 
@@ -61,6 +77,9 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           storeName,
           customerName,
           unsubscribeUrl,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }
@@ -73,6 +92,9 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           cartItems: [], // live cart items not available at delay time — use empty list
           cartUrl: env.SHOPIFY_STORE_URL,
           unsubscribeUrl,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }
@@ -92,6 +114,9 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           lastOrderDate,
           shopUrl: env.SHOPIFY_STORE_URL,
           unsubscribeUrl,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }
@@ -102,6 +127,10 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
             (Date.now() - customer.lastOrderAt.getTime()) / (1000 * 60 * 60 * 24)
           )
         : 0
+      // discountCode maps to the winback incentive prop (shown in the highlighted offer box)
+      const incentive = config?.discountCode
+        ? `Use code ${config.discountCode}`
+        : undefined
       templateFactory = (unsubscribeUrl) =>
         React.createElement(WinbackEmail, {
           storeName,
@@ -109,6 +138,10 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           daysSinceLastOrder,
           shopUrl: env.SHOPIFY_STORE_URL,
           unsubscribeUrl,
+          incentive,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }
@@ -126,6 +159,9 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           orderCount,
           shopUrl: env.SHOPIFY_STORE_URL,
           unsubscribeUrl,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }
@@ -136,6 +172,9 @@ export async function executeEmailAction(params: EmailActionParams): Promise<voi
           storeName,
           customerName,
           unsubscribeUrl,
+          customHeadline: config?.headline,
+          customBody: config?.body,
+          customCtaText: config?.ctaText,
         })
       break
     }

@@ -26,6 +26,9 @@ interface RepurchaseEmailProps {
   shopUrl: string
   unsubscribeUrl: string
   logoUrl?: string
+  customHeadline?: string
+  customBody?: string
+  customCtaText?: string
 }
 
 const main = {
@@ -157,8 +160,14 @@ export default function RepurchaseEmail({
   shopUrl,
   unsubscribeUrl,
   logoUrl,
+  customHeadline,
+  customBody,
+  customCtaText,
 }: RepurchaseEmailProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi there,'
+  const defaultHeadline = 'Time to restock?'
+  const defaultBody = `It's been a while since your last order from ${storeName}. We have new products and restocked favourites waiting for you.`
+  const defaultCtaText = 'Visit the Store'
 
   return (
     <Html lang="en">
@@ -172,12 +181,11 @@ export default function RepurchaseEmail({
             </Section>
           )}
 
-          <Text style={heading}>Time to restock?</Text>
+          <Text style={heading}>{customHeadline ?? defaultHeadline}</Text>
 
           <Text style={bodyText}>{greeting}</Text>
           <Text style={bodyText}>
-            It&apos;s been a while since your last order from {storeName}. We have new
-            products and restocked favourites waiting for you.
+            {customBody ?? defaultBody}
           </Text>
 
           <Section style={lastOrderBox}>
@@ -206,7 +214,7 @@ export default function RepurchaseEmail({
 
           <Section style={buttonContainer}>
             <Button href={shopUrl} style={button}>
-              Visit the Store
+              {customCtaText ?? defaultCtaText}
             </Button>
           </Section>
 

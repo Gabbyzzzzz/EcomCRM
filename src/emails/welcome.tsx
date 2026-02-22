@@ -17,6 +17,9 @@ interface WelcomeEmailProps {
   customerName?: string
   unsubscribeUrl: string
   logoUrl?: string
+  customHeadline?: string
+  customBody?: string
+  customCtaText?: string
 }
 
 const main = {
@@ -99,8 +102,14 @@ export default function WelcomeEmail({
   customerName,
   unsubscribeUrl,
   logoUrl,
+  customHeadline,
+  customBody,
+  customCtaText,
 }: WelcomeEmailProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Welcome!'
+  const defaultHeadline = storeName
+  const defaultBody = `Thank you for joining ${storeName}. We're excited to have you as a customer and we can't wait to share what we have in store for you.`
+  const defaultCtaText = 'Shop Now'
 
   return (
     <Html lang="en">
@@ -114,13 +123,12 @@ export default function WelcomeEmail({
             </Section>
           )}
 
-          <Text style={heading}>{storeName}</Text>
+          <Text style={heading}>{customHeadline ?? defaultHeadline}</Text>
           <Text style={subheading}>Welcome to the family</Text>
 
           <Text style={bodyText}>{greeting}</Text>
           <Text style={bodyText}>
-            Thank you for joining {storeName}. We&apos;re excited to have you as a customer
-            and we can&apos;t wait to share what we have in store for you.
+            {customBody ?? defaultBody}
           </Text>
           <Text style={bodyText}>
             Explore our latest collection and find something you&apos;ll love.
@@ -128,7 +136,7 @@ export default function WelcomeEmail({
 
           <Section style={buttonContainer}>
             <Button href="#" style={button}>
-              Shop Now
+              {customCtaText ?? defaultCtaText}
             </Button>
           </Section>
 

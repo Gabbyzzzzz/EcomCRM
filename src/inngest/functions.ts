@@ -628,6 +628,7 @@ export const processFirstOrder = inngest.createFunction(
           automationId: automation.id,
           emailTemplateId: automation.emailTemplateId ?? 'welcome',
           eventTimestamp,
+          actionConfig: (automation.actionConfig as Record<string, unknown> | null) ?? null,
         })
         await updateAutomationLastRun(automation.id, new Date())
       })
@@ -688,13 +689,14 @@ export const processSegmentChange = inngest.createFunction(
           automationId: automation.id,
           emailTemplateId: automation.emailTemplateId ?? 'vip',
           eventTimestamp,
+          actionConfig: (automation.actionConfig as Record<string, unknown> | null) ?? null,
         })
 
-        const actionConfig = automation.actionConfig as { alsoAddTag?: string } | null
-        if (actionConfig?.alsoAddTag) {
+        const segActionConfig = automation.actionConfig as { alsoAddTag?: string } | null
+        if (segActionConfig?.alsoAddTag) {
           const customer = await getCustomerByInternalId(shopId, customerId)
           if (customer?.shopifyId) {
-            await executeTagAction(shopId, customer.shopifyId, actionConfig.alsoAddTag, 'add')
+            await executeTagAction(shopId, customer.shopifyId, segActionConfig.alsoAddTag, 'add')
           }
         }
 
@@ -774,6 +776,7 @@ export const processCartAbandoned = inngest.createFunction(
           automationId: automation.id,
           emailTemplateId: automation.emailTemplateId ?? 'abandoned-cart',
           eventTimestamp,
+          actionConfig: (automation.actionConfig as Record<string, unknown> | null) ?? null,
         })
         await updateAutomationLastRun(automation.id, new Date())
       })
@@ -878,6 +881,7 @@ export const checkDaysSinceOrder = inngest.createFunction(
             automationId: automation.id,
             emailTemplateId: automation.emailTemplateId ?? 'repurchase',
             eventTimestamp: new Date().toISOString(),
+            actionConfig: (automation.actionConfig as Record<string, unknown> | null) ?? null,
           })
           emailCount++
         }

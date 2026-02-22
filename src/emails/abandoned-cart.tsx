@@ -27,6 +27,9 @@ interface AbandonedCartEmailProps {
   cartUrl: string
   unsubscribeUrl: string
   logoUrl?: string
+  customHeadline?: string
+  customBody?: string
+  customCtaText?: string
 }
 
 const main = {
@@ -140,8 +143,14 @@ export default function AbandonedCartEmail({
   cartUrl,
   unsubscribeUrl,
   logoUrl,
+  customHeadline,
+  customBody,
+  customCtaText,
 }: AbandonedCartEmailProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi there,'
+  const defaultHeadline = 'You left something behind'
+  const defaultBody = `It looks like you left some items in your cart at ${storeName}. They're still waiting for you!`
+  const defaultCtaText = 'Complete Your Purchase'
 
   return (
     <Html lang="en">
@@ -155,12 +164,11 @@ export default function AbandonedCartEmail({
             </Section>
           )}
 
-          <Text style={heading}>You left something behind</Text>
+          <Text style={heading}>{customHeadline ?? defaultHeadline}</Text>
 
           <Text style={bodyText}>{greeting}</Text>
           <Text style={bodyText}>
-            It looks like you left some items in your cart at {storeName}. They&apos;re
-            still waiting for you!
+            {customBody ?? defaultBody}
           </Text>
 
           {cartItems.length > 0 && (
@@ -192,7 +200,7 @@ export default function AbandonedCartEmail({
 
           <Section style={buttonContainer}>
             <Button href={cartUrl} style={button}>
-              Complete Your Purchase
+              {customCtaText ?? defaultCtaText}
             </Button>
           </Section>
 

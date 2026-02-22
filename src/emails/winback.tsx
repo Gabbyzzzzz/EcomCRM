@@ -20,6 +20,9 @@ interface WinbackEmailProps {
   shopUrl: string
   unsubscribeUrl: string
   logoUrl?: string
+  customHeadline?: string
+  customBody?: string
+  customCtaText?: string
 }
 
 const main = {
@@ -130,8 +133,13 @@ export default function WinbackEmail({
   shopUrl,
   unsubscribeUrl,
   logoUrl,
+  customHeadline,
+  customBody,
+  customCtaText,
 }: WinbackEmailProps) {
   const greeting = customerName ? `We miss you, ${customerName}` : 'We miss you'
+  const defaultBody = `It's been ${daysSinceLastOrder} days since your last visit and we've been thinking about you. We'd love to have you back.`
+  const defaultCtaText = 'Come Back and Shop'
 
   return (
     <Html lang="en">
@@ -147,12 +155,11 @@ export default function WinbackEmail({
             </Section>
           )}
 
-          <Text style={heading}>{greeting}</Text>
+          <Text style={heading}>{customHeadline ?? greeting}</Text>
           <Text style={subheading}>{storeName}</Text>
 
           <Text style={bodyText}>
-            It&apos;s been {daysSinceLastOrder} days since your last visit and we&apos;ve
-            been thinking about you. We&apos;d love to have you back.
+            {customBody ?? defaultBody}
           </Text>
 
           <Text style={bodyText}>
@@ -169,7 +176,7 @@ export default function WinbackEmail({
 
           <Section style={buttonContainer}>
             <Button href={shopUrl} style={button}>
-              Come Back and Shop
+              {customCtaText ?? defaultCtaText}
             </Button>
           </Section>
 
