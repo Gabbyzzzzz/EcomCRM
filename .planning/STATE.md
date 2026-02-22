@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 13 in progress (Plan 01 complete — email_templates table, API routes, /emails list page)
+**Current focus:** Phase 13 in progress (Plan 02 complete — Unlayer editor at /emails/[id]/edit with save/load/image upload)
 
 ## Current Position
 
-Phase: 13 of 20 (Email Template Editor — in progress, Plan 01/3 complete)
-Status: Phase 13 Plan 01 complete — email_templates table, CRUD query functions, REST API routes, and DB-backed /emails list page with Create/Duplicate/Delete.
-Last activity: 2026-02-22 — Phase 13 Plan 01 executed (email templates foundation)
+Phase: 13 of 20 (Email Template Editor — in progress, Plan 02/3 complete)
+Status: Phase 13 Plan 02 complete — Unlayer drag-and-drop editor at /emails/[id]/edit, image upload API, /emails/[id] redirect.
+Last activity: 2026-02-22 — Phase 13 Plan 02 executed (Unlayer editor integration)
 
 Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
@@ -40,7 +40,7 @@ Progress: [██████████████░░░░░░] 60% (12
 - Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
 
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
-| 13-email-template-editor | 1/3 | 4 min | 4 min |
+| 13-email-template-editor | 2/3 | 7 min | 3.5 min |
 
 *Updated after each plan completion*
 
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - [Phase 13]: drizzle-kit push bug workaround: applied migration directly via postgres.js client (drizzle-kit push fails with TypeError on pg_check constraints)
 - [Phase 13]: Duplicate action uses POST /api/email-templates/[id]?action=duplicate — keeps route structure simple for single action
 - [Phase 13]: _components/ subdirectory pattern: client components collocated with their server-component page under emails/_components/
+- [Phase 13]: Unlayer engine pinned to version 1.157.0 — registerCallback image only works on free tier with pinned version
+- [Phase 13]: Image upload API uses service-role Supabase key (server-side only) for email-assets bucket uploads
 
 ### Pending Todos
 
@@ -79,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 13-01 complete (04d3da2) — email_templates table, 6 CRUD queries, REST API routes, /emails DB-backed list page
+Stopped at: 13-02 complete (683dcaf) — Unlayer editor at /emails/[id]/edit, image upload API, /emails/[id] redirect
 Resume file: None
