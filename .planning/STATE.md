@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 14 in progress (1/? plans done — automation template linking infrastructure complete)
+**Current focus:** Phase 14 complete (2/2 plans done — template linking + inline editor with merge tags)
 
 ## Current Position
 
-Phase: 14 of 20 (Template-Automation Linking — in progress, 1 plan done)
-Status: Phase 14 Plan 01 complete — 3 schema columns added, 3-tier send fallback implemented, template selector UI built, preview endpoint updated.
-Last activity: 2026-02-22 — Phase 14 Plan 01 executed (automation template linking)
+Phase: 14 of 20 (Template-Automation Linking — complete, 2 plans done)
+Status: Phase 14 Plan 02 complete — inline Unlayer editor with merge tags, Customize for this Flow button, Clear Customization, substituteVariables bug fix.
+Last activity: 2026-02-22 — Phase 14 Plan 02 executed (inline editor + merge tags)
 
 Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
@@ -41,7 +41,7 @@ Progress: [██████████████░░░░░░] 60% (12
 
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
 | 13-email-template-editor | 3/3 | 9 min | 3 min |
-| 14-template-automation-linking | 1/? | 5 min | 5 min |
+| 14-template-automation-linking | 2/2 | 8 min | 4 min |
 
 *Updated after each plan completion*
 
@@ -75,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 14-01]: rawHtml added to SendMarketingEmailParams — skips React Email render for Tier 1/2 sends while preserving tracking pixel + link rewriting
 - [Phase 14-01]: substituteVariables() exported from actions.ts and imported by preview/route.ts for shared {{variable}} replacement logic
 - [Phase 14-01]: Template selector saves linkedEmailTemplateId with form changes on Save (not immediate PATCH) for UX consistency
+- [Phase 14-02]: AutomationInlineEditor is inline (500px) not fullscreen — visually embedded in automation detail page below template selector
+- [Phase 14-02]: substituteVariables fallback changed from match to empty string — prevents literal merge tags appearing in sent emails
+- [Phase 14-02]: Customize for this Flow fetches linked template designJson on demand via GET /api/email-templates/[id] — not pre-loaded
 
 ### Pending Todos
 
@@ -88,5 +91,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 14-01 complete (d84a376) — 3-tier template linking infrastructure: schema columns, selector UI, send fallback, preview endpoint
+Stopped at: 14-02 complete (6152019) — inline Unlayer editor with merge tags, Customize for this Flow, Clear Customization buttons, substituteVariables bug fix
 Resume file: None
