@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,6 +53,8 @@ function formatCount(n: number): string {
  * showing "Sync complete: X customers, Y orders imported".
  */
 export function SyncIndicator() {
+  const pathname = usePathname()
+  const isOnSyncPage = pathname === '/settings/sync'
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
 
@@ -127,17 +130,17 @@ export function SyncIndicator() {
       await fetchStatus()
       // Reschedule with current status — need to read from ref
       const currentStatus = prevStatusRef.current
-      const delay = currentStatus === 'running' ? 2000 : 10000
+      const delay = currentStatus === 'running' ? 2000 : isOnSyncPage ? 10000 : 30000
       intervalRef.current = setTimeout(tick, delay)
     }
 
-    // Start polling
-    intervalRef.current = setTimeout(tick, 10000)
+    // Start polling — 10s on /settings/sync, 30s elsewhere
+    intervalRef.current = setTimeout(tick, isOnSyncPage ? 10000 : 30000)
 
     return () => {
       if (intervalRef.current) clearTimeout(intervalRef.current)
     }
-  }, [fetchStatus])
+  }, [fetchStatus, isOnSyncPage])
 
   // ─── Auto-sync on first run ───────────────────────────────────────────────
 

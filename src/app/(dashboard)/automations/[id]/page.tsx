@@ -113,15 +113,6 @@ export default async function AutomationDetailPage({
         </div>
       </div>
 
-      {/* Performance Over Time chart section */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-medium mb-4">Performance Over Time</h2>
-        <p className="text-xs text-muted-foreground mb-4">
-          Sends, opens, and clicks per day (last 30 days)
-        </p>
-        <EmailPerformanceChart data={timeSeries} />
-      </div>
-
       {/* Configuration section — editable via AutomationDetailClient */}
       <div className="rounded-lg border bg-card p-6">
         <h2 className="text-lg font-medium mb-4">Configuration</h2>
@@ -178,6 +169,15 @@ export default async function AutomationDetailPage({
           initialCustomTemplateHtml={automation.customTemplateHtml ?? null}
           initialCustomTemplateJson={(automation.customTemplateJson as object | null) ?? null}
         />
+      </div>
+
+      {/* Performance Over Time chart section */}
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="text-lg font-medium mb-4">Performance Over Time</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          Sends, opens, and clicks per day (last 30 days)
+        </p>
+        <EmailPerformanceChart data={timeSeries} />
       </div>
 
       {/* AI Email Copy Generator section */}

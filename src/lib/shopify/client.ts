@@ -23,7 +23,15 @@ let tokenCache: CachedToken | null = null
  * Tokens expire in 24 hours (expires_in: 86399).
  */
 async function fetchAccessToken(): Promise<CachedToken> {
-  const tokenEndpoint = `${env.SHOPIFY_STORE_URL}/admin/oauth/access_token`
+  const tokenEndpoint = `${normalizeStoreUrl()}/admin/oauth/access_token`
+
+  const requestBody = {
+    client_id: env.SHOPIFY_CLIENT_ID,
+    client_secret: '[REDACTED]',
+    grant_type: 'client_credentials',
+  }
+  console.info('[shopify] Token request URL:', tokenEndpoint)
+  console.info('[shopify] Token request body:', JSON.stringify(requestBody))
 
   const response = await fetch(tokenEndpoint, {
     method: 'POST',
@@ -37,6 +45,8 @@ async function fetchAccessToken(): Promise<CachedToken> {
 
   if (!response.ok) {
     const body = await response.text()
+    console.error('[shopify] Token request failed — status:', response.status, response.statusText)
+    console.error('[shopify] Token request failed — response body:', body)
     throw new Error(
       `Shopify token request failed: ${response.status} ${response.statusText} — ${body}`
     )
@@ -83,8 +93,13 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function normalizeStoreUrl(): string {
+  const url = env.SHOPIFY_STORE_URL.replace(/\/+$/, '')
+  return url.startsWith('http') ? url : `https://${url}`
+}
+
 function getShopifyEndpoint(): string {
-  return `${env.SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`
+  return `${normalizeStoreUrl()}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`
 }
 
 // ─── Core GraphQL request function ───────────────────────────────────────────

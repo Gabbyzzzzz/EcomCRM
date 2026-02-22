@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { getAutomationListWithRates } from '@/lib/db/queries'
+import { getAutomationListWithRates, listEmailTemplatesForDropdown } from '@/lib/db/queries'
 import { env } from '@/lib/env'
 import { AutomationToggle } from '@/components/automation-toggle'
 import { SeedAutomationsButton } from '@/components/seed-automations-button'
+import CreateFlowButton from './_components/CreateFlowButton'
 
 export const metadata = {
   title: 'Automations | EcomCRM',
@@ -42,7 +43,10 @@ function delayLabel(delayValue: number | null, delayUnit: string | null): string
 
 export default async function AutomationsPage() {
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
-  const automationList = await getAutomationListWithRates(shopId)
+  const [automationList, templateOptions] = await Promise.all([
+    getAutomationListWithRates(shopId),
+    listEmailTemplatesForDropdown(shopId),
+  ])
 
   return (
     <div className="flex flex-col gap-6">
@@ -54,6 +58,7 @@ export default async function AutomationsPage() {
             Preset email flows that fire automatically on customer events
           </p>
         </div>
+        <CreateFlowButton templateOptions={templateOptions} />
       </div>
 
       {/* Empty state */}

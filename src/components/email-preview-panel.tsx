@@ -111,7 +111,7 @@ export function EmailPreviewPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          emailTemplateId: resolvedTemplateId,
+          emailTemplateId: resolvedTemplateId ?? undefined,
           subject,
           headline,
           body,

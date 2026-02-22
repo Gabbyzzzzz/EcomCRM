@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { listEmailTemplates } from '@/lib/db/queries'
 import { env } from '@/lib/env'
 import CreateTemplateButton from './_components/CreateTemplateButton'
+import ImportTemplateButton from './_components/ImportTemplateButton'
 import TemplateCardActions from './_components/TemplateCardActions'
 
 function getShopId(): string {
@@ -49,7 +50,10 @@ export default async function EmailTemplatesPage() {
             Create and manage email templates for your automation flows.
           </p>
         </div>
-        <CreateTemplateButton />
+        <div className="flex items-center gap-2">
+          <ImportTemplateButton />
+          <CreateTemplateButton />
+        </div>
       </div>
 
       {templates.length === 0 ? (
