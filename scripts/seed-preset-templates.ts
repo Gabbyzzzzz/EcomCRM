@@ -229,9 +229,9 @@ function makeDesign(id: string, rows: object[], bgColor = '#F4F4F4') {
 
 // ─── Preset Designs ───────────────────────────────────────────────────────────
 
-const WELCOME_DESIGN = makeDesign('welcome-body', [
+const WELCOME_DESIGN = makeDesign('welcome-doc', [
   row('welcome-header', [headingBlock('welcome-h1', 'Welcome to the Family!', '28px', '#FFFFFF')], '#1E40AF'),
-  row('welcome-body', [
+  row('welcome-content', [
     textBlock('welcome-t1', "Thank you for joining us. We're thrilled to have you."),
     buttonBlock('welcome-btn', 'Shop Now', '#', '#1E40AF'),
   ]),
@@ -245,13 +245,13 @@ const WELCOME_DESIGN = makeDesign('welcome-body', [
   ]),
 ])
 
-const ABANDONED_CART_DESIGN = makeDesign('abandoned-cart-body', [
+const ABANDONED_CART_DESIGN = makeDesign('abandoned-cart-doc', [
   row(
     'cart-header',
     [headingBlock('cart-h1', 'You Left Something Behind', '28px', '#FFFFFF')],
     '#F59E0B'
   ),
-  row('cart-body', [
+  row('cart-content', [
     textBlock('cart-t1', 'Your cart is waiting! Complete your purchase before items sell out.'),
     buttonBlock('cart-btn', 'Return to Cart', '#', '#F59E0B'),
   ]),
@@ -265,13 +265,13 @@ const ABANDONED_CART_DESIGN = makeDesign('abandoned-cart-body', [
   ]),
 ])
 
-const REPURCHASE_DESIGN = makeDesign('repurchase-body', [
+const REPURCHASE_DESIGN = makeDesign('repurchase-doc', [
   row(
     'repurchase-header',
     [headingBlock('repurchase-h1', 'Time to Stock Up?', '28px', '#FFFFFF')],
     '#10B981'
   ),
-  row('repurchase-body', [
+  row('repurchase-content', [
     textBlock(
       'repurchase-t1',
       "It's been a while since your last order. Your favorites are still available!"
@@ -288,13 +288,13 @@ const REPURCHASE_DESIGN = makeDesign('repurchase-body', [
   ]),
 ])
 
-const WINBACK_DESIGN = makeDesign('winback-body', [
+const WINBACK_DESIGN = makeDesign('winback-doc', [
   row(
     'winback-header',
     [headingBlock('winback-h1', 'We Miss You!', '28px', '#FFFFFF')],
     '#8B5CF6'
   ),
-  row('winback-body', [
+  row('winback-content', [
     textBlock(
       'winback-t1',
       "It's been a while. Here's an exclusive offer to welcome you back: use code WINBACK15 for 15% off."
@@ -311,13 +311,13 @@ const WINBACK_DESIGN = makeDesign('winback-body', [
   ]),
 ])
 
-const VIP_DESIGN = makeDesign('vip-body', [
+const VIP_DESIGN = makeDesign('vip-doc', [
   row(
     'vip-header',
     [headingBlock('vip-h1', 'You\'re a VIP \u2746', '28px', '#FFFFFF')],
     '#B45309'
   ),
-  row('vip-body', [
+  row('vip-content', [
     textBlock(
       'vip-t1',
       'As one of our most valued customers, you get exclusive early access to new arrivals and special rewards.'
@@ -350,7 +350,7 @@ async function main() {
   console.log(`Seeding preset templates for shop: ${shopId}`)
 
   const existing = await db
-    .select({ name: emailTemplates.name })
+    .select({ id: emailTemplates.id, name: emailTemplates.name })
     .from(emailTemplates)
     .where(
       and(
@@ -359,11 +359,16 @@ async function main() {
       )
     )
 
-  const existingNames = new Set(existing.map((r) => r.name))
+  const existingByName = new Map(existing.map((r) => [r.name, r.id]))
 
   for (const preset of PRESETS) {
-    if (existingNames.has(preset.name)) {
-      console.log(`  [${preset.name}] already exists, skipping`)
+    const existingId = existingByName.get(preset.name)
+    if (existingId) {
+      await db
+        .update(emailTemplates)
+        .set({ designJson: preset.design, html: null, updatedAt: new Date() })
+        .where(eq(emailTemplates.id, existingId))
+      console.log(`  [${preset.name}] updated`)
       continue
     }
     await db.insert(emailTemplates).values({

@@ -204,12 +204,11 @@ export function UnlayerEditor({ templateId, templateName, initialDesign }: Unlay
 
       {/* Editor + preview pane */}
       <div className="flex flex-1 overflow-hidden">
-        <div className={previewDevice ? 'w-1/2 overflow-hidden' : 'flex-1'}>
+        <div className={`${previewDevice ? 'w-1/2' : 'flex-1'} flex flex-col overflow-hidden`}>
           <EmailEditor
             ref={editorRef}
             onReady={onReady}
-            minHeight={previewDevice ? '100%' : 'calc(100vh - 49px)'}
-            style={{ height: '100%' }}
+            style={{ flex: 1 }}
             options={{
               version: '1.157.0',
               appearance: { theme: 'modern_light' },
