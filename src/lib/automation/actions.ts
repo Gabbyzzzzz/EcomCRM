@@ -63,8 +63,9 @@ export function substituteVariables(
   html: string,
   vars: Record<string, string>
 ): string {
-  return html.replace(/\{\{(\w+)\}\}/g, (match, key: string) => {
-    return vars[key] ?? match
+  // Replace all {{variable}} placeholders. Unknown keys → empty string (never leave raw tags in output).
+  return html.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
+    return vars[key] ?? ''
   })
 }
 
