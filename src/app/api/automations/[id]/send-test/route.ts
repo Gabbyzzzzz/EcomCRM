@@ -3,8 +3,9 @@ import { render } from '@react-email/render'
 import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { automations } from '@/lib/db/schema'
+import { automations, messageLogs } from '@/lib/db/schema'
 import { env } from '@/lib/env'
+import { injectTrackingPixel, rewriteLinks } from '@/lib/email/send'
 import WelcomeEmail from '@/emails/welcome'
 import WinbackEmail from '@/emails/winback'
 import VipEmail from '@/emails/vip'
@@ -173,14 +174,43 @@ export async function POST(
     const element = buildTestTemplate(automation.emailTemplateId, storeName, unsubscribeUrl, overrides)
     const html = await render(element)
 
+    // Pre-insert MessageLog to get messageLogId for tracking URLs
+    // customerId is null for test sends (no real customer)
+    let messageLogId: string | null = null
+    try {
+      const [logRow] = await db.insert(messageLogs).values({
+        shopId,
+        customerId: null,
+        automationId: id,
+        channel: 'email',
+        subject,
+        status: 'sent',
+        sentAt: new Date(),
+      }).returning({ id: messageLogs.id })
+      messageLogId = logRow.id
+    } catch (err) {
+      console.error('[send-test] Failed to pre-insert MessageLog:', err)
+      // Continue — tracking is best-effort, do not block the test send
+    }
+
+    // Inject tracking pixel and rewrite links
+    const trackedHtml = messageLogId
+      ? rewriteLinks(injectTrackingPixel(html, messageLogId), messageLogId)
+      : html
+
     const { data, error } = await resend.emails.send({
       from: `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`,
       to: email,
       subject,
-      html,
+      html: trackedHtml,
     })
 
     if (error || !data) {
+      if (messageLogId) {
+        try {
+          await db.update(messageLogs).set({ status: 'failed' }).where(eq(messageLogs.id, messageLogId))
+        } catch { /* ignore secondary failure */ }
+      }
       return Response.json({ error: error?.message ?? 'Send failed' }, { status: 500 })
     }
 

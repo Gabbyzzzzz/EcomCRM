@@ -78,7 +78,7 @@ async function logSuppressed(
  * NOTE: Apple Mail Privacy Protection (MPP) pre-fetches images including tracking
  * pixels, inflating open rates. Click rate is the more reliable engagement metric.
  */
-function injectTrackingPixel(html: string, messageLogId: string): string {
+export function injectTrackingPixel(html: string, messageLogId: string): string {
   const pixelUrl = `${env.APP_URL}/api/track/open?id=${messageLogId}`
   const pixelTag = `<img src="${pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`
   // Insert before closing </body> tag if present, otherwise append
@@ -93,7 +93,7 @@ function injectTrackingPixel(html: string, messageLogId: string): string {
  * tracking redirect endpoint. Unsubscribe links, mailto: links, anchor (#)
  * links, and non-http(s) URLs are left untouched.
  */
-function rewriteLinks(html: string, messageLogId: string): string {
+export function rewriteLinks(html: string, messageLogId: string): string {
   const baseUrl = env.APP_URL
   // Match href="..." in anchor tags, but skip unsubscribe links and mailto: links
   return html.replace(
