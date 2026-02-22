@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 14 complete (2/2 plans done — template linking + inline editor with merge tags)
+**Current focus:** Phase 15 complete (2/2 plans done — email performance KPIs on dashboard + time-series chart on automation detail)
 
 ## Current Position
 
-Phase: 15 of 20 (Email Performance Dashboard — in progress, 1/1 plans done)
-Status: Phase 15 Plan 01 complete — aggregate email KPIs on dashboard (total sent, open rate, click rate), open/click rate columns on automation list.
-Last activity: 2026-02-22 — Phase 15 Plan 01 executed (email performance dashboard)
+Phase: 15 of 20 (Email Performance Dashboard — complete, 2/2 plans done)
+Status: Phase 15 complete — email performance KPIs on dashboard, open/click rate columns on automation list, time-series line chart on automation detail page.
+Last activity: 2026-02-22 — Phase 15 Plan 02 executed (time-series chart + PERF-04 verification)
 
 Progress: [████████████████░░░░] 75% (15/20 phases complete)
 
@@ -42,7 +42,7 @@ Progress: [████████████████░░░░] 75% (15
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
 | 13-email-template-editor | 3/3 | 9 min | 3 min |
 | 14-template-automation-linking | 2/2 | 8 min | 4 min |
-| 15-email-performance-dashboard | 1/1 | 2 min | 2 min |
+| 15-email-performance-dashboard | 2/2 | 4 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -82,6 +82,9 @@ Recent decisions affecting current work:
 - [Phase 15-01]: getAutomationListWithRates uses LEFT JOIN subquery (db.execute) rather than N+1 per-row getAutomationEmailStats calls for automation list
 - [Phase 15-01]: Automation list shows "—" when rate is 0 (no sends) rather than "0%" — cleaner UX distinguishing no-data from actual 0% rate
 - [Phase 15-01]: Email Performance section placed inside kpis.totalCustomers > 0 branch — consistent with all other dashboard data sections
+- [Phase 15-02]: getAutomationEmailTimeSeries uses db.execute<Row>(sql`...`) + Date instanceof guard — consistent with getRevenueOverTime date handling pattern
+- [Phase 15-02]: EmailPerformanceChart renders 'No email data yet' empty state — graceful handling before any messages sent for an automation
+- [Phase 15-02]: PERF-04 (customer profile engagement icons) confirmed complete from Phase 12-02, no changes needed
 
 ### Pending Todos
 
@@ -95,5 +98,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 15-01 complete (82d3b03) — email performance KPIs on dashboard, open/click rate columns on automation list
+Stopped at: 15-02 complete (79fc33a) — time-series line chart on automation detail, PERF-04 verified. Phase 15 fully complete.
 Resume file: None
