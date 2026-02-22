@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 12 of 20 (Open & Click Tracking — in progress, Plan 01 complete)
-Status: Phase 12 Plan 01 complete — email_clicks table, tracking pixel, click-redirect endpoint implemented. Ready for Plan 02.
-Last activity: 2026-02-22 — Phase 12 Plan 01 executed (email tracking infrastructure)
+Phase: 12 of 20 (Open & Click Tracking — complete)
+Status: Phase 12 complete — tracking pixel injection, link rewriting, customer engagement column, and automation email performance stats implemented.
+Last activity: 2026-02-22 — Phase 12 Plan 02 executed (tracking pipeline + UI engagement)
 
 Progress: [█████████████░░░░░░░] 55% (11/20 phases complete)
 
@@ -39,7 +39,7 @@ Progress: [█████████████░░░░░░░] 55% (11
 - Last 5 plans: 06-03 (4 min), 07-01 (3 min), 07-02 (2 min), 08-01 (4 min), 08-02 (2 min)
 - Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
 
-| 12-open-and-click-tracking | 1/2 | 2 min | 2 min |
+| 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -60,6 +60,8 @@ Recent decisions affecting current work:
 - [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run to avoid JsonifyObject type incompatibility
 - [Phase 12-01]: email_clicks records every click; messageLogs.clicked_at is first-click only via isNull() guard
 - [Phase 12-01]: Tracking endpoints are best-effort (try/catch, never throw) — tracking should never break email delivery
+- [Phase 12-02]: MessageLog pre-inserted before Resend call so messageLogId is available for tracking URLs; on failure UPDATE pre-inserted row (no second INSERT)
+- [Phase 12-02]: Unsubscribe links skipped by rewriteLinks via url.includes('/unsubscribe') — compliance requirement
 
 ### Pending Todos
 
@@ -73,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 12-01 complete (ff8bc44) — email_clicks table, tracking pixel, and click redirect endpoint implemented
+Stopped at: 12-02 complete (a1bdc02) — tracking pixel injection, link rewriting, customer engagement column, and automation email performance stats implemented
 Resume file: None
