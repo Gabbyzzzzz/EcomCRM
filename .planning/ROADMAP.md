@@ -99,11 +99,11 @@ Plans:
   2. Automation list shows open rate and click rate columns per flow
   3. Automation detail shows sends/opens/clicks over time line chart (last 30 days)
   4. Customer profile Message History shows status icons (✓ sent, 👁 opened, 🔗 clicked) with timestamps
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Dashboard email performance section, automation list open/click columns, automation detail performance chart
-- [ ] 15-02-PLAN.md — Customer profile message history status icons (depends on Phase 12 data)
+- [ ] 15-01-PLAN.md — Aggregate email performance queries, dashboard Email Performance section (PERF-01), automation list open/click rate columns (PERF-02)
+- [ ] 15-02-PLAN.md — Automation detail time-series line chart (PERF-03), verify customer profile status icons (PERF-04, already done in Phase 12)
 
 ---
 
