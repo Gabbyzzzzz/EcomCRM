@@ -5,13 +5,13 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 13 complete (3/3 plans done — email template editor, Unlayer drag-and-drop, 5 preset templates seeded)
+**Current focus:** Phase 14 in progress (1/? plans done — automation template linking infrastructure complete)
 
 ## Current Position
 
-Phase: 13 of 20 (Email Template Editor — COMPLETE, 3/3 plans done)
-Status: Phase 13 complete — email_templates table, Unlayer editor at /emails/[id]/edit, 5 preset templates seeded with is_preset=true.
-Last activity: 2026-02-22 — Phase 13 Plan 03 executed (preset template seeder)
+Phase: 14 of 20 (Template-Automation Linking — in progress, 1 plan done)
+Status: Phase 14 Plan 01 complete — 3 schema columns added, 3-tier send fallback implemented, template selector UI built, preview endpoint updated.
+Last activity: 2026-02-22 — Phase 14 Plan 01 executed (automation template linking)
 
 Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
 
@@ -41,6 +41,7 @@ Progress: [██████████████░░░░░░] 60% (12
 
 | 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
 | 13-email-template-editor | 3/3 | 9 min | 3 min |
+| 14-template-automation-linking | 1/? | 5 min | 5 min |
 
 *Updated after each plan completion*
 
@@ -70,6 +71,10 @@ Recent decisions affecting current work:
 - [Phase 13]: Image upload API uses service-role Supabase key (server-side only) for email-assets bucket uploads
 - [Phase 13]: seed:templates script uses tsx --env-file .env.local — zero-config, loads .env.local without extra deps
 - [Phase 13]: Preset seeding uses pre-query + existingNames Set for idempotency, not onConflictDoNothing — email_templates has no unique(shopId, name) constraint
+- [Phase 14-01]: 3-tier template fallback: customTemplateHtml (Tier 1) > linkedEmailTemplateId HTML (Tier 2) > React Email switch (Tier 3, always succeeds)
+- [Phase 14-01]: rawHtml added to SendMarketingEmailParams — skips React Email render for Tier 1/2 sends while preserving tracking pixel + link rewriting
+- [Phase 14-01]: substituteVariables() exported from actions.ts and imported by preview/route.ts for shared {{variable}} replacement logic
+- [Phase 14-01]: Template selector saves linkedEmailTemplateId with form changes on Save (not immediate PATCH) for UX consistency
 
 ### Pending Todos
 
@@ -83,5 +88,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: 13-03 complete (45d0b25) — Phase 13 complete: 5 preset templates seeded (Welcome, Abandoned Cart, Repurchase, Win-back, VIP)
+Stopped at: 14-01 complete (d84a376) — 3-tier template linking infrastructure: schema columns, selector UI, send fallback, preview endpoint
 Resume file: None
