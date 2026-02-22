@@ -153,6 +153,13 @@ export const automations = pgTable(
     actionType: actionTypeEnum('action_type').notNull(),
     actionConfig: jsonb('action_config'),
     emailTemplateId: varchar('email_template_id', { length: 255 }),
+    // ── Phase 14: Template linking columns ───────────────────────────────────
+    /** UUID FK to email_templates.id — links automation to a library template (Tier 2 fallback) */
+    linkedEmailTemplateId: uuid('linked_email_template_id').references(() => emailTemplates.id),
+    /** Flow-specific customized HTML — overrides linked template (Tier 1, highest priority) */
+    customTemplateHtml: text('custom_template_html'),
+    /** Flow-specific Unlayer design JSON — stored alongside customTemplateHtml */
+    customTemplateJson: jsonb('custom_template_json'),
     enabled: boolean('enabled').default(true).notNull(),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })

@@ -975,6 +975,61 @@ export async function recordEmailClick(
   }
 }
 
+// ─── Automation template linking helpers ───────────────────────────────────────
+
+/**
+ * Fetch an automation row joined with its linked email template data.
+ * Returns the automation row plus `linkedTemplateHtml` and `linkedTemplateDesignJson`
+ * from the linked email_templates row (null if no template linked).
+ */
+export async function getAutomationWithTemplate(shopId: string, automationId: string) {
+  const [row] = await db
+    .select({
+      // Automation columns
+      id: automations.id,
+      shopId: automations.shopId,
+      name: automations.name,
+      triggerType: automations.triggerType,
+      triggerConfig: automations.triggerConfig,
+      delayValue: automations.delayValue,
+      delayUnit: automations.delayUnit,
+      actionType: automations.actionType,
+      actionConfig: automations.actionConfig,
+      emailTemplateId: automations.emailTemplateId,
+      linkedEmailTemplateId: automations.linkedEmailTemplateId,
+      customTemplateHtml: automations.customTemplateHtml,
+      customTemplateJson: automations.customTemplateJson,
+      enabled: automations.enabled,
+      lastRunAt: automations.lastRunAt,
+      createdAt: automations.createdAt,
+      // Joined template columns
+      linkedTemplateHtml: emailTemplates.html,
+      linkedTemplateDesignJson: emailTemplates.designJson,
+      linkedTemplateName: emailTemplates.name,
+    })
+    .from(automations)
+    .leftJoin(emailTemplates, eq(automations.linkedEmailTemplateId, emailTemplates.id))
+    .where(and(eq(automations.id, automationId), eq(automations.shopId, shopId)))
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * List email templates as lightweight dropdown options: { id, name }.
+ * Presets appear first (is_preset DESC), then alphabetically by name.
+ * Avoids sending full HTML/JSON to the client for the dropdown.
+ */
+export async function listEmailTemplatesForDropdown(
+  shopId: string
+): Promise<Array<{ id: string; name: string }>> {
+  return db
+    .select({ id: emailTemplates.id, name: emailTemplates.name })
+    .from(emailTemplates)
+    .where(eq(emailTemplates.shopId, shopId))
+    .orderBy(desc(emailTemplates.isPreset), emailTemplates.name)
+}
+
 // ─── Email template type ───────────────────────────────────────────────────────
 
 type EmailTemplateRow = typeof emailTemplates.$inferSelect
