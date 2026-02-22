@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { automations } from '@/lib/db/schema'
 import { env } from '@/lib/env'
-import { getAutomationEmailStats } from '@/lib/db/queries'
+import { getAutomationEmailStats, listEmailTemplatesForDropdown } from '@/lib/db/queries'
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
 import { AutomationDetailClient } from '@/components/automation-detail-client'
 
@@ -44,9 +44,10 @@ export default async function AutomationDetailPage({
   const { id } = await params
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
 
-  const [automationRows, stats] = await Promise.all([
+  const [automationRows, stats, templateOptions] = await Promise.all([
     db.select().from(automations).where(and(eq(automations.id, id), eq(automations.shopId, shopId))).limit(1),
     getAutomationEmailStats(shopId, id),
+    listEmailTemplatesForDropdown(shopId),
   ])
   const automation = automationRows[0]
 
@@ -132,7 +133,13 @@ export default async function AutomationDetailPage({
             <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
               Email Template
             </dt>
-            <dd className="text-sm">{automation.emailTemplateId ?? 'N/A'}</dd>
+            <dd className="text-sm">
+              {automation.customTemplateHtml
+                ? 'Custom (flow-specific)'
+                : automation.linkedEmailTemplateId
+                  ? (templateOptions.find((t) => t.id === automation.linkedEmailTemplateId)?.name ?? 'Linked template')
+                  : (automation.emailTemplateId ?? 'N/A')}
+            </dd>
           </div>
           <div>
             <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
@@ -155,6 +162,9 @@ export default async function AutomationDetailPage({
           initialDelayUnit={automation.delayUnit ?? null}
           initialTriggerConfig={(automation.triggerConfig as Record<string, unknown> | null) ?? null}
           initialActionConfig={(automation.actionConfig as Record<string, unknown> | null) ?? null}
+          templateOptions={templateOptions}
+          initialLinkedEmailTemplateId={automation.linkedEmailTemplateId ?? null}
+          initialCustomTemplateHtml={automation.customTemplateHtml ?? null}
         />
       </div>
 

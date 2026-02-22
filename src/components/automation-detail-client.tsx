@@ -20,6 +20,12 @@ interface AutomationDetailClientProps {
   initialDelayUnit: string | null
   initialTriggerConfig: Record<string, unknown> | null
   initialActionConfig: Record<string, unknown> | null
+  /** Lightweight dropdown options from listEmailTemplatesForDropdown */
+  templateOptions: Array<{ id: string; name: string }>
+  /** UUID of the currently linked email template (Tier 2) */
+  initialLinkedEmailTemplateId: string | null
+  /** Flow-specific HTML override (Tier 1) — null if none set */
+  initialCustomTemplateHtml: string | null
 }
 
 // ─── Helpers to extract actionConfig fields ───────────────────────────────────
@@ -40,6 +46,11 @@ function getStringField(
  *
  * Layout: config form on top, email preview panel below on mobile;
  * side-by-side (form left, preview right) on lg+ screens.
+ *
+ * Template selector dropdown (Phase 14):
+ * - "Default (React Email)" = empty string → Tier 3 fallback
+ * - Any template option → Tier 2, persisted as linkedEmailTemplateId UUID FK
+ * - customTemplateHtml present → Tier 1 badge displayed
  */
 export function AutomationDetailClient({
   automationId,
@@ -49,6 +60,9 @@ export function AutomationDetailClient({
   initialDelayUnit,
   initialTriggerConfig,
   initialActionConfig,
+  templateOptions,
+  initialLinkedEmailTemplateId,
+  initialCustomTemplateHtml,
 }: AutomationDetailClientProps) {
   const router = useRouter()
 
@@ -71,9 +85,21 @@ export function AutomationDetailClient({
 
   const [isSaving, setIsSaving] = useState(false)
 
+  // ─── Template linking state (Phase 14) ────────────────────────────────────
+
+  const [linkedEmailTemplateId, setLinkedEmailTemplateId] = useState<string | null>(
+    initialLinkedEmailTemplateId
+  )
+  const lastSavedLinkedTemplateRef = useRef<string | null>(initialLinkedEmailTemplateId)
+
+  // customTemplateHtml is read-only in this component — it's set via the email editor
+  const customTemplateHtml = initialCustomTemplateHtml
+
   // ─── isDirty ──────────────────────────────────────────────────────────────
 
-  const isDirty = JSON.stringify(values) !== JSON.stringify(lastSavedRef.current)
+  const isFormDirty = JSON.stringify(values) !== JSON.stringify(lastSavedRef.current)
+  const isTemplateDirty = linkedEmailTemplateId !== lastSavedLinkedTemplateRef.current
+  const isDirty = isFormDirty || isTemplateDirty
 
   // ─── onFieldChange ────────────────────────────────────────────────────────
 
@@ -97,6 +123,8 @@ export function AutomationDetailClient({
           delayUnit: values.delayUnit,
           triggerConfig: values.triggerConfig ?? {},
           actionConfig: values.actionConfig ?? {},
+          // Phase 14: include linkedEmailTemplateId in save
+          linkedEmailTemplateId: linkedEmailTemplateId ?? null,
         }),
       })
 
@@ -108,6 +136,7 @@ export function AutomationDetailClient({
       }
 
       lastSavedRef.current = values
+      lastSavedLinkedTemplateRef.current = linkedEmailTemplateId
       toast.success('Automation saved')
       router.refresh()
     } catch {
@@ -115,12 +144,13 @@ export function AutomationDetailClient({
     } finally {
       setIsSaving(false)
     }
-  }, [automationId, values, router])
+  }, [automationId, values, linkedEmailTemplateId, router])
 
   // ─── onCancel ─────────────────────────────────────────────────────────────
 
   const onCancel = useCallback(() => {
     setValues(lastSavedRef.current)
+    setLinkedEmailTemplateId(lastSavedLinkedTemplateRef.current)
   }, [])
 
   // ─── Derived preview props from current actionConfig ─────────────────────
@@ -150,6 +180,41 @@ export function AutomationDetailClient({
 
   return (
     <>
+      {/* Template selector (Phase 14) */}
+      {templateOptions.length > 0 && (
+        <div className="mb-6 rounded-md border bg-muted/30 px-4 py-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <label
+              htmlFor="template-select"
+              className="text-sm font-medium text-muted-foreground whitespace-nowrap"
+            >
+              Email Template:
+            </label>
+            <select
+              id="template-select"
+              value={linkedEmailTemplateId ?? ''}
+              onChange={(e) => setLinkedEmailTemplateId(e.target.value || null)}
+              className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">Default (React Email)</option>
+              {templateOptions.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            {customTemplateHtml && (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                Custom edits applied
+              </span>
+            )}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Select a template from your email library. &quot;Default&quot; uses the built-in React Email template.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration form */}
         <AutomationConfigForm
@@ -172,6 +237,8 @@ export function AutomationDetailClient({
           body={previewBody}
           ctaText={previewCtaText}
           discountCode={previewDiscountCode}
+          linkedEmailTemplateId={linkedEmailTemplateId}
+          customTemplateHtml={customTemplateHtml}
         />
       </div>
 

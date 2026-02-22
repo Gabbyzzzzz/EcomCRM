@@ -3,6 +3,11 @@ import * as React from 'react'
 import { render } from '@react-email/render'
 import { z } from 'zod'
 import { env } from '@/lib/env'
+import { db } from '@/lib/db'
+import { automations } from '@/lib/db/schema'
+import { eq, and } from 'drizzle-orm'
+import { getEmailTemplate } from '@/lib/db/queries'
+import { substituteVariables } from '@/lib/automation/actions'
 import WelcomeEmail from '@/emails/welcome'
 import WinbackEmail from '@/emails/winback'
 import RepurchaseEmail from '@/emails/repurchase'
@@ -12,12 +17,18 @@ import VipEmail from '@/emails/vip'
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 
 const previewSchema = z.object({
-  emailTemplateId: z.string(),
+  // Tier 3 (React Email) identifier
+  emailTemplateId: z.string().optional(),
   subject: z.string().optional(),
   headline: z.string().optional(),
   body: z.string().optional(),
   ctaText: z.string().optional(),
   discountCode: z.string().optional(),
+  // Phase 14: Tier 1/2 identifiers
+  /** UUID FK — resolves Tier 2 (linked email template from library) */
+  linkedEmailTemplateId: z.string().uuid().optional(),
+  /** True = fetch customTemplateHtml from the automation row (Tier 1 server-side) */
+  hasCustomTemplate: z.boolean().optional(),
 })
 
 // ─── Default subjects per template ────────────────────────────────────────────
@@ -30,14 +41,26 @@ const SUBJECT_MAP: Record<string, string> = {
   vip: "You're a VIP!",
 }
 
+// ─── Preview variable substitution values ─────────────────────────────────────
+
+function previewVars(discountCode?: string): Record<string, string> {
+  return {
+    customer_name: 'Preview Customer',
+    store_name: env.RESEND_FROM_NAME ?? 'EcomCRM Store',
+    unsubscribe_url: '#',
+    discount_code: discountCode ?? 'PREVIEW10',
+    shop_url: env.SHOPIFY_STORE_URL ?? '#',
+  }
+}
+
 // ─── POST /api/automations/[id]/preview ───────────────────────────────────────
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
-  // params unused but must be present for Next.js route type
-  await params
+  const { id } = await params
+  const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
 
   let body: unknown
   try {
@@ -51,7 +74,52 @@ export async function POST(
     return Response.json({ error: parsed.error.message }, { status: 400 })
   }
 
-  const { emailTemplateId, subject, headline, body: customBody, ctaText, discountCode } = parsed.data
+  const {
+    emailTemplateId,
+    subject,
+    headline,
+    body: customBody,
+    ctaText,
+    discountCode,
+    linkedEmailTemplateId,
+    hasCustomTemplate,
+  } = parsed.data
+
+  // ── Tier 1: Fetch customTemplateHtml from automation row ─────────────────
+  if (hasCustomTemplate) {
+    const [automationRow] = await db
+      .select({ customTemplateHtml: automations.customTemplateHtml })
+      .from(automations)
+      .where(and(eq(automations.id, id), eq(automations.shopId, shopId)))
+      .limit(1)
+
+    if (automationRow?.customTemplateHtml) {
+      const html = substituteVariables(automationRow.customTemplateHtml, previewVars(discountCode))
+      return Response.json({
+        html,
+        subject: subject ?? 'Custom Template Preview',
+      })
+    }
+    // Fall through if customTemplateHtml is null (defensive)
+  }
+
+  // ── Tier 2: Linked email template from library ────────────────────────────
+  if (linkedEmailTemplateId) {
+    const template = await getEmailTemplate(shopId, linkedEmailTemplateId)
+    if (template?.html) {
+      const html = substituteVariables(template.html, previewVars(discountCode))
+      return Response.json({
+        html,
+        subject: subject ?? template.name,
+      })
+    }
+    // If linked template has no HTML yet, fall through to Tier 3
+  }
+
+  // ── Tier 3: React Email template (original behavior) ─────────────────────
+  if (!emailTemplateId) {
+    return Response.json({ error: 'No template specified' }, { status: 400 })
+  }
 
   const storeName = env.RESEND_FROM_NAME
   const customerName = 'Preview Customer'

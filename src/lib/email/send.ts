@@ -39,6 +39,13 @@ export interface SendMarketingEmailParams {
   idempotencyKey: string
   /** Optional FK to automations table — stored in MessageLog */
   automationId?: string
+  /**
+   * Phase 14: Optional pre-rendered HTML for Tier 1 (customTemplateHtml) and
+   * Tier 2 (linked email template) sends. When provided, skips the templateFactory
+   * render step and uses this HTML directly. Tracking pixel + link rewriting
+   * still apply. Variable substitution must be done by the caller before passing.
+   */
+  rawHtml?: string
 }
 
 export interface SendResult {
@@ -134,7 +141,7 @@ export function rewriteLinks(html: string, messageLogId: string): string {
 export async function sendMarketingEmail(
   params: SendMarketingEmailParams
 ): Promise<SendResult> {
-  const { shopId, customerInternalId, subject, templateFactory, idempotencyKey, automationId } =
+  const { shopId, customerInternalId, subject, templateFactory, idempotencyKey, automationId, rawHtml } =
     params
 
   // ── Step 1: Look up customer ──────────────────────────────────────────────
@@ -167,8 +174,15 @@ export async function sendMarketingEmail(
   const unsubscribeUrl = buildUnsubscribeUrl(customerInternalId, shopId)
 
   // ── Step 6: Render template ───────────────────────────────────────────────
-  const element = templateFactory(unsubscribeUrl)
-  const html = await render(element)
+  // Phase 14: If rawHtml is provided (Tier 1/2), skip React Email render entirely.
+  // Tracking pixel injection + link rewriting still apply to rawHtml.
+  let html: string
+  if (rawHtml !== undefined) {
+    html = rawHtml
+  } else {
+    const element = templateFactory(unsubscribeUrl)
+    html = await render(element)
+  }
 
   // ── Step 7: Pre-insert MessageLog to get messageLogId for tracking URLs ──
   let messageLogId: string
