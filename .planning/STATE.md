@@ -9,9 +9,9 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 
 ## Current Position
 
-Phase: 11 of 20 (UI Polish — complete, v1.1 shipped)
-Status: v1.1 milestone complete and archived. v2.0 roadmap + requirements defined. Ready to plan Phase 12.
-Last activity: 2026-02-22 — v2.0/v3.0 roadmap discussed and finalized
+Phase: 12 of 20 (Open & Click Tracking — in progress, Plan 01 complete)
+Status: Phase 12 Plan 01 complete — email_clicks table, tracking pixel, click-redirect endpoint implemented. Ready for Plan 02.
+Last activity: 2026-02-22 — Phase 12 Plan 01 executed (email tracking infrastructure)
 
 Progress: [█████████████░░░░░░░] 55% (11/20 phases complete)
 
@@ -39,6 +39,8 @@ Progress: [█████████████░░░░░░░] 55% (11
 - Last 5 plans: 06-03 (4 min), 07-01 (3 min), 07-02 (2 min), 08-01 (4 min), 08-02 (2 min)
 - Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
 
+| 12-open-and-click-tracking | 1/2 | 2 min | 2 min |
+
 *Updated after each plan completion*
 
 ## Accumulated Context
@@ -56,6 +58,8 @@ Recent decisions affecting current work:
 - [Phase 07-ai-insights]: Provider factory getModel() selects google('gemini-1.5-flash') by default, anthropic('claude-sonnet-4-20250514') when AI_PROVIDER=anthropic
 - [Phase 05-automation-engine]: Automations page at (dashboard)/automations/page.tsx to inherit dashboard sidebar layout via Next.js route group
 - [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run to avoid JsonifyObject type incompatibility
+- [Phase 12-01]: email_clicks records every click; messageLogs.clicked_at is first-click only via isNull() guard
+- [Phase 12-01]: Tracking endpoints are best-effort (try/catch, never throw) — tracking should never break email delivery
 
 ### Pending Todos
 
@@ -68,6 +72,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: 08-02 complete (75ec87c) — badge text fix and toggle persistence verified by user
+Last session: 2026-02-22
+Stopped at: 12-01 complete (ff8bc44) — email_clicks table, tracking pixel, and click redirect endpoint implemented
 Resume file: None
