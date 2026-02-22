@@ -2,23 +2,11 @@
 
 ## What This Is
 
-A lightweight CRM + marketing automation tool for Shopify small-team merchants. Connects to a real Shopify store via Custom App, auto-syncs customer and order data, segments customers using RFM scoring, and runs triggered email automation flows. Built for self-use and as a portfolio/interview demo — everything must actually work end-to-end with real data and real emails.
+A lightweight CRM + marketing automation tool for Shopify small-team merchants. Connects to a real Shopify store via Partners Dashboard OAuth app, auto-syncs customer and order data, segments customers using RFM scoring, and runs triggered email automation flows with configurable content and live preview. Built for self-use and as a portfolio/interview demo — everything works end-to-end with real Shopify data and real Resend email delivery.
 
 ## Core Value
 
 Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-
-## Current Milestone: v1.1 Make It Real - Production-Ready Automations
-
-**Goal:** Make the automation pipeline actually fire end-to-end, add configuration and email customization UI, and polish the whole app for demo-readiness.
-
-**Target features:**
-- End-to-end pipeline debug and verification (webhook → Inngest → engine → email)
-- Editable automation flow configuration (delay, thresholds, discount code, subject, body)
-- Email content customization with live preview
-- Test send capability with customized content
-- UI polish across dashboard, customer list, and automation pages
-- Fix automation toggle persistence and badge sync
 
 ## Requirements
 
@@ -26,7 +14,7 @@ Shopify customers auto-segmented by RFM score, with triggered email flows that a
 
 - ✓ Next.js 14 (App Router) + TypeScript scaffolding — v1.0
 - ✓ Tailwind CSS + shadcn/ui configured — v1.0
-- ✓ All dependencies installed (Drizzle, Supabase, Inngest, Resend, Recharts, Claude SDK) — v1.0
+- ✓ All dependencies installed (Drizzle, Supabase, Inngest, Resend, Recharts, AI SDK) — v1.0
 - ✓ PostgreSQL schema (Customer, Order, Automation, MessageLog) via Drizzle + Supabase — v1.0
 - ✓ Shopify OAuth integration (GraphQL client with rate limit handling) — v1.0
 - ✓ Full customer + order sync (bulk + incremental via webhooks) — v1.0
@@ -37,18 +25,19 @@ Shopify customers auto-segmented by RFM score, with triggered email flows that a
 - ✓ 5 preset email automation flows (welcome, abandoned cart, repurchase, winback, VIP) — v1.0
 - ✓ Automation engine (trigger evaluation, delay handling, action execution) — v1.0
 - ✓ Email sending via Resend + React Email templates — v1.0
-- ✓ AI-powered customer insights via Claude API — v1.0
+- ✓ AI-powered customer insights via Claude/Gemini API — v1.0
 - ✓ Inngest cron jobs (daily RFM recalculation, automation checks) — v1.0
 - ✓ Webhook ingestion (orders/create, orders/updated, customers/create, customers/update) — v1.0
+- ✓ End-to-end automation pipeline verified working with real Shopify data — v1.1
+- ✓ Automation flow configuration editable in UI (delay, thresholds, discount, subject, body) — v1.1
+- ✓ Email content customization with live preview on automation detail page — v1.1
+- ✓ Test send capability delivers current in-form content to inbox without saving — v1.1
+- ✓ UI polish for demo-readiness (skeleton loaders + empty states on all pages) — v1.1
+- ✓ Automation toggle state persists to database and Active/Inactive badge syncs — v1.1
 
 ### Active
 
-- [ ] End-to-end automation pipeline verified working with real Shopify data
-- [ ] Automation flow configuration editable in UI (delay, thresholds, discount, subject, body)
-- [ ] Email content customization with live preview on automation detail page
-- [ ] Test send capability with customized email content
-- [ ] UI polish for demo-readiness (dashboard, customer list, automations)
-- [ ] Automation toggle state persists to database and badge syncs
+_(None — v1.1 shipped. Define v2 requirements with `/gsd:new-milestone`.)_
 
 ### Out of Scope
 
@@ -58,33 +47,49 @@ Shopify customers auto-segmented by RFM score, with triggered email flows that a
 - Mobile app — web only
 - Custom automation builder — 5 preset flows only for v1
 - A/B testing, open-rate tracking pixel — future
+- WYSIWYG email editor — React Email + textarea editing sufficient for v1
 
 ## Context
 
-- Existing code is boilerplate Next.js 14 skeleton; no business logic implemented yet
-- Shopify integration uses Custom App access token (env var), not OAuth — simpler and sufficient for single-store use
-- RFM scoring is quintile-based across all customers (adaptive thresholds, not fixed)
-- Webhook verification uses HMAC-SHA256 with SHOPIFY_WEBHOOK_SECRET
-- Money fields always stored as decimal strings, never floats
-- This is the authoritative project spec; CLAUDE.md contains the full technical schema and coding rules
+**Shipped:** v1.1 (2026-02-22) — 11 phases, 26 plans, 43 files changed, ~11,700 LOC TypeScript
+
+**Tech stack:**
+- Next.js 14 App Router + TypeScript strict
+- Drizzle ORM + Supabase PostgreSQL (PgBouncer Transaction mode)
+- Inngest (cron + event-driven background jobs)
+- Resend + React Email (5 templates with custom content props)
+- Vercel AI SDK — Google Gemini (default) or Anthropic Claude
+- shadcn/ui + Tailwind CSS + Recharts
+- Deployed to Vercel
+
+**Current state:**
+- Shopify webhooks registered to `https://ecomcrm.vercel.app/api/webhooks/shopify` (4 topics)
+- Auth uses client_credentials grant (Partners Dashboard OAuth app) — token cached in memory, auto-refreshed
+- All automation content (subject, headline, body, CTA, discount) flows from UI form → DB actionConfig → executeEmailAction → Resend
+- Test send and live preview both use unsaved form state (no save required)
 
 ## Constraints
 
 - **Tech Stack**: Next.js 14 App Router, TypeScript strict, Drizzle ORM, Supabase PostgreSQL — locked per CLAUDE.md
-- **Shopify**: Custom App only (no Public App OAuth) — single store access token in env
-- **Code Quality**: TypeScript strict (no `any`), zod validation on all API inputs, HMAC verification on webhooks — non-negotiable for portfolio quality
+- **Shopify**: Partners Dashboard OAuth app, client_credentials grant — do NOT change to static access token
+- **Code Quality**: TypeScript strict (no `any`), zod validation on all API inputs, HMAC verification on webhooks
 - **Data**: Real Shopify store data, not mock — demo must show actual customer/order sync
-- **Email**: Real sends via Resend (not just logged) — automation flows must actually fire
+- **Email**: Real sends via Resend — automation flows must actually fire
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Custom App (not Public App) | Single store, no OAuth complexity needed | — Pending |
-| Inngest for scheduling | Handles retries, idempotency, cron natively | — Pending |
-| Quintile-based RFM | Adaptive to store size, no fixed thresholds | — Pending |
-| Resend + React Email | Type-safe templates, reliable delivery | — Pending |
-| Claude API for insights | Portfolio differentiator, AI layer on top of CRM data | — Pending |
+| Partners Dashboard OAuth app (client_credentials) | Single store, token auto-refreshes every 24h | ✓ Good — no manual token rotation |
+| Inngest for scheduling | Handles retries, idempotency, cron natively | ✓ Good — zero duplicate sends |
+| Quintile-based RFM | Adaptive to store size, no fixed thresholds | ✓ Good — works from 1 to 10K customers |
+| Resend + React Email | Type-safe templates, reliable delivery | ✓ Good — custom props make content overrides clean |
+| Vercel AI SDK + Gemini default | Swap to Claude via env var | ✓ Good — flexible without code change |
+| Controlled AutomationConfigForm | No internal state — parent owns all form values | ✓ Good — enables shared state with live preview |
+| Three-layer content priority (body > DB > defaults) | Unsaved edits visible in test send and preview | ✓ Good — zero save-before-preview friction |
+| Next.js loading.tsx for skeletons | App Router Suspense boundary, zero extra code | ✓ Good — route-level coverage with no client wrappers |
+| PgBouncer Transaction mode (port 6543) | Serverless connection pooling | ✓ Good — no connection exhaustion under concurrency |
+| REST webhook normalization at Inngest boundary | Shopify webhooks are REST format, internal types are GQL-format | ✓ Good — clear boundary, no type leakage |
 
 ---
-*Last updated: 2026-02-21 after milestone v1.1 started*
+*Last updated: 2026-02-22 after v1.1 milestone shipped*

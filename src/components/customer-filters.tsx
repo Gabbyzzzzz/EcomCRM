@@ -174,11 +174,26 @@ export function CustomerFilters({ initialData }: CustomerFiltersProps) {
       <div className="rounded-lg border bg-card overflow-hidden">
         {rows.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-muted-foreground text-sm">No customers found.</p>
-            {(search || segment) && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Try clearing the search or segment filter.
-              </p>
+            {search || segment ? (
+              <>
+                <p className="text-sm font-medium mb-1">No customers match your filters.</p>
+                <p className="text-xs text-muted-foreground">
+                  Try clearing the search or segment filter.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium mb-1">No customers found.</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Import your Shopify customers to get started.
+                </p>
+                <a
+                  href="/settings/sync"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Go to Sync Settings &rarr;
+                </a>
+              </>
             )}
           </div>
         ) : (
