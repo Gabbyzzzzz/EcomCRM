@@ -67,12 +67,12 @@ Plans:
   3. Images uploaded in Unlayer are stored in Supabase Storage and inserted as public URLs
   4. Saving a template persists HTML + Design JSON; reopening loads JSON back into Unlayer for re-editing
   5. 5 preset Unlayer templates (welcome, abandoned-cart, repurchase, winback, VIP) exist as `is_preset = true` — built natively in Unlayer, not converted from React Email
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Schema (email_templates table, automations FK columns), migration, /emails list page with placeholder thumbnails
-- [ ] 13-02-PLAN.md — Unlayer editor integration at /emails/[id]/edit, save/load HTML+JSON, image upload to Supabase Storage
-- [ ] 13-03-PLAN.md — Build and seed 5 preset Unlayer templates
+- [ ] 13-01-PLAN.md — emailTemplates table schema, migration, CRUD query functions, email-templates API routes, /emails list page with placeholder thumbnails
+- [ ] 13-02-PLAN.md — Unlayer editor at /emails/[id]/edit with save/load HTML+JSON, image upload to Supabase Storage
+- [ ] 13-03-PLAN.md — Seed 5 preset Unlayer templates (Welcome, Abandoned Cart, Repurchase, Win-back, VIP)
 
 #### Phase 14: Template ↔ Automation Linking
 **Goal**: Connect the Unlayer template library to automation flows with 3-tier content fallback.
