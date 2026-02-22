@@ -1,68 +1,109 @@
 import Link from 'next/link'
+import { listEmailTemplates } from '@/lib/db/queries'
+import { env } from '@/lib/env'
+import CreateTemplateButton from './_components/CreateTemplateButton'
+import TemplateCardActions from './_components/TemplateCardActions'
 
-const TEMPLATES = [
-  {
-    id: 'welcome',
-    name: 'Welcome',
-    description: 'Sent when a customer places their first order.',
-    trigger: 'First order placed',
-  },
-  {
-    id: 'winback',
-    name: 'Win-back',
-    description: 'Re-engages customers who haven\'t ordered in 90+ days.',
-    trigger: 'Days since last order',
-  },
-  {
-    id: 'vip',
-    name: 'VIP',
-    description: 'Rewards customers who reach the Champion segment.',
-    trigger: 'Segment → champion',
-  },
-  {
-    id: 'repurchase',
-    name: 'Repurchase',
-    description: 'Encourages repeat purchases with personalised suggestions.',
-    trigger: 'Segment → loyal / potential',
-  },
-  {
-    id: 'abandoned-cart',
-    name: 'Abandoned Cart',
-    description: 'Recovers carts left more than 1 hour without checkout.',
-    trigger: 'Cart abandoned',
-  },
-]
+function getShopId(): string {
+  return new URL(env.SHOPIFY_STORE_URL).hostname
+}
 
-export default function EmailTemplatesPage() {
+function getColorForName(name: string): string {
+  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffSeconds = Math.floor(diffMs / 1000)
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  const diffHours = Math.floor(diffMinutes / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffDays > 30) {
+    return date.toLocaleDateString()
+  } else if (diffDays > 0) {
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+  } else if (diffHours > 0) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+  } else if (diffMinutes > 0) {
+    return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`
+  } else {
+    return 'just now'
+  }
+}
+
+export default async function EmailTemplatesPage() {
+  const shopId = getShopId()
+  const templates = await listEmailTemplates(shopId)
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Email Templates</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          The 5 pre-built React Email templates used by the automation engine.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Email Templates</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create and manage email templates for your automation flows.
+          </p>
+        </div>
+        <CreateTemplateButton />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {TEMPLATES.map((t) => (
-          <Link
-            key={t.id}
-            href={`/emails/${t.id}`}
-            className="rounded-lg border bg-card p-5 flex flex-col gap-3 hover:bg-accent transition-colors group"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <h2 className="font-medium group-hover:text-accent-foreground">{t.name}</h2>
-              <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground shrink-0">
-                {t.id}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t.description}</p>
-            <div className="mt-auto pt-2 border-t">
-              <span className="text-xs text-muted-foreground">Trigger: {t.trigger}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {templates.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            No templates yet. Create your first template to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {templates.map((template) => {
+            const color = getColorForName(template.name)
+            const initial = template.name.charAt(0).toUpperCase()
+
+            return (
+              <div
+                key={template.id}
+                className="rounded-lg border bg-card flex flex-col overflow-hidden"
+              >
+                {/* Clickable area: thumbnail + name */}
+                <Link href={`/emails/${template.id}/edit`} className="group flex flex-col">
+                  <div
+                    className="flex items-center justify-center group-hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: color, height: '120px' }}
+                  >
+                    <span className="text-4xl font-bold text-white">{initial}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 px-4 pt-4 pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="font-medium leading-tight group-hover:text-primary transition-colors">{template.name}</h2>
+                      {template.isPreset && (
+                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          Preset
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Edited {formatRelativeTime(new Date(template.updatedAt))}
+                    </p>
+                  </div>
+                </Link>
+
+                {/* Actions */}
+                <div className="px-4 pb-4">
+                  <TemplateCardActions
+                    templateId={template.id}
+                    templateName={template.name}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

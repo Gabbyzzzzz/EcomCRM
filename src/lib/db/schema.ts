@@ -153,6 +153,13 @@ export const automations = pgTable(
     actionType: actionTypeEnum('action_type').notNull(),
     actionConfig: jsonb('action_config'),
     emailTemplateId: varchar('email_template_id', { length: 255 }),
+    // ── Phase 14: Template linking columns ───────────────────────────────────
+    /** UUID FK to email_templates.id — links automation to a library template (Tier 2 fallback) */
+    linkedEmailTemplateId: uuid('linked_email_template_id').references(() => emailTemplates.id),
+    /** Flow-specific customized HTML — overrides linked template (Tier 1, highest priority) */
+    customTemplateHtml: text('custom_template_html'),
+    /** Flow-specific Unlayer design JSON — stored alongside customTemplateHtml */
+    customTemplateJson: jsonb('custom_template_json'),
     enabled: boolean('enabled').default(true).notNull(),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -254,5 +261,43 @@ export const webhookDeliveries = pgTable(
       table.webhookId
     ),
     index('webhook_deliveries_topic_idx').on(table.topic),
+  ]
+)
+
+export const emailClicks = pgTable(
+  'email_clicks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    messageLogId: uuid('message_log_id')
+      .notNull()
+      .references(() => messageLogs.id),
+    linkUrl: text('link_url').notNull(),
+    clickedAt: timestamp('clicked_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('email_clicks_shop_id_idx').on(table.shopId),
+    index('email_clicks_message_log_id_idx').on(table.messageLogId),
+    index('email_clicks_clicked_at_idx').on(table.clickedAt),
+  ]
+)
+
+export const emailTemplates = pgTable(
+  'email_templates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    html: text('html'),
+    designJson: jsonb('design_json'),
+    isPreset: boolean('is_preset').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('email_templates_shop_id_idx').on(table.shopId),
+    index('email_templates_is_preset_idx').on(table.isPreset),
   ]
 )

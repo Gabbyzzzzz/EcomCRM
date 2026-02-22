@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { listAutomations } from '@/lib/db/queries'
+import { getAutomationListWithRates } from '@/lib/db/queries'
 import { env } from '@/lib/env'
 import { AutomationToggle } from '@/components/automation-toggle'
 import { SeedAutomationsButton } from '@/components/seed-automations-button'
@@ -42,7 +42,7 @@ function delayLabel(delayValue: number | null, delayUnit: string | null): string
 
 export default async function AutomationsPage() {
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
-  const automationList = await listAutomations(shopId)
+  const automationList = await getAutomationListWithRates(shopId)
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,6 +83,12 @@ export default async function AutomationsPage() {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                   Action
                 </th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">
+                  Open Rate
+                </th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">
+                  Click Rate
+                </th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                   Status
                 </th>
@@ -116,6 +122,12 @@ export default async function AutomationsPage() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground capitalize">
                     {automation.actionType.replace('_', ' ')}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {automation.openRate > 0 ? `${automation.openRate}%` : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {automation.clickRate > 0 ? `${automation.clickRate}%` : '—'}
                   </td>
                   <td className="px-4 py-3">
                     <span

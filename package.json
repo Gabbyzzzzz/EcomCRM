@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:templates": "npx tsx --env-file .env.local scripts/seed-preset-templates.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.46",
@@ -31,6 +32,7 @@
     "postgres": "^3.4.8",
     "react": "^18",
     "react-dom": "^18",
+    "react-email-editor": "^1.7.11",
     "recharts": "^3.7.0",
     "resend": "^6.9.2",
     "sonner": "^2.0.7",

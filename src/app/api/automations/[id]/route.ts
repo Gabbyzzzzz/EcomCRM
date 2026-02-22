@@ -38,6 +38,13 @@ const patchSchema = z.object({
       alsoAddTag: z.string().optional(),
     })
     .optional(),
+  // Phase 14: Template linking columns
+  /** UUID FK to email_templates — links this automation to a library template */
+  linkedEmailTemplateId: z.string().uuid().nullable().optional(),
+  /** Flow-specific HTML override (Tier 1 — highest priority in 3-tier fallback) */
+  customTemplateHtml: z.string().nullable().optional(),
+  /** Flow-specific Unlayer design JSON stored alongside customTemplateHtml */
+  customTemplateJson: z.unknown().nullable().optional(),
 })
 
 export async function PATCH(
@@ -62,7 +69,10 @@ export async function PATCH(
     data.delayValue !== undefined ||
     data.delayUnit !== undefined ||
     data.triggerConfig !== undefined ||
-    data.actionConfig !== undefined
+    data.actionConfig !== undefined ||
+    data.linkedEmailTemplateId !== undefined ||
+    data.customTemplateHtml !== undefined ||
+    data.customTemplateJson !== undefined
 
   if (!hasConfigChanges && data.enabled !== undefined) {
     // Toggle-only: use existing helper for backward compatibility
@@ -86,6 +96,16 @@ export async function PATCH(
     }
     if (data.actionConfig !== undefined) {
       updateSet.actionConfig = data.actionConfig
+    }
+    // Phase 14: template linking fields
+    if (data.linkedEmailTemplateId !== undefined) {
+      updateSet.linkedEmailTemplateId = data.linkedEmailTemplateId
+    }
+    if (data.customTemplateHtml !== undefined) {
+      updateSet.customTemplateHtml = data.customTemplateHtml
+    }
+    if (data.customTemplateJson !== undefined) {
+      updateSet.customTemplateJson = data.customTemplateJson
     }
 
     await db

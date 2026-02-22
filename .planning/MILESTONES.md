@@ -21,12 +21,38 @@
 ---
 *Last updated: 2026-02-21*
 
-## v1.1 Make It Real - Production-Ready Automations (Shipped: 2026-02-22)
+## v1.1 — Make It Real: Production-Ready Automations (Complete)
 
-**Phases completed:** 11 phases, 26 plans, 0 tasks
+**Completed:** 2026-02-22
+**Phases:** 8–11 (8 plans total)
+**Duration:** 2026-02-21 to 2026-02-22
 
-**Key accomplishments:**
-- (none recorded)
+**What shipped:**
+- Pipeline Verification: REST webhook normalization, Shopify → DB GID conversion, days_since_order cron trigger verified end-to-end
+- Configuration UI: Automation delay, thresholds, discount code, subject, and body all editable in-app
+- Live Preview: Unsaved form content visible in email preview without saving; test send delivers current state to inbox
+- UI Polish: Skeleton loaders + empty states on dashboard, customers, automations pages; Active/Inactive badge fixed
+
+**Last phase:** Phase 11 (UI Polish)
 
 ---
 
+## v2.0 — Email Intelligence + Template Editor (Complete)
+
+**Completed:** 2026-02-22
+**Phases:** 12–15 (9 plans total)
+**Files changed:** 54 files, 7,574 insertions, 254 deletions
+**Duration:** 2026-02-22 (single-day sprint)
+
+**What shipped:**
+- Open & Click Tracking: 1×1 GIF pixel + 302 redirect endpoints, email_clicks table, best-effort idempotent DB writes (MPP inflation documented)
+- Tracking Injection: sendMarketingEmail pre-inserts MessageLog for UUID, rewrites all links, skips unsubscribe URLs; engagement icons in customer profile
+- Template Library: email_templates table with CRUD API, /emails list page with colored placeholder cards, Create/Duplicate/Delete
+- Unlayer Editor: Drag-and-drop editor at /emails/[id]/edit with Supabase Storage image upload; design JSON persisted for re-editing
+- Preset Templates: 5 Unlayer-native presets (welcome, abandoned-cart, repurchase, winback, VIP) seeded; React Email kept as tier-3 fallback
+- Template ↔ Automation Linking: 3-tier content fallback (custom HTML > linked template > React Email), template selector dropdown, inline Unlayer customization per flow
+- Email Performance Dashboard: KPI section (total sent, open rate, click rate), per-flow rate columns on automation list, time-series line chart on automation detail
+
+**Last phase:** Phase 15 (Email Performance Dashboard)
+
+---

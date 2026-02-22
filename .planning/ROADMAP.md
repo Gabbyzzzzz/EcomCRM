@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 Full CRM Loop** — Phases 1-7 (shipped 2026-02-21)
 - ✅ **v1.1 Make It Real - Production-Ready Automations** — Phases 8-11 (shipped 2026-02-22)
-- 🚧 **v2.0 Email Intelligence + Template Editor** — Phases 12-15 (in progress)
+- ✅ **v2.0 Email Intelligence + Template Editor** — Phases 12-15 (shipped 2026-02-22)
 - 📋 **v3.0 Public App + Multi-Tenant** — Phases 16-20 (planned)
 
 ## Phases
@@ -36,74 +36,17 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 </details>
 
----
+<details>
+<summary>✅ v2.0 Email Intelligence + Template Editor (Phases 12-15) — SHIPPED 2026-02-22</summary>
 
-### 🚧 v2.0 Email Intelligence + Template Editor (In Progress)
+- [x] Phase 12: Open & Click Tracking (2/2 plans) — completed 2026-02-22
+- [x] Phase 13: Email Template Editor (3/3 plans) — completed 2026-02-22
+- [x] Phase 14: Template ↔ Automation Linking (2/2 plans) — completed 2026-02-22
+- [x] Phase 15: Email Performance Dashboard (2/2 plans) — completed 2026-02-22
 
-**Milestone Goal:** Make email performance measurable and let merchants design custom templates visually — upgrading from static React Email components to a fully configurable, trackable email system.
+Full details: `.planning/milestones/v2.0-ROADMAP.md`
 
-#### Phase 12: Open & Click Tracking
-**Goal**: Make email performance measurable with open and click data.
-**Depends on**: Phase 11
-**Requirements**: TRACK-01, TRACK-02, TRACK-03, TRACK-04
-**Success Criteria** (what must be TRUE):
-  1. Every outgoing marketing email contains a 1×1 tracking pixel; loading it records `opened_at` in `message_logs` (MPP inflation documented as known limitation)
-  2. Every link in outgoing emails routes through `/api/track/click`; clicking records to `email_clicks` table then redirects to the real URL
-  3. Customer 360 profile Message History shows open/click status icons and timestamps per message
-  4. Automation detail page displays per-flow open rate and click rate
-**Plans**: 2 plans
-
-Plans:
-- [ ] 12-01-PLAN.md — email_clicks table schema, tracking query helpers, open-pixel endpoint, click-redirect endpoint
-- [ ] 12-02-PLAN.md — Inject tracking pixel + rewrite links in sendMarketingEmail, customer profile engagement icons, automation detail open/click rates
-
-#### Phase 13: Email Template Editor
-**Goal**: Merchants can design custom email templates visually using Unlayer drag-and-drop editor.
-**Depends on**: Phase 12
-**Requirements**: EDITOR-01, EDITOR-02, EDITOR-03, EDITOR-04, EDITOR-05
-**Success Criteria** (what must be TRUE):
-  1. `/emails` page shows all templates as cards with placeholder thumbnail (name + colored background), name, last edited date, Create/Duplicate/Delete actions
-  2. `/emails/[id]/edit` opens Unlayer editor with full drag-and-drop, text, button, color/font editing
-  3. Images uploaded in Unlayer are stored in Supabase Storage and inserted as public URLs
-  4. Saving a template persists HTML + Design JSON; reopening loads JSON back into Unlayer for re-editing
-  5. 5 preset Unlayer templates (welcome, abandoned-cart, repurchase, winback, VIP) exist as `is_preset = true` — built natively in Unlayer, not converted from React Email
-**Plans**: TBD
-
-Plans:
-- [ ] 13-01-PLAN.md — Schema (email_templates table, automations FK columns), migration, /emails list page with placeholder thumbnails
-- [ ] 13-02-PLAN.md — Unlayer editor integration at /emails/[id]/edit, save/load HTML+JSON, image upload to Supabase Storage
-- [ ] 13-03-PLAN.md — Build and seed 5 preset Unlayer templates
-
-#### Phase 14: Template ↔ Automation Linking
-**Goal**: Connect the Unlayer template library to automation flows with 3-tier content fallback.
-**Depends on**: Phase 13
-**Requirements**: LINK-01, LINK-02, LINK-03, LINK-04, LINK-05
-**Success Criteria** (what must be TRUE):
-  1. Automation detail page has "Email Template" section with dropdown to select from template library
-  2. "Customize for this Flow" copies the template into automation's `custom_template_html/json` and opens Unlayer inline for flow-specific edits
-  3. Send logic uses 3-tier fallback: custom_template_html → linked email_template_id HTML → React Email template (never fails)
-  4. Template preview on automation detail shows the currently active template (correct tier)
-  5. Dynamic variables (customer name, discount code, store name, unsubscribe link) inject correctly into any template tier
-**Plans**: TBD
-
-Plans:
-- [ ] 14-01-PLAN.md — Template selector dropdown + preview on automation detail, wire 3-tier fallback into executeEmailAction
-- [ ] 14-02-PLAN.md — "Customize for this Flow" inline Unlayer editor, dynamic variable injection via merge tags
-
-#### Phase 15: Email Performance Dashboard
-**Goal**: Merchants can see email effectiveness across flows and time.
-**Depends on**: Phase 12
-**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04
-**Success Criteria** (what must be TRUE):
-  1. Dashboard shows "Email Performance" section: total sent, overall open rate, overall click rate (last 30 days)
-  2. Automation list shows open rate and click rate columns per flow
-  3. Automation detail shows sends/opens/clicks over time line chart (last 30 days)
-  4. Customer profile Message History shows status icons (✓ sent, 👁 opened, 🔗 clicked) with timestamps
-**Plans**: TBD
-
-Plans:
-- [ ] 15-01-PLAN.md — Dashboard email performance section, automation list open/click columns, automation detail performance chart
-- [ ] 15-02-PLAN.md — Customer profile message history status icons (depends on Phase 12 data)
+</details>
 
 ---
 
@@ -148,7 +91,7 @@ Plans:
 **Execution Order:**
 v1.0: 1 → 2 → 3 → 4 → 5 → 6 → 7 (complete)
 v1.1: 8 → 9 → 10, 8 → 11 (complete)
-v2.0: 12 → 13 → 14, 12 → 15 (Phase 15 can start after Phase 12)
+v2.0: 12 → 13 → 14, 12 → 15 (complete)
 v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -164,10 +107,10 @@ v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 | 9. Configuration and Email Customization UI | v1.1 | 3/3 | Complete | 2026-02-21 |
 | 10. Test Send | v1.1 | 1/1 | Complete | 2026-02-22 |
 | 11. UI Polish | v1.1 | 2/2 | Complete | 2026-02-22 |
-| 12. Open & Click Tracking | v2.0 | 0/2 | Not started | - |
-| 13. Email Template Editor | v2.0 | 0/3 | Not started | - |
-| 14. Template ↔ Automation Linking | v2.0 | 0/2 | Not started | - |
-| 15. Email Performance Dashboard | v2.0 | 0/2 | Not started | - |
+| 12. Open & Click Tracking | v2.0 | 2/2 | Complete | 2026-02-22 |
+| 13. Email Template Editor | v2.0 | 3/3 | Complete | 2026-02-22 |
+| 14. Template ↔ Automation Linking | v2.0 | 2/2 | Complete | 2026-02-22 |
+| 15. Email Performance Dashboard | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 16. OAuth 2.0 Authorization Flow | v3.0 | 0/? | Not started | - |
 | 17. Multi-Tenant Data Isolation | v3.0 | 0/? | Not started | - |
 | 18. Shopify Billing API | v3.0 | 0/? | Not started | - |

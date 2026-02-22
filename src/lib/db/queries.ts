@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs } from './schema'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs, emailClicks, emailTemplates } from './schema'
 import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte, inArray } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
@@ -883,4 +883,446 @@ export async function getRecentActivity(
       createdAt: r.createdAt ?? null,
     })),
   }
+}
+
+// ─── Automation email stats query ─────────────────────────────────────────────
+
+export interface AutomationEmailStats {
+  totalSent: number
+  totalOpened: number
+  totalClicked: number
+  openRate: number    // 0-100 percentage
+  clickRate: number   // 0-100 percentage
+}
+
+/**
+ * Aggregate open and click stats for a single automation.
+ * Uses SQL FILTER clause for efficient single-pass aggregation.
+ * Returns 0 for all metrics when no messages have been sent.
+ */
+export async function getAutomationEmailStats(
+  shopId: string,
+  automationId: string
+): Promise<AutomationEmailStats> {
+  interface StatsRow extends Record<string, unknown> {
+    total_sent: string | number
+    total_opened: string | number
+    total_clicked: string | number
+  }
+
+  const rows = await db.execute<StatsRow>(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS total_sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL) AS total_opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL) AS total_clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND automation_id = ${automationId}::uuid
+      AND status IN ('sent', 'opened', 'clicked', 'converted')
+  `)
+
+  const row = rows[0]
+  const totalSent = Number(row?.total_sent ?? 0)
+  const totalOpened = Number(row?.total_opened ?? 0)
+  const totalClicked = Number(row?.total_clicked ?? 0)
+
+  return {
+    totalSent,
+    totalOpened,
+    totalClicked,
+    openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
+    clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+  }
+}
+
+// ─── Email tracking query functions ────────────────────────────────────────────
+
+/**
+ * Record that a message was opened (first open only — idempotent).
+ * Updates opened_at and status only when opened_at IS NULL, so re-opens are no-ops.
+ * Best-effort: errors are logged but never re-thrown.
+ */
+export async function recordEmailOpen(messageLogId: string): Promise<void> {
+  try {
+    await db
+      .update(messageLogs)
+      .set({ openedAt: new Date(), status: 'opened' })
+      .where(and(eq(messageLogs.id, messageLogId), isNull(messageLogs.openedAt)))
+  } catch (err) {
+    console.error('[recordEmailOpen] failed to record open', { messageLogId, err })
+  }
+}
+
+/**
+ * Record that a link was clicked in an email.
+ * Inserts a row into email_clicks for every click (multi-click tracking).
+ * Also updates clicked_at and status on the parent message_logs row (first click only — idempotent).
+ * Best-effort: errors are logged but never re-thrown.
+ */
+export async function recordEmailClick(
+  shopId: string,
+  messageLogId: string,
+  linkUrl: string
+): Promise<void> {
+  try {
+    await db.insert(emailClicks).values({ shopId, messageLogId, linkUrl })
+    await db
+      .update(messageLogs)
+      .set({ clickedAt: new Date(), status: 'clicked' })
+      .where(and(eq(messageLogs.id, messageLogId), isNull(messageLogs.clickedAt)))
+  } catch (err) {
+    console.error('[recordEmailClick] failed to record click', { shopId, messageLogId, linkUrl, err })
+  }
+}
+
+// ─── Automation template linking helpers ───────────────────────────────────────
+
+/**
+ * Fetch an automation row joined with its linked email template data.
+ * Returns the automation row plus `linkedTemplateHtml` and `linkedTemplateDesignJson`
+ * from the linked email_templates row (null if no template linked).
+ */
+export async function getAutomationWithTemplate(shopId: string, automationId: string) {
+  const [row] = await db
+    .select({
+      // Automation columns
+      id: automations.id,
+      shopId: automations.shopId,
+      name: automations.name,
+      triggerType: automations.triggerType,
+      triggerConfig: automations.triggerConfig,
+      delayValue: automations.delayValue,
+      delayUnit: automations.delayUnit,
+      actionType: automations.actionType,
+      actionConfig: automations.actionConfig,
+      emailTemplateId: automations.emailTemplateId,
+      linkedEmailTemplateId: automations.linkedEmailTemplateId,
+      customTemplateHtml: automations.customTemplateHtml,
+      customTemplateJson: automations.customTemplateJson,
+      enabled: automations.enabled,
+      lastRunAt: automations.lastRunAt,
+      createdAt: automations.createdAt,
+      // Joined template columns
+      linkedTemplateHtml: emailTemplates.html,
+      linkedTemplateDesignJson: emailTemplates.designJson,
+      linkedTemplateName: emailTemplates.name,
+    })
+    .from(automations)
+    .leftJoin(emailTemplates, eq(automations.linkedEmailTemplateId, emailTemplates.id))
+    .where(and(eq(automations.id, automationId), eq(automations.shopId, shopId)))
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * List email templates as lightweight dropdown options: { id, name }.
+ * Presets appear first (is_preset DESC), then alphabetically by name.
+ * Avoids sending full HTML/JSON to the client for the dropdown.
+ */
+export async function listEmailTemplatesForDropdown(
+  shopId: string
+): Promise<Array<{ id: string; name: string }>> {
+  return db
+    .select({ id: emailTemplates.id, name: emailTemplates.name })
+    .from(emailTemplates)
+    .where(eq(emailTemplates.shopId, shopId))
+    .orderBy(desc(emailTemplates.isPreset), emailTemplates.name)
+}
+
+// ─── Email performance KPI query functions ─────────────────────────────────────
+
+export interface EmailPerformanceKpis {
+  totalSent: number
+  totalOpened: number
+  totalClicked: number
+  openRate: number   // 0-100 percentage
+  clickRate: number  // 0-100 percentage
+}
+
+/**
+ * Aggregate email performance KPIs for the last N days (default 30).
+ * Returns totalSent, totalOpened, totalClicked, openRate, clickRate.
+ * All rates are 0-100 percentages, zero-guarded against division by zero.
+ */
+export async function getEmailPerformanceKpis(
+  shopId: string,
+  days: number = 30
+): Promise<EmailPerformanceKpis> {
+  interface KpiRow extends Record<string, unknown> {
+    total_sent: string | number
+    total_opened: string | number
+    total_clicked: string | number
+  }
+
+  const rows = await db.execute<KpiRow>(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS total_sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL)                                AS total_opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)                               AS total_clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND sent_at >= NOW() - (${days} || ' days')::interval
+  `)
+
+  const row = rows[0]
+  const totalSent = Number(row?.total_sent ?? 0)
+  const totalOpened = Number(row?.total_opened ?? 0)
+  const totalClicked = Number(row?.total_clicked ?? 0)
+
+  return {
+    totalSent,
+    totalOpened,
+    totalClicked,
+    openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
+    clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+  }
+}
+
+export interface AutomationWithRates {
+  id: string
+  name: string
+  triggerType: string
+  triggerConfig: unknown
+  delayValue: number | null
+  delayUnit: string | null
+  actionType: string
+  enabled: boolean
+  lastRunAt: Date | null
+  openRate: number   // 0-100 percentage
+  clickRate: number  // 0-100 percentage
+}
+
+/**
+ * List all automations for a shop joined with per-automation email open/click rates.
+ * Uses a LEFT JOIN subquery against message_logs for efficient single-query computation.
+ * Rates are 0-100 percentages; 0 when no messages have been sent for that flow.
+ */
+export async function getAutomationListWithRates(
+  shopId: string
+): Promise<AutomationWithRates[]> {
+  interface AutomationRateRow extends Record<string, unknown> {
+    id: string
+    name: string
+    trigger_type: string
+    trigger_config: unknown
+    delay_value: number | null
+    delay_unit: string | null
+    action_type: string
+    enabled: boolean
+    last_run_at: Date | string | null
+    open_rate: string | number
+    click_rate: string | number
+  }
+
+  const rows = await db.execute<AutomationRateRow>(sql`
+    SELECT
+      a.id,
+      a.name,
+      a.trigger_type,
+      a.trigger_config,
+      a.delay_value,
+      a.delay_unit,
+      a.action_type,
+      a.enabled,
+      a.last_run_at,
+      COALESCE(s.open_rate, 0)  AS open_rate,
+      COALESCE(s.click_rate, 0) AS click_rate
+    FROM automations a
+    LEFT JOIN (
+      SELECT
+        automation_id,
+        CASE
+          WHEN COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE opened_at IS NOT NULL)::numeric /
+            COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) * 100
+          )
+          ELSE 0
+        END AS open_rate,
+        CASE
+          WHEN COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)::numeric /
+            COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) * 100
+          )
+          ELSE 0
+        END AS click_rate
+      FROM message_logs
+      WHERE shop_id = ${shopId}
+      GROUP BY automation_id
+    ) s ON a.id = s.automation_id
+    WHERE a.shop_id = ${shopId}
+    ORDER BY a.created_at ASC
+  `)
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    triggerType: String(row.trigger_type),
+    triggerConfig: row.trigger_config,
+    delayValue: row.delay_value != null ? Number(row.delay_value) : null,
+    delayUnit: row.delay_unit != null ? String(row.delay_unit) : null,
+    actionType: String(row.action_type),
+    enabled: Boolean(row.enabled),
+    lastRunAt: row.last_run_at != null ? new Date(row.last_run_at as string) : null,
+    openRate: Number(row.open_rate),
+    clickRate: Number(row.click_rate),
+  }))
+}
+
+// ─── Email time-series query function ─────────────────────────────────────────
+
+export interface EmailTimeSeriesItem {
+  date: string    // YYYY-MM-DD
+  sent: number
+  opened: number
+  clicked: number
+}
+
+/**
+ * Fetch daily sends, opens, and clicks for a single automation over the last N days.
+ * Groups by DATE(sent_at), ordered ascending for chart rendering.
+ * Returns an empty array when no messages have been sent.
+ */
+export async function getAutomationEmailTimeSeries(
+  shopId: string,
+  automationId: string,
+  days: number = 30
+): Promise<EmailTimeSeriesItem[]> {
+  interface TimeSeriesRow extends Record<string, unknown> {
+    date: Date | string
+    sent: string | number
+    opened: string | number
+    clicked: string | number
+  }
+
+  const rows = await db.execute<TimeSeriesRow>(sql`
+    SELECT
+      DATE(sent_at) AS date,
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL)                               AS opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)                              AS clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND automation_id = ${automationId}::uuid
+      AND sent_at >= NOW() - (${days} || ' days')::interval
+      AND status IN ('sent', 'opened', 'clicked', 'converted')
+    GROUP BY DATE(sent_at)
+    ORDER BY date ASC
+  `)
+
+  return rows.map((r) => ({
+    date: r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date),
+    sent: Number(r.sent),
+    opened: Number(r.opened),
+    clicked: Number(r.clicked),
+  }))
+}
+
+// ─── Email template type ───────────────────────────────────────────────────────
+
+type EmailTemplateRow = typeof emailTemplates.$inferSelect
+
+// ─── Email template CRUD query functions ──────────────────────────────────────
+
+/**
+ * List all email templates for a shop.
+ * Presets appear first (is_preset DESC), then sorted by updated_at DESC.
+ */
+export async function listEmailTemplates(shopId: string): Promise<EmailTemplateRow[]> {
+  return db
+    .select()
+    .from(emailTemplates)
+    .where(eq(emailTemplates.shopId, shopId))
+    .orderBy(desc(emailTemplates.isPreset), desc(emailTemplates.updatedAt))
+}
+
+/**
+ * Get a single email template by id and shopId.
+ * Returns null if not found or does not belong to this shop.
+ */
+export async function getEmailTemplate(
+  shopId: string,
+  id: string
+): Promise<EmailTemplateRow | null> {
+  const [row] = await db
+    .select()
+    .from(emailTemplates)
+    .where(and(eq(emailTemplates.id, id), eq(emailTemplates.shopId, shopId)))
+    .limit(1)
+
+  return row ?? null
+}
+
+/**
+ * Create a new blank email template for a shop.
+ * Returns the created row.
+ */
+export async function createEmailTemplate(
+  shopId: string,
+  data: { name: string }
+): Promise<EmailTemplateRow> {
+  const [row] = await db
+    .insert(emailTemplates)
+    .values({
+      shopId,
+      name: data.name,
+      isPreset: false,
+      html: null,
+      designJson: null,
+    })
+    .returning()
+
+  return row
+}
+
+/**
+ * Update name, html, and/or designJson on an email template.
+ * Also sets updatedAt = now().
+ */
+export async function updateEmailTemplate(
+  id: string,
+  data: { name?: string; html?: string; designJson?: unknown }
+): Promise<void> {
+  await db
+    .update(emailTemplates)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(emailTemplates.id, id))
+}
+
+/**
+ * Delete an email template by id.
+ */
+export async function deleteEmailTemplate(id: string): Promise<void> {
+  await db.delete(emailTemplates).where(eq(emailTemplates.id, id))
+}
+
+/**
+ * Duplicate an email template.
+ * Creates a new row with name = `${source.name} (Copy)`, same html + designJson, isPreset=false.
+ * Returns the new row.
+ */
+export async function duplicateEmailTemplate(
+  shopId: string,
+  id: string
+): Promise<EmailTemplateRow | null> {
+  const source = await getEmailTemplate(shopId, id)
+  if (!source) return null
+
+  const [row] = await db
+    .insert(emailTemplates)
+    .values({
+      shopId,
+      name: `${source.name} (Copy)`,
+      html: source.html,
+      designJson: source.designJson,
+      isPreset: false,
+    })
+    .returning()
+
+  return row
 }

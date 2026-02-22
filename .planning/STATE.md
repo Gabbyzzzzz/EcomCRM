@@ -2,25 +2,25 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-21)
+See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** v2.0 milestone defined — ready to plan Phase 12 (Open & Click Tracking)
+**Current focus:** v2.0 complete — planning v3.0 Public App + Multi-Tenant (Phases 16-20)
 
 ## Current Position
 
-Phase: 11 of 20 (UI Polish — complete, v1.1 shipped)
-Status: v1.1 milestone complete and archived. v2.0 roadmap + requirements defined. Ready to plan Phase 12.
-Last activity: 2026-02-22 — v2.0/v3.0 roadmap discussed and finalized
+Phase: 15 complete — v2.0 milestone archived
+Status: v2.0 shipped — email tracking, Unlayer editor, template library, 3-tier fallback, performance dashboard all complete.
+Last activity: 2026-02-22 — v2.0 milestone archived (phases 12-15)
 
-Progress: [█████████████░░░░░░░] 55% (11/20 phases complete)
+Progress: [████████████████░░░░] 75% (15/20 phases complete, v2.0 done, v3.0 planned)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: 3.8 min
-- Total execution time: 0.57 hours
+- Total plans completed: 27 (18 v1.0 + 8 v1.1 + 9 v2.0... wait, 2+5+2+2+2+3+2 = 18 v1.0; 2+3+1+2 = 8 v1.1; 2+3+2+2 = 9 v2.0)
+- Average duration: ~3.5 min/plan
+- Total phases: 15 complete
 
 **By Phase:**
 
@@ -34,10 +34,13 @@ Progress: [█████████████░░░░░░░] 55% (11
 | 06-dashboard-and-customer-ui | 3/3 | 17 min | 5.7 min |
 | 07-ai-insights | 2/2 | 5 min | 2.5 min |
 | 08-pipeline-verification-and-toggle-fix | 2/2 | 6 min | 3 min |
-
-**Recent Trend:**
-- Last 5 plans: 06-03 (4 min), 07-01 (3 min), 07-02 (2 min), 08-01 (4 min), 08-02 (2 min)
-- Trend: Stable — v1.0 complete, v1.1 Phase 8 complete
+| 09-configuration-and-email-customization-ui | 3/3 | ~9 min | 3 min |
+| 10-test-send | 1/1 | ~3 min | 3 min |
+| 11-ui-polish | 2/2 | ~6 min | 3 min |
+| 12-open-and-click-tracking | 2/2 | 4 min | 2 min |
+| 13-email-template-editor | 3/3 | 9 min | 3 min |
+| 14-template-automation-linking | 2/2 | 8 min | 4 min |
+| 15-email-performance-dashboard | 2/2 | 4 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -46,20 +49,19 @@ Progress: [█████████████░░░░░░░] 55% (11
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
 
-- [Phase 08-01]: REST webhook normalization at Inngest boundary — normalizeRestOrder/normalizeRestCustomer convert Shopify REST payload (snake_case, numeric IDs) to internal GraphQL-format types including GID conversion for customer/order IDs
-- [Phase 08-01]: days_since_order test-trigger uses direct invocation (fetchEnabledAutomationsByTrigger + executeEmailAction) not Inngest event — trigger is cron-driven with no event name
-- [Phase 08-02]: PATCH endpoint uses write-then-read pattern — after setAutomationEnabled, SELECT row back and return { ok: true, automation: { id, enabled } } confirming actual DB state
-- [Phase 08-02]: Badge text is 'Inactive' (not 'Disabled') for disabled automations on both list and detail pages
-- [Phase 07-ai-insights]: params typed as Promise<{ id: string }> in API route and detail page — Next.js 15 async params convention
-- [Phase 07-ai-insights]: Provider factory getModel() selects google('gemini-1.5-flash') by default, anthropic('claude-sonnet-4-20250514') when AI_PROVIDER=anthropic
-- [Phase 05-automation-engine]: Automations page at (dashboard)/automations/page.tsx to inherit dashboard sidebar layout via Next.js route group
-- [Phase 05-automation-engine]: Inline segment filter in checkDaysSinceOrder step.run to avoid JsonifyObject type incompatibility
+Key decisions from v2.0 (Phases 12-15):
+- Best-effort tracking endpoints (try/catch, never throw) — tracking never breaks email delivery
+- MessageLog pre-inserted before Resend call — messageLogId needed for pixel + link rewrite URLs
+- email_clicks records every click; messageLogs.clicked_at is first-click only (isNull guard)
+- 3-tier template fallback: customTemplateHtml > linkedEmailTemplateId HTML > React Email (never fails)
+- Unlayer engine pinned to v1.157.0 — registerCallback image only works on free tier with pinned version
+- getAutomationListWithRates uses LEFT JOIN subquery — avoids N+1 per-row stats calls
+- Automation list shows "—" for 0-send flows (not "0%") — distinguishes no-data from actual 0%
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -68,6 +70,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: 08-02 complete (75ec87c) — badge text fix and toggle persistence verified by user
+Last session: 2026-02-22
+Stopped at: v2.0 milestone archived — all phases 12-15 complete, ROADMAP/PROJECT/MILESTONES updated.
 Resume file: None
+Next: `/gsd:new-milestone` to define v3.0 requirements and roadmap (Phases 16-20)

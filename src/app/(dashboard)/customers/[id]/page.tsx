@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { CheckIcon, EyeIcon, Link2Icon } from 'lucide-react'
 import { env } from '@/lib/env'
 import { getCustomerProfile, getCustomerOrders, getCustomerMessages } from '@/lib/db/queries'
 import { InfoPopover } from '@/components/info-popover'
@@ -346,8 +347,7 @@ export default async function CustomerProfilePage({
                   <th className="text-left pb-2 pr-4 font-medium text-muted-foreground">Subject</th>
                   <th className="text-left pb-2 pr-4 font-medium text-muted-foreground">Automation</th>
                   <th className="text-left pb-2 pr-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left pb-2 pr-4 font-medium text-muted-foreground">Opened</th>
-                  <th className="text-left pb-2 font-medium text-muted-foreground">Clicked</th>
+                  <th className="text-left pb-2 font-medium text-muted-foreground">Engagement</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -371,19 +371,25 @@ export default async function CustomerProfilePage({
                           {msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 text-xs">
-                        {msg.openedAt ? (
-                          <span className="text-green-600">Yes — {formatDate(msg.openedAt)}</span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
                       <td className="py-3 text-xs">
                         {msg.clickedAt ? (
-                          <span className="text-green-600">Yes — {formatDate(msg.clickedAt)}</span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                          <span className="inline-flex items-center gap-1 text-blue-600">
+                            <Link2Icon className="h-3.5 w-3.5" />
+                            <span>Clicked</span>
+                            <span className="text-muted-foreground">{formatDateTime(msg.clickedAt)}</span>
+                          </span>
+                        ) : msg.openedAt ? (
+                          <span className="inline-flex items-center gap-1 text-green-600">
+                            <EyeIcon className="h-3.5 w-3.5" />
+                            <span>Opened</span>
+                            <span className="text-muted-foreground">{formatDateTime(msg.openedAt)}</span>
+                          </span>
+                        ) : msg.status === 'sent' ? (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <CheckIcon className="h-3.5 w-3.5" />
+                            <span>Sent</span>
+                          </span>
+                        ) : null}
                       </td>
                     </tr>
                   )
