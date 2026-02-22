@@ -1030,6 +1030,147 @@ export async function listEmailTemplatesForDropdown(
     .orderBy(desc(emailTemplates.isPreset), emailTemplates.name)
 }
 
+// ─── Email performance KPI query functions ─────────────────────────────────────
+
+export interface EmailPerformanceKpis {
+  totalSent: number
+  totalOpened: number
+  totalClicked: number
+  openRate: number   // 0-100 percentage
+  clickRate: number  // 0-100 percentage
+}
+
+/**
+ * Aggregate email performance KPIs for the last N days (default 30).
+ * Returns totalSent, totalOpened, totalClicked, openRate, clickRate.
+ * All rates are 0-100 percentages, zero-guarded against division by zero.
+ */
+export async function getEmailPerformanceKpis(
+  shopId: string,
+  days: number = 30
+): Promise<EmailPerformanceKpis> {
+  interface KpiRow extends Record<string, unknown> {
+    total_sent: string | number
+    total_opened: string | number
+    total_clicked: string | number
+  }
+
+  const rows = await db.execute<KpiRow>(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS total_sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL)                                AS total_opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)                               AS total_clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND sent_at >= NOW() - (${days} || ' days')::interval
+  `)
+
+  const row = rows[0]
+  const totalSent = Number(row?.total_sent ?? 0)
+  const totalOpened = Number(row?.total_opened ?? 0)
+  const totalClicked = Number(row?.total_clicked ?? 0)
+
+  return {
+    totalSent,
+    totalOpened,
+    totalClicked,
+    openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
+    clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+  }
+}
+
+export interface AutomationWithRates {
+  id: string
+  name: string
+  triggerType: string
+  triggerConfig: unknown
+  delayValue: number | null
+  delayUnit: string | null
+  actionType: string
+  enabled: boolean
+  lastRunAt: Date | null
+  openRate: number   // 0-100 percentage
+  clickRate: number  // 0-100 percentage
+}
+
+/**
+ * List all automations for a shop joined with per-automation email open/click rates.
+ * Uses a LEFT JOIN subquery against message_logs for efficient single-query computation.
+ * Rates are 0-100 percentages; 0 when no messages have been sent for that flow.
+ */
+export async function getAutomationListWithRates(
+  shopId: string
+): Promise<AutomationWithRates[]> {
+  interface AutomationRateRow extends Record<string, unknown> {
+    id: string
+    name: string
+    trigger_type: string
+    trigger_config: unknown
+    delay_value: number | null
+    delay_unit: string | null
+    action_type: string
+    enabled: boolean
+    last_run_at: Date | string | null
+    open_rate: string | number
+    click_rate: string | number
+  }
+
+  const rows = await db.execute<AutomationRateRow>(sql`
+    SELECT
+      a.id,
+      a.name,
+      a.trigger_type,
+      a.trigger_config,
+      a.delay_value,
+      a.delay_unit,
+      a.action_type,
+      a.enabled,
+      a.last_run_at,
+      COALESCE(s.open_rate, 0)  AS open_rate,
+      COALESCE(s.click_rate, 0) AS click_rate
+    FROM automations a
+    LEFT JOIN (
+      SELECT
+        automation_id,
+        CASE
+          WHEN COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE opened_at IS NOT NULL)::numeric /
+            COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) * 100
+          )
+          ELSE 0
+        END AS open_rate,
+        CASE
+          WHEN COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)::numeric /
+            COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) * 100
+          )
+          ELSE 0
+        END AS click_rate
+      FROM message_logs
+      WHERE shop_id = ${shopId}
+      GROUP BY automation_id
+    ) s ON a.id = s.automation_id
+    WHERE a.shop_id = ${shopId}
+    ORDER BY a.created_at ASC
+  `)
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    triggerType: String(row.trigger_type),
+    triggerConfig: row.trigger_config,
+    delayValue: row.delay_value != null ? Number(row.delay_value) : null,
+    delayUnit: row.delay_unit != null ? String(row.delay_unit) : null,
+    actionType: String(row.action_type),
+    enabled: Boolean(row.enabled),
+    lastRunAt: row.last_run_at != null ? new Date(row.last_run_at as string) : null,
+    openRate: Number(row.open_rate),
+    clickRate: Number(row.click_rate),
+  }))
+}
+
 // ─── Email template type ───────────────────────────────────────────────────────
 
 type EmailTemplateRow = typeof emailTemplates.$inferSelect
