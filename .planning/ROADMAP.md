@@ -84,11 +84,11 @@ Plans:
   3. Send logic uses 3-tier fallback: custom_template_html → linked email_template_id HTML → React Email template (never fails)
   4. Template preview on automation detail shows the currently active template (correct tier)
   5. Dynamic variables (customer name, discount code, store name, unsubscribe link) inject correctly into any template tier
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Template selector dropdown + preview on automation detail, wire 3-tier fallback into executeEmailAction
-- [ ] 14-02-PLAN.md — "Customize for this Flow" inline Unlayer editor, dynamic variable injection via merge tags
+- [ ] 14-01-PLAN.md — Schema migration (3 columns), template selector dropdown, 3-tier send fallback in executeEmailAction, preview endpoint update
+- [ ] 14-02-PLAN.md — "Customize for this Flow" inline Unlayer editor with merge tags, variable substitution in send pipeline and preview
 
 #### Phase 15: Email Performance Dashboard
 **Goal**: Merchants can see email effectiveness across flows and time.
@@ -166,7 +166,7 @@ v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 | 11. UI Polish | v1.1 | 2/2 | Complete | 2026-02-22 |
 | 12. Open & Click Tracking | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 13. Email Template Editor | v2.0 | 0/3 | Not started | - |
-| 14. Template ↔ Automation Linking | v2.0 | 0/2 | Not started | - |
+| 14. Template ↔ Automation Linking | v2.0 | 0/2 | Planned | - |
 | 15. Email Performance Dashboard | v2.0 | 0/2 | Not started | - |
 | 16. OAuth 2.0 Authorization Flow | v3.0 | 0/? | Not started | - |
 | 17. Multi-Tenant Data Isolation | v3.0 | 0/? | Not started | - |
