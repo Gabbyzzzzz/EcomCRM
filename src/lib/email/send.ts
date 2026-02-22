@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { render } from '@react-email/render'
+import { eq } from 'drizzle-orm'
 import { env } from '@/lib/env'
 import { db } from '@/lib/db'
 import { messageLogs } from '@/lib/db/schema'
@@ -69,6 +70,50 @@ async function logSuppressed(
   }
 }
 
+// ─── Tracking helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Inject a 1x1 transparent tracking pixel before the closing </body> tag.
+ *
+ * NOTE: Apple Mail Privacy Protection (MPP) pre-fetches images including tracking
+ * pixels, inflating open rates. Click rate is the more reliable engagement metric.
+ */
+function injectTrackingPixel(html: string, messageLogId: string): string {
+  const pixelUrl = `${env.APP_URL}/api/track/open?id=${messageLogId}`
+  const pixelTag = `<img src="${pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`
+  // Insert before closing </body> tag if present, otherwise append
+  if (html.includes('</body>')) {
+    return html.replace('</body>', `${pixelTag}</body>`)
+  }
+  return html + pixelTag
+}
+
+/**
+ * Rewrite all http(s) href links in anchor tags to route through the click
+ * tracking redirect endpoint. Unsubscribe links, mailto: links, anchor (#)
+ * links, and non-http(s) URLs are left untouched.
+ */
+function rewriteLinks(html: string, messageLogId: string): string {
+  const baseUrl = env.APP_URL
+  // Match href="..." in anchor tags, but skip unsubscribe links and mailto: links
+  return html.replace(
+    /(<a\s[^>]*href=")([^"]+)(")/gi,
+    (match, prefix, url, suffix) => {
+      // Skip unsubscribe links — must remain direct for compliance
+      if (url.includes('/unsubscribe')) return match
+      // Skip mailto: links
+      if (url.startsWith('mailto:')) return match
+      // Skip anchor links
+      if (url.startsWith('#')) return match
+      // Skip non-http(s) links
+      if (!url.startsWith('http://') && !url.startsWith('https://')) return match
+      // Rewrite to click tracking redirect
+      const trackUrl = `${baseUrl}/api/track/click?id=${messageLogId}&url=${encodeURIComponent(url)}`
+      return `${prefix}${trackUrl}${suffix}`
+    }
+  )
+}
+
 // ─── Main send function ───────────────────────────────────────────────────────
 
 /**
@@ -125,7 +170,28 @@ export async function sendMarketingEmail(
   const element = templateFactory(unsubscribeUrl)
   const html = await render(element)
 
-  // ── Step 7: Send via Resend ───────────────────────────────────────────────
+  // ── Step 7: Pre-insert MessageLog to get messageLogId for tracking URLs ──
+  let messageLogId: string
+  try {
+    const [logRow] = await db.insert(messageLogs).values({
+      shopId,
+      customerId: customerInternalId,
+      automationId: automationId ?? null,
+      channel: 'email',
+      subject,
+      status: 'sent',
+      sentAt: new Date(),
+    }).returning({ id: messageLogs.id })
+    messageLogId = logRow.id
+  } catch (err) {
+    console.error('[sendMarketingEmail] Failed to pre-insert MessageLog:', err)
+    return { sent: false, reason: 'error' }
+  }
+
+  // ── Step 8: Inject tracking pixel + rewrite links ────────────────────────
+  const trackedHtml = rewriteLinks(injectTrackingPixel(html, messageLogId), messageLogId)
+
+  // ── Step 9: Send via Resend ───────────────────────────────────────────────
   try {
     const fromAddress = `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`
 
@@ -134,7 +200,7 @@ export async function sendMarketingEmail(
         from: fromAddress,
         to: email,
         subject,
-        html,
+        html: trackedHtml,
         replyTo: env.RESEND_REPLY_TO ?? undefined,
         headers: {
           // RFC 2369 + RFC 8058 — required for Gmail/Yahoo one-click unsubscribe
@@ -148,43 +214,19 @@ export async function sendMarketingEmail(
 
     if (error || !data) {
       console.error('[sendMarketingEmail] Resend returned error:', error)
-      await db.insert(messageLogs).values({
-        shopId,
-        customerId: customerInternalId,
-        automationId: automationId ?? null,
-        channel: 'email',
-        subject,
-        status: 'failed',
-        sentAt: new Date(),
-      })
+      // Update pre-inserted log to failed
+      try {
+        await db.update(messageLogs).set({ status: 'failed' }).where(eq(messageLogs.id, messageLogId))
+      } catch { /* ignore secondary failure */ }
       return { sent: false, reason: 'error' }
     }
-
-    // ── Step 8: Log successful send ───────────────────────────────────────
-    await db.insert(messageLogs).values({
-      shopId,
-      customerId: customerInternalId,
-      automationId: automationId ?? null,
-      channel: 'email',
-      subject,
-      status: 'sent',
-      sentAt: new Date(),
-    })
 
     return { sent: true, reason: 'sent', resendId: data.id }
   } catch (err) {
     // Non-fatal: email failures should never crash the automation engine
     console.error('[sendMarketingEmail] Unexpected error:', err)
     try {
-      await db.insert(messageLogs).values({
-        shopId,
-        customerId: customerInternalId,
-        automationId: automationId ?? null,
-        channel: 'email',
-        subject,
-        status: 'failed',
-        sentAt: new Date(),
-      })
+      await db.update(messageLogs).set({ status: 'failed' }).where(eq(messageLogs.id, messageLogId))
     } catch {
       // ignore secondary logging failure
     }
