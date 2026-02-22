@@ -2,11 +2,22 @@
 
 ## What This Is
 
-A lightweight CRM + marketing automation tool for Shopify small-team merchants. Connects to a real Shopify store via Partners Dashboard OAuth app, auto-syncs customer and order data, segments customers using RFM scoring, and runs triggered email automation flows with configurable content and live preview. Built for self-use and as a portfolio/interview demo — everything works end-to-end with real Shopify data and real Resend email delivery.
+A lightweight CRM + marketing automation tool for Shopify small-team merchants. Connects to a real Shopify store via Partners Dashboard OAuth app, auto-syncs customer and order data, segments customers using RFM scoring, and runs triggered email automation flows with configurable content, live preview, and visual template editing. Built for self-use and as a portfolio/interview demo — everything works end-to-end with real Shopify data and real Resend email delivery.
 
 ## Core Value
 
 Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
+
+## Current Milestone: v2.0 Email Intelligence + Template Editor
+
+**Goal:** Make email performance measurable and give merchants a visual drag-and-drop template editor — upgrading from static React Email components to a fully configurable, trackable email system.
+
+**Target features:**
+- Open and click tracking (pixel + redirect, Apple MPP documented as known limitation)
+- Unlayer drag-and-drop template editor with Supabase Storage image upload
+- 5 preset templates built natively in Unlayer (React Email stays as tier-3 fallback, not removed)
+- Template library linked to automation flows with 3-tier content fallback
+- Email performance dashboard: open rate, click rate per flow and overall
 
 ## Requirements
 
@@ -31,23 +42,31 @@ Shopify customers auto-segmented by RFM score, with triggered email flows that a
 - ✓ End-to-end automation pipeline verified working with real Shopify data — v1.1
 - ✓ Automation flow configuration editable in UI (delay, thresholds, discount, subject, body) — v1.1
 - ✓ Email content customization with live preview on automation detail page — v1.1
-- ✓ Test send capability delivers current in-form content to inbox without saving — v1.1
-- ✓ UI polish for demo-readiness (skeleton loaders + empty states on all pages) — v1.1
-- ✓ Automation toggle state persists to database and Active/Inactive badge syncs — v1.1
+- ✓ Test send delivers current unsaved form content to inbox without saving — v1.1
+- ✓ UI polish: skeleton loaders + empty states on dashboard, customers, automations — v1.1
+- ✓ Automation toggle persistence fixed; Active/Inactive badge syncs with DB state — v1.1
 
 ### Active
 
-_(None — v1.1 shipped. Define v2 requirements with `/gsd:new-milestone`.)_
+- [ ] Open tracking pixel in every outgoing email; records opened_at in message_logs
+- [ ] Click tracking via redirect endpoint; records email_clicks table entries
+- [ ] Unlayer drag-and-drop template editor at /emails/[id]/edit
+- [ ] Template library at /emails with Create/Duplicate/Delete
+- [ ] Image upload to Supabase Storage from within Unlayer editor
+- [ ] 5 preset Unlayer templates (built natively — React Email kept as fallback tier)
+- [ ] Automation detail page: template selector + 3-tier content fallback in send logic
+- [ ] Dynamic variable injection (customer name, discount code, etc.) across all template tiers
+- [ ] Email performance dashboard section (sent/opens/clicks, per-flow rates, over-time chart)
 
 ### Out of Scope
 
-- Public App / OAuth Shopify flow — Custom App only (single store, no multi-tenant auth)
-- SMS channel — email only for v1
-- Multi-tenant (multiple stores) — single store, shop_id column reserved for future
-- Mobile app — web only
-- Custom automation builder — 5 preset flows only for v1
-- A/B testing, open-rate tracking pixel — future
-- WYSIWYG email editor — React Email + textarea editing sufficient for v1
+- SMS channel — email only for v1/v2; revisit in a future milestone
+- A/B testing — dropped from v2; will revisit later
+- Auto-generated template thumbnails — placeholder (name + colored background) used instead
+- Custom sender domain DNS wizard — link to Resend's own domain verification UI
+- Embedded Shopify admin app (Polaris/App Bridge) — external standalone app only; shadcn/ui stays
+- Visual drag-and-drop flow builder — preset flows sufficient for v1/v2
+- Predictive CLV/churn ML — RFM + Claude narratives deliver 90% of value
 
 ## Context
 
@@ -57,16 +76,16 @@ _(None — v1.1 shipped. Define v2 requirements with `/gsd:new-milestone`.)_
 - Next.js 14 App Router + TypeScript strict
 - Drizzle ORM + Supabase PostgreSQL (PgBouncer Transaction mode)
 - Inngest (cron + event-driven background jobs)
-- Resend + React Email (5 templates with custom content props)
+- Resend + React Email (5 templates with custom content props — kept as tier-3 fallback in v2)
 - Vercel AI SDK — Google Gemini (default) or Anthropic Claude
 - shadcn/ui + Tailwind CSS + Recharts
-- Deployed to Vercel
+- Deployed to Vercel (external standalone app, not embedded in Shopify admin)
 
 **Current state:**
 - Shopify webhooks registered to `https://ecomcrm.vercel.app/api/webhooks/shopify` (4 topics)
-- Auth uses client_credentials grant (Partners Dashboard OAuth app) — token cached in memory, auto-refreshed
-- All automation content (subject, headline, body, CTA, discount) flows from UI form → DB actionConfig → executeEmailAction → Resend
-- Test send and live preview both use unsaved form state (no save required)
+- Auth uses client_credentials grant (Partners Dashboard OAuth app)
+- All automation content flows from UI form → DB actionConfig → executeEmailAction → Resend
+- v2 adds: email_clicks table, email_templates table, Unlayer editor, 3-tier send fallback
 
 ## Constraints
 
@@ -75,6 +94,7 @@ _(None — v1.1 shipped. Define v2 requirements with `/gsd:new-milestone`.)_
 - **Code Quality**: TypeScript strict (no `any`), zod validation on all API inputs, HMAC verification on webhooks
 - **Data**: Real Shopify store data, not mock — demo must show actual customer/order sync
 - **Email**: Real sends via Resend — automation flows must actually fire
+- **App type**: External/standalone (not embedded in Shopify admin) — keep shadcn/ui, no Polaris
 
 ## Key Decisions
 
@@ -83,13 +103,15 @@ _(None — v1.1 shipped. Define v2 requirements with `/gsd:new-milestone`.)_
 | Partners Dashboard OAuth app (client_credentials) | Single store, token auto-refreshes every 24h | ✓ Good — no manual token rotation |
 | Inngest for scheduling | Handles retries, idempotency, cron natively | ✓ Good — zero duplicate sends |
 | Quintile-based RFM | Adaptive to store size, no fixed thresholds | ✓ Good — works from 1 to 10K customers |
-| Resend + React Email | Type-safe templates, reliable delivery | ✓ Good — custom props make content overrides clean |
+| Resend + React Email | Type-safe templates, reliable delivery | ✓ Good — kept as tier-3 fallback in v2 |
 | Vercel AI SDK + Gemini default | Swap to Claude via env var | ✓ Good — flexible without code change |
 | Controlled AutomationConfigForm | No internal state — parent owns all form values | ✓ Good — enables shared state with live preview |
 | Three-layer content priority (body > DB > defaults) | Unsaved edits visible in test send and preview | ✓ Good — zero save-before-preview friction |
-| Next.js loading.tsx for skeletons | App Router Suspense boundary, zero extra code | ✓ Good — route-level coverage with no client wrappers |
-| PgBouncer Transaction mode (port 6543) | Serverless connection pooling | ✓ Good — no connection exhaustion under concurrency |
-| REST webhook normalization at Inngest boundary | Shopify webhooks are REST format, internal types are GQL-format | ✓ Good — clear boundary, no type leakage |
+| Next.js loading.tsx for skeletons | App Router Suspense boundary, zero extra code | ✓ Good — route-level coverage |
+| External standalone app (no Polaris) | Avoid Shopify admin embedding complexity | ✓ Good — shadcn/ui stays, simpler v3 path |
+| Unlayer presets built natively (not converted from React Email) | React Email JSX → Unlayer JSON conversion is non-trivial | ✓ Good — two systems coexist cleanly |
+| Placeholder thumbnails (no auto-generation) | No headless browser on Vercel serverless | ✓ Good — avoids Puppeteer/screenshot API complexity |
+| HOOK-03 links to Resend UI (no custom wizard) | DNS wizard is UX-heavy and support-intensive | ✓ Good — Resend's own UI is better |
 
 ---
-*Last updated: 2026-02-22 after v1.1 milestone shipped*
+*Last updated: 2026-02-22 after v2.0 milestone defined*

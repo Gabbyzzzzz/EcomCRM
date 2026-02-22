@@ -1,0 +1,126 @@
+# Requirements: EcomCRM
+
+**Defined:** 2026-02-22
+**Core Value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
+
+---
+
+## v2.0 Requirements (Email Intelligence + Template Editor)
+
+### Open & Click Tracking
+
+- [ ] **TRACK-01**: Embed a 1×1 tracking pixel in every outgoing marketing email. When the pixel is loaded, record `opened_at` timestamp in `message_logs`. Document Apple Mail Privacy Protection (MPP) as a known limitation — open rates may be inflated; click rate is the more reliable metric.
+- [ ] **TRACK-02**: Rewrite all links in outgoing emails to route through `/api/track/click?id=xxx&url=yyy`. Record click event (link URL, `clicked_at`) in a new `email_clicks` table, then 302 redirect to the real destination URL.
+- [ ] **TRACK-03**: Customer profile Message History table shows open/click status icons (sent ✓, opened 👁, clicked 🔗) with timestamps for each message.
+- [ ] **TRACK-04**: Automation detail page shows per-flow open rate and click rate computed from `message_logs` + `email_clicks`.
+
+### Email Template Editor
+
+- [ ] **EDITOR-01**: `/emails` page shows all templates as cards with placeholder thumbnail (template name + colored background), name, and last edited date. Includes "Create New" button and ability to duplicate/delete templates.
+- [ ] **EDITOR-02**: Integrate `react-email-editor` (Unlayer free tier) on `/emails/[id]/edit` page. Supports drag-and-drop layout, text editing, button styling, color/font customization.
+- [ ] **EDITOR-03**: Image upload via Supabase Storage. User uploads image in Unlayer → POST `/api/uploads/image` → store in Supabase Storage bucket → return public URL → Unlayer inserts URL into template.
+- [ ] **EDITOR-04**: Save template as HTML + Design JSON to `email_templates` table. Load JSON back into Unlayer editor for re-editing.
+- [ ] **EDITOR-05**: Seed 5 preset templates (welcome, abandoned-cart, repurchase, winback, VIP) built natively in Unlayer. These are new designs — not converted from React Email. React Email templates remain as the tier-3 fallback and are not removed.
+
+### Template ↔ Automation Linking
+
+- [ ] **LINK-01**: Automation detail page (`/automations/[id]`) adds "Email Template" section with dropdown to select from the template library.
+- [ ] **LINK-02**: After selecting a template, "Customize for this Flow" button copies the template into `custom_template_html`/`custom_template_json` columns on the automation row and opens Unlayer editor for flow-specific edits.
+- [ ] **LINK-03**: Send logic uses 3-tier fallback: (1) `custom_template_html` if exists, (2) linked `email_template_id` HTML, (3) default React Email template. Tier 3 never fails.
+- [ ] **LINK-04**: Template preview on automation detail page shows the currently active template (whichever tier applies).
+- [ ] **LINK-05**: Dynamic variable injection into any template tier: customer name, discount code, product info, store name, unsubscribe link. Uses Unlayer merge tags (`{{variable}}`) for tiers 1–2; existing React Email props for tier 3.
+
+### Email Performance Dashboard
+
+- [ ] **PERF-01**: Dashboard adds "Email Performance" section: total sent, overall open rate, overall click rate (last 30 days).
+- [ ] **PERF-02**: Automation list page (`/automations`) shows open rate and click rate columns per flow.
+- [ ] **PERF-03**: Automation detail page shows performance chart: sends/opens/clicks over time (last 30 days, line chart).
+- [ ] **PERF-04**: Customer profile Message History table shows status icons and timestamps (sent ✓, opened 👁, clicked 🔗).
+
+---
+
+## v3.0 Requirements (Public App + Multi-Tenant)
+
+### OAuth 2.0 Authorization Flow
+
+- [ ] **AUTH-01**: Implement standard Shopify OAuth 2.0 flow: install link → permission consent screen → callback with auth code → exchange for access token → store per-shop token in DB.
+- [ ] **AUTH-02**: Create `shops` table storing shop domain, access token (encrypted at rest), `installed_at`, plan, status (active/uninstalled).
+- [ ] **AUTH-03**: Auth middleware on all routes: extract current shop from session/JWT, inject `shopId` into all DB queries.
+- [ ] **AUTH-04**: Handle `app/uninstalled` webhook: mark shop as inactive, stop automations, retain data for 30 days then purge.
+
+### Multi-Tenant Data Isolation
+
+- [ ] **TENANT-01**: Add `shop_id WHERE` clause to every database query (customers, orders, automations, message_logs, email_templates, email_clicks).
+- [ ] **TENANT-02**: Enable Supabase Row Level Security (RLS) policies on all tables as a safety-net secondary enforcement layer.
+- [ ] **TENANT-03**: Webhook handler validates `shop_id` from Shopify webhook header matches the registered shop before processing.
+- [ ] **TENANT-04**: RFM scoring runs per-shop — `NTILE(5) OVER (PARTITION BY shop_id)`, not globally across all merchants' customers.
+- [ ] **TENANT-05**: Inngest functions receive `shopId` in event data and scope all DB operations to that shop.
+
+### Shopify Billing API
+
+- [ ] **BILL-01**: Implement Shopify Billing API integration for recurring app charges.
+- [ ] **BILL-02**: 4 plan tiers: Free (50 customers), Starter $29/mo (1,000 customers), Growth $79/mo (10,000 customers), Pro $149/mo (unlimited).
+- [ ] **BILL-03**: Plan limits enforced: customer count cap, automation count cap per plan, AI insights only on Growth+.
+- [ ] **BILL-04**: In-app upgrade/downgrade flow that initiates a Shopify billing confirmation redirect.
+- [ ] **BILL-05**: Grace period handling when plan expires or payment fails — downgrade to Free tier limits, show upgrade prompt.
+
+### Webhook Auto-Registration + Sender Domain
+
+- [ ] **HOOK-01**: On app install, automatically register all required Shopify webhooks (orders/create, orders/updated, customers/create, customers/update, app/uninstalled) pointing to the production URL.
+- [ ] **HOOK-02**: On app uninstall, Shopify automatically removes webhooks (no action needed — Shopify handles this natively).
+- [ ] **HOOK-03**: Sender domain setup: Settings page links to Resend's domain verification UI with a brief in-app guide explaining SPF/DKIM/DMARC. No custom DNS wizard built. Fallback sender (`mail.ecomcrm.app`) used until merchant verifies their own domain.
+- [ ] **HOOK-04**: Fallback sender domain (`mail.ecomcrm.app`) verified in Resend and used as default for all merchants.
+
+### App Store Compliance + Listing
+
+- [ ] **COMPLY-01**: App is external/standalone (not embedded in Shopify admin). Keep shadcn/ui — no Polaris migration required.
+- [ ] **COMPLY-02**: Privacy policy page at `/privacy` and terms of service at `/terms`.
+- [ ] **COMPLY-03**: Data protection: merchant can export all their data and request deletion from Settings page.
+- [ ] **COMPLY-04**: App listing content: description, feature list, screenshots, pricing table, demo video link.
+- [ ] **COMPLY-05**: Accessibility: all pages pass basic a11y checks (contrast ratios, keyboard navigation, screen reader labels).
+
+---
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| SMS channel | TCPA/GDPR compliance + carrier setup; email only for v1/v2 |
+| A/B testing | Dropped from v2; will revisit in a future milestone |
+| WYSIWYG embedded in Shopify admin | External app only — no App Bridge / Polaris required |
+| Auto-generated template thumbnails | Not worth complexity; placeholder used instead |
+| Custom sender domain DNS wizard | Link to Resend's own domain verification UI |
+| Visual drag-and-drop flow builder | Preset flows sufficient for v1/v2 |
+| Predictive CLV/churn ML | RFM + Claude narratives deliver 90% of value |
+| Real-time chat / push notifications | Email is the channel; build it exceptionally first |
+
+---
+
+## Traceability
+
+### v2.0
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| TRACK-01 through TRACK-04 | Phase 12 | Pending |
+| EDITOR-01 through EDITOR-05 | Phase 13 | Pending |
+| LINK-01 through LINK-05 | Phase 14 | Pending |
+| PERF-01 through PERF-04 | Phase 15 | Pending |
+
+### v3.0
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AUTH-01 through AUTH-04 | Phase 16 | Pending |
+| TENANT-01 through TENANT-05 | Phase 17 | Pending |
+| BILL-01 through BILL-05 | Phase 18 | Pending |
+| HOOK-01 through HOOK-04 | Phase 19 | Pending |
+| COMPLY-01 through COMPLY-05 | Phase 20 | Pending |
+
+**Coverage:**
+- v2.0 requirements: 18 total, all mapped to phases
+- v3.0 requirements: 23 total, all mapped to phases
+
+---
+*Requirements defined: 2026-02-22*
+*Decisions: no A/B testing, external app (no Polaris), Unlayer presets built natively (React Email kept as fallback), thumbnails use placeholder, HOOK-03 links to Resend UI*

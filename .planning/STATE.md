@@ -5,16 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-21)
 
 **Core value:** Shopify customers auto-segmented by RFM score, with triggered email flows that actually fire — a full CRM loop that Shopify, Klaviyo, and HubSpot each only half-solve.
-**Current focus:** Phase 8 — Pipeline Verification and Toggle Fix (v1.1 start)
+**Current focus:** v2.0 milestone defined — ready to plan Phase 12 (Open & Click Tracking)
 
 ## Current Position
 
-Phase: 8 of 11 (Pipeline Verification and Toggle Fix)
-Plan: 2 of 2 in current phase (complete)
-Status: Phase 08 complete — ready for next phase
-Last activity: 2026-02-21 — 08-02 complete, user verified toggle persistence and badge text (PIPE-03 and PIPE-04 resolved)
+Phase: 11 of 20 (UI Polish — complete, v1.1 shipped)
+Status: v1.1 milestone complete and archived. v2.0 roadmap + requirements defined. Ready to plan Phase 12.
+Last activity: 2026-02-22 — v2.0/v3.0 roadmap discussed and finalized
 
-Progress: [████████░░░] 73% (8/11 phases complete)
+Progress: [█████████████░░░░░░░] 55% (11/20 phases complete)
 
 ## Performance Metrics
 
