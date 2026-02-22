@@ -70,9 +70,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — emailTemplates table schema, migration, CRUD query functions, email-templates API routes, /emails list page with placeholder thumbnails
-- [ ] 13-02-PLAN.md — Unlayer editor at /emails/[id]/edit with save/load HTML+JSON, image upload to Supabase Storage
-- [ ] 13-03-PLAN.md — Seed 5 preset Unlayer templates (Welcome, Abandoned Cart, Repurchase, Win-back, VIP)
+- [x] 13-01-PLAN.md — emailTemplates table schema, migration, CRUD query functions, email-templates API routes, /emails list page with placeholder thumbnails
+- [x] 13-02-PLAN.md — Unlayer editor at /emails/[id]/edit with save/load HTML+JSON, image upload to Supabase Storage
+- [x] 13-03-PLAN.md — Seed 5 preset Unlayer templates (Welcome, Abandoned Cart, Repurchase, Win-back, VIP)
 
 #### Phase 14: Template ↔ Automation Linking
 **Goal**: Connect the Unlayer template library to automation flows with 3-tier content fallback.
@@ -87,8 +87,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Schema migration (3 columns), template selector dropdown, 3-tier send fallback in executeEmailAction, preview endpoint update
-- [ ] 14-02-PLAN.md — "Customize for this Flow" inline Unlayer editor with merge tags, variable substitution in send pipeline and preview
+- [x] 14-01-PLAN.md — Schema migration (3 columns), template selector dropdown, 3-tier send fallback in executeEmailAction, preview endpoint update
+- [x] 14-02-PLAN.md — "Customize for this Flow" inline Unlayer editor with merge tags, variable substitution in send pipeline and preview
 
 #### Phase 15: Email Performance Dashboard
 **Goal**: Merchants can see email effectiveness across flows and time.
@@ -165,8 +165,8 @@ v3.0: 16 → 17 → 18, 16 → 19, (17 + 18 + 19) → 20
 | 10. Test Send | v1.1 | 1/1 | Complete | 2026-02-22 |
 | 11. UI Polish | v1.1 | 2/2 | Complete | 2026-02-22 |
 | 12. Open & Click Tracking | v2.0 | 2/2 | Complete | 2026-02-22 |
-| 13. Email Template Editor | v2.0 | 0/3 | Not started | - |
-| 14. Template ↔ Automation Linking | v2.0 | 0/2 | Planned | - |
+| 13. Email Template Editor | v2.0 | 3/3 | Complete | 2026-02-22 |
+| 14. Template ↔ Automation Linking | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 15. Email Performance Dashboard | v2.0 | 0/2 | Not started | - |
 | 16. OAuth 2.0 Authorization Flow | v3.0 | 0/? | Not started | - |
 | 17. Multi-Tenant Data Isolation | v3.0 | 0/? | Not started | - |

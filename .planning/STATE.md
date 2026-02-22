@@ -13,7 +13,7 @@ Phase: 14 of 20 (Template-Automation Linking — complete, 2 plans done)
 Status: Phase 14 Plan 02 complete — inline Unlayer editor with merge tags, Customize for this Flow button, Clear Customization, substituteVariables bug fix.
 Last activity: 2026-02-22 — Phase 14 Plan 02 executed (inline editor + merge tags)
 
-Progress: [██████████████░░░░░░] 60% (12/20 phases complete)
+Progress: [███████████████░░░░░] 70% (14/20 phases complete)
 
 ## Performance Metrics
 
