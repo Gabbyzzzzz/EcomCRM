@@ -4,6 +4,7 @@ import {
   getRevenueOverTime,
   getChurnAlerts,
   getRecentActivity,
+  getEmailPerformanceKpis,
 } from '@/lib/db/queries'
 import { env } from '@/lib/env'
 import { SegmentChart } from '@/components/segment-chart'
@@ -45,13 +46,14 @@ function capitalize(str: string): string {
 export default async function DashboardPage() {
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
 
-  const [kpis, segmentData, revenueData, churnAlerts, activity] =
+  const [kpis, segmentData, revenueData, churnAlerts, activity, emailPerf] =
     await Promise.all([
       getDashboardKpis(shopId),
       getSegmentDistribution(shopId),
       getRevenueOverTime(shopId, 90),
       getChurnAlerts(shopId, 7),
       getRecentActivity(shopId, 20),
+      getEmailPerformanceKpis(shopId, 30),
     ])
 
   // ── Recent Activity: merge messages + orders into single timeline ─────────
@@ -148,6 +150,34 @@ export default async function DashboardPage() {
               <p className="text-2xl font-semibold">
                 {kpis.emailsSent30d.toLocaleString()}
               </p>
+            </div>
+          </div>
+
+          {/* ── Email Performance ──────────────────────────────────────── */}
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="text-sm font-semibold mb-4">Email Performance</h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              Last 30 days. Open rates may be inflated by Apple Mail Privacy Protection.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Total Sent</p>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {emailPerf.totalSent.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Open Rate</p>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {emailPerf.openRate}%
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Click Rate</p>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {emailPerf.clickRate}%
+                </p>
+              </div>
             </div>
           </div>
 
