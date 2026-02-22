@@ -1171,6 +1171,55 @@ export async function getAutomationListWithRates(
   }))
 }
 
+// ─── Email time-series query function ─────────────────────────────────────────
+
+export interface EmailTimeSeriesItem {
+  date: string    // YYYY-MM-DD
+  sent: number
+  opened: number
+  clicked: number
+}
+
+/**
+ * Fetch daily sends, opens, and clicks for a single automation over the last N days.
+ * Groups by DATE(sent_at), ordered ascending for chart rendering.
+ * Returns an empty array when no messages have been sent.
+ */
+export async function getAutomationEmailTimeSeries(
+  shopId: string,
+  automationId: string,
+  days: number = 30
+): Promise<EmailTimeSeriesItem[]> {
+  interface TimeSeriesRow extends Record<string, unknown> {
+    date: Date | string
+    sent: string | number
+    opened: string | number
+    clicked: string | number
+  }
+
+  const rows = await db.execute<TimeSeriesRow>(sql`
+    SELECT
+      DATE(sent_at) AS date,
+      COUNT(*) FILTER (WHERE status IN ('sent', 'opened', 'clicked', 'converted')) AS sent,
+      COUNT(*) FILTER (WHERE opened_at IS NOT NULL)                               AS opened,
+      COUNT(*) FILTER (WHERE clicked_at IS NOT NULL)                              AS clicked
+    FROM ${messageLogs}
+    WHERE shop_id = ${shopId}
+      AND automation_id = ${automationId}::uuid
+      AND sent_at >= NOW() - (${days} || ' days')::interval
+      AND status IN ('sent', 'opened', 'clicked', 'converted')
+    GROUP BY DATE(sent_at)
+    ORDER BY date ASC
+  `)
+
+  return rows.map((r) => ({
+    date: r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date),
+    sent: Number(r.sent),
+    opened: Number(r.opened),
+    clicked: Number(r.clicked),
+  }))
+}
+
 // ─── Email template type ───────────────────────────────────────────────────────
 
 type EmailTemplateRow = typeof emailTemplates.$inferSelect
