@@ -165,6 +165,7 @@ export default async function AutomationDetailPage({
           templateOptions={templateOptions}
           initialLinkedEmailTemplateId={automation.linkedEmailTemplateId ?? null}
           initialCustomTemplateHtml={automation.customTemplateHtml ?? null}
+          initialCustomTemplateJson={(automation.customTemplateJson as object | null) ?? null}
         />
       </div>
 

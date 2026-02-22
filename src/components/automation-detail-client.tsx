@@ -9,6 +9,7 @@ import {
 } from '@/components/automation-config-form'
 import { EmailPreviewPanel } from '@/components/email-preview-panel'
 import { SendTestEmailButton } from '@/components/send-test-email-button'
+import { AutomationInlineEditor } from '@/components/automation-inline-editor'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ interface AutomationDetailClientProps {
   initialLinkedEmailTemplateId: string | null
   /** Flow-specific HTML override (Tier 1) — null if none set */
   initialCustomTemplateHtml: string | null
+  /** Flow-specific Unlayer design JSON stored alongside customTemplateHtml — null if none set */
+  initialCustomTemplateJson: object | null
 }
 
 // ─── Helpers to extract actionConfig fields ───────────────────────────────────
@@ -63,6 +66,7 @@ export function AutomationDetailClient({
   templateOptions,
   initialLinkedEmailTemplateId,
   initialCustomTemplateHtml,
+  initialCustomTemplateJson,
 }: AutomationDetailClientProps) {
   const router = useRouter()
 
@@ -92,8 +96,14 @@ export function AutomationDetailClient({
   )
   const lastSavedLinkedTemplateRef = useRef<string | null>(initialLinkedEmailTemplateId)
 
-  // customTemplateHtml is read-only in this component — it's set via the email editor
-  const customTemplateHtml = initialCustomTemplateHtml
+  // customTemplateHtml tracks whether a Tier 1 override is active for badge display
+  // The actual HTML is managed server-side — we reflect server state here
+  const [customTemplateHtml, setCustomTemplateHtml] = useState<string | null>(initialCustomTemplateHtml)
+
+  // ─── Inline editor state (Phase 14-02) ───────────────────────────────────
+
+  const [isCustomizing, setIsCustomizing] = useState<boolean>(false)
+  const [customDesignJson, setCustomDesignJson] = useState<object | null>(initialCustomTemplateJson)
 
   // ─── isDirty ──────────────────────────────────────────────────────────────
 
@@ -152,6 +162,105 @@ export function AutomationDetailClient({
     setValues(lastSavedRef.current)
     setLinkedEmailTemplateId(lastSavedLinkedTemplateRef.current)
   }, [])
+
+  // ─── Customize for this Flow ──────────────────────────────────────────────
+
+  const onCustomizeForFlow = useCallback(async () => {
+    // a) Existing custom JSON — open editor with it
+    if (customDesignJson) {
+      setIsCustomizing(true)
+      return
+    }
+
+    // b) No custom JSON but a linked template — fetch its designJson
+    if (linkedEmailTemplateId) {
+      try {
+        const res = await fetch(`/api/email-templates/${linkedEmailTemplateId}`)
+        if (!res.ok) {
+          toast.error('Failed to load template design')
+          return
+        }
+        const template = (await res.json()) as { designJson?: object | null }
+        setCustomDesignJson(template.designJson ?? null)
+        setIsCustomizing(true)
+      } catch {
+        toast.error('Network error loading template')
+      }
+      return
+    }
+
+    // c) Neither — prompt to select a template first
+    toast.error('Select a template first')
+  }, [customDesignJson, linkedEmailTemplateId])
+
+  // ─── Inline editor save ───────────────────────────────────────────────────
+
+  const onInlineEditorSave = useCallback(
+    async (html: string, designJson: object) => {
+      try {
+        const res = await fetch(`/api/automations/${automationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customTemplateHtml: html,
+            customTemplateJson: designJson,
+          }),
+        })
+
+        const json = (await res.json()) as { ok?: boolean; error?: string }
+
+        if (!res.ok || !json.ok) {
+          toast.error(json.error ?? 'Failed to save custom template')
+          return
+        }
+
+        // Update local state to reflect new Tier 1 override
+        setCustomTemplateHtml(html)
+        setCustomDesignJson(designJson)
+        setIsCustomizing(false)
+        toast.success('Custom template saved')
+        router.refresh()
+      } catch {
+        toast.error('Network error — check the console')
+      }
+    },
+    [automationId, router]
+  )
+
+  // ─── Clear Customization ──────────────────────────────────────────────────
+
+  const onClearCustomization = useCallback(async () => {
+    const confirmed = window.confirm(
+      'Remove flow-specific edits? This will revert to the linked template.'
+    )
+    if (!confirmed) return
+
+    try {
+      const res = await fetch(`/api/automations/${automationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customTemplateHtml: null,
+          customTemplateJson: null,
+        }),
+      })
+
+      const json = (await res.json()) as { ok?: boolean; error?: string }
+
+      if (!res.ok || !json.ok) {
+        toast.error(json.error ?? 'Failed to clear customization')
+        return
+      }
+
+      setCustomTemplateHtml(null)
+      setCustomDesignJson(null)
+      setIsCustomizing(false)
+      toast.success('Customization cleared — reverting to linked template')
+      router.refresh()
+    } catch {
+      toast.error('Network error — check the console')
+    }
+  }, [automationId, router])
 
   // ─── Derived preview props from current actionConfig ─────────────────────
 
@@ -212,6 +321,36 @@ export function AutomationDetailClient({
           <p className="mt-1.5 text-xs text-muted-foreground">
             Select a template from your email library. &quot;Default&quot; uses the built-in React Email template.
           </p>
+
+          {/* Customize for this Flow / Clear Customization buttons (Phase 14-02) */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <button
+              type="button"
+              onClick={onCustomizeForFlow}
+              className="px-3 py-1.5 text-sm rounded-md border border-primary text-primary hover:bg-primary/5 transition-colors"
+            >
+              Customize for this Flow
+            </button>
+            {customTemplateHtml && (
+              <button
+                type="button"
+                onClick={onClearCustomization}
+                className="px-3 py-1.5 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/5 transition-colors"
+              >
+                Clear Customization
+              </button>
+            )}
+          </div>
+
+          {/* Inline Unlayer editor — visible when isCustomizing is true */}
+          {isCustomizing && (
+            <AutomationInlineEditor
+              automationId={automationId}
+              initialDesign={customDesignJson}
+              onSave={onInlineEditorSave}
+              onClose={() => setIsCustomizing(false)}
+            />
+          )}
         </div>
       )}
 
