@@ -8,6 +8,7 @@ import {
   type AutomationFormValues,
 } from '@/components/automation-config-form'
 import { EmailPreviewPanel } from '@/components/email-preview-panel'
+import { SendTestEmailButton } from '@/components/send-test-email-button'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -148,29 +149,47 @@ export function AutomationDetailClient({
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Configuration form */}
-      <AutomationConfigForm
-        automationId={automationId}
-        triggerType={triggerType}
-        values={values}
-        onFieldChange={onFieldChange}
-        onSave={onSave}
-        onCancel={onCancel}
-        isDirty={isDirty}
-        isSaving={isSaving}
-      />
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Configuration form */}
+        <AutomationConfigForm
+          automationId={automationId}
+          triggerType={triggerType}
+          values={values}
+          onFieldChange={onFieldChange}
+          onSave={onSave}
+          onCancel={onCancel}
+          isDirty={isDirty}
+          isSaving={isSaving}
+        />
 
-      {/* Live email preview */}
-      <EmailPreviewPanel
-        automationId={automationId}
-        emailTemplateId={emailTemplateId}
-        subject={previewSubject}
-        headline={previewHeadline}
-        body={previewBody}
-        ctaText={previewCtaText}
-        discountCode={previewDiscountCode}
-      />
-    </div>
+        {/* Live email preview */}
+        <EmailPreviewPanel
+          automationId={automationId}
+          emailTemplateId={emailTemplateId}
+          subject={previewSubject}
+          headline={previewHeadline}
+          body={previewBody}
+          ctaText={previewCtaText}
+          discountCode={previewDiscountCode}
+        />
+      </div>
+
+      {/* Send Test Email */}
+      <div className="mt-6">
+        <h3 className="text-base font-medium mb-1">Send Test Email</h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          Send a test version with your current edits — no need to save first
+        </p>
+        <SendTestEmailButton
+          automationId={automationId}
+          subject={previewSubject}
+          headline={previewHeadline}
+          bodyText={previewBody}
+          ctaText={previewCtaText}
+          discountCode={previewDiscountCode}
+        />
+      </div>
+    </>
   )
 }

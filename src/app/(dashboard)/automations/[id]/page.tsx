@@ -5,7 +5,6 @@ import { db } from '@/lib/db'
 import { automations } from '@/lib/db/schema'
 import { env } from '@/lib/env'
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
-import { SendTestEmailButton } from '@/components/send-test-email-button'
 import { AutomationDetailClient } from '@/components/automation-detail-client'
 
 // ─── Human-readable trigger label ─────────────────────────────────────────────
@@ -126,15 +125,6 @@ export default async function AutomationDetailPage({
           initialTriggerConfig={(automation.triggerConfig as Record<string, unknown> | null) ?? null}
           initialActionConfig={(automation.actionConfig as Record<string, unknown> | null) ?? null}
         />
-      </div>
-
-      {/* Send Test Email section */}
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-medium mb-1">Send Test Email</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Send a test version of this automation&apos;s email to any address
-        </p>
-        <SendTestEmailButton automationId={automation.id} />
       </div>
 
       {/* AI Email Copy Generator section */}

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "automations_shop_name_unique" ON "automations" USING btree ("shop_id","name");

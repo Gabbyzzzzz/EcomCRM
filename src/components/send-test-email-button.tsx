@@ -4,9 +4,26 @@ import { useState } from 'react'
 
 interface SendTestEmailButtonProps {
   automationId: string
+  /** Current subject line from the config form (unsaved edits included) */
+  subject?: string
+  /** Current headline from the config form (unsaved edits included) */
+  headline?: string
+  /** Current body text from the config form (unsaved edits included). Named bodyText to avoid collision with fetch body parameter. */
+  bodyText?: string
+  /** Current CTA text from the config form (unsaved edits included) */
+  ctaText?: string
+  /** Current discount code from the config form (unsaved edits included) */
+  discountCode?: string
 }
 
-export function SendTestEmailButton({ automationId }: SendTestEmailButtonProps) {
+export function SendTestEmailButton({
+  automationId,
+  subject,
+  headline,
+  bodyText,
+  ctaText,
+  discountCode,
+}: SendTestEmailButtonProps) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +39,14 @@ export function SendTestEmailButton({ automationId }: SendTestEmailButtonProps) 
       const res = await fetch(`/api/automations/${automationId}/send-test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          ...(subject ? { subject } : {}),
+          ...(headline ? { headline } : {}),
+          ...(bodyText ? { body: bodyText } : {}),
+          ...(ctaText ? { ctaText } : {}),
+          ...(discountCode ? { discountCode } : {}),
+        }),
       })
       const json = await res.json() as { sent?: boolean; resendId?: string; error?: string }
 
