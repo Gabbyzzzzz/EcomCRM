@@ -4,9 +4,10 @@ import { eq, and } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { automations } from '@/lib/db/schema'
 import { env } from '@/lib/env'
-import { getAutomationEmailStats, listEmailTemplatesForDropdown } from '@/lib/db/queries'
+import { getAutomationEmailStats, getAutomationEmailTimeSeries, listEmailTemplatesForDropdown } from '@/lib/db/queries'
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
 import { AutomationDetailClient } from '@/components/automation-detail-client'
+import { EmailPerformanceChart } from '@/components/email-performance-chart'
 
 // ─── Human-readable trigger label ─────────────────────────────────────────────
 
@@ -44,10 +45,11 @@ export default async function AutomationDetailPage({
   const { id } = await params
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
 
-  const [automationRows, stats, templateOptions] = await Promise.all([
+  const [automationRows, stats, templateOptions, timeSeries] = await Promise.all([
     db.select().from(automations).where(and(eq(automations.id, id), eq(automations.shopId, shopId))).limit(1),
     getAutomationEmailStats(shopId, id),
     listEmailTemplatesForDropdown(shopId),
+    getAutomationEmailTimeSeries(shopId, id, 30),
   ])
   const automation = automationRows[0]
 
@@ -109,6 +111,15 @@ export default async function AutomationDetailPage({
             <p className="text-2xl font-semibold tabular-nums">{stats.clickRate}%</p>
           </div>
         </div>
+      </div>
+
+      {/* Performance Over Time chart section */}
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="text-lg font-medium mb-4">Performance Over Time</h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          Sends, opens, and clicks per day (last 30 days)
+        </p>
+        <EmailPerformanceChart data={timeSeries} />
       </div>
 
       {/* Configuration section — editable via AutomationDetailClient */}
