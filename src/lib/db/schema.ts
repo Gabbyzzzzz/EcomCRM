@@ -256,3 +256,23 @@ export const webhookDeliveries = pgTable(
     index('webhook_deliveries_topic_idx').on(table.topic),
   ]
 )
+
+export const emailClicks = pgTable(
+  'email_clicks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shopId: varchar('shop_id', { length: 255 }).notNull(),
+    messageLogId: uuid('message_log_id')
+      .notNull()
+      .references(() => messageLogs.id),
+    linkUrl: text('link_url').notNull(),
+    clickedAt: timestamp('clicked_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('email_clicks_shop_id_idx').on(table.shopId),
+    index('email_clicks_message_log_id_idx').on(table.messageLogId),
+    index('email_clicks_clicked_at_idx').on(table.clickedAt),
+  ]
+)

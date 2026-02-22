@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs } from './schema'
+import { customers, orders, syncLogs, webhookDeliveries, suppressions, automations, messageLogs, emailClicks } from './schema'
 import { eq, and, desc, isNotNull, lte, or, isNull, sql, gte, inArray } from 'drizzle-orm'
 import Decimal from 'decimal.js'
 
@@ -882,5 +882,45 @@ export async function getRecentActivity(
       totalPrice: r.totalPrice ?? null,
       createdAt: r.createdAt ?? null,
     })),
+  }
+}
+
+// ─── Email tracking query functions ────────────────────────────────────────────
+
+/**
+ * Record that a message was opened (first open only — idempotent).
+ * Updates opened_at and status only when opened_at IS NULL, so re-opens are no-ops.
+ * Best-effort: errors are logged but never re-thrown.
+ */
+export async function recordEmailOpen(messageLogId: string): Promise<void> {
+  try {
+    await db
+      .update(messageLogs)
+      .set({ openedAt: new Date(), status: 'opened' })
+      .where(and(eq(messageLogs.id, messageLogId), isNull(messageLogs.openedAt)))
+  } catch (err) {
+    console.error('[recordEmailOpen] failed to record open', { messageLogId, err })
+  }
+}
+
+/**
+ * Record that a link was clicked in an email.
+ * Inserts a row into email_clicks for every click (multi-click tracking).
+ * Also updates clicked_at and status on the parent message_logs row (first click only — idempotent).
+ * Best-effort: errors are logged but never re-thrown.
+ */
+export async function recordEmailClick(
+  shopId: string,
+  messageLogId: string,
+  linkUrl: string
+): Promise<void> {
+  try {
+    await db.insert(emailClicks).values({ shopId, messageLogId, linkUrl })
+    await db
+      .update(messageLogs)
+      .set({ clickedAt: new Date(), status: 'clicked' })
+      .where(and(eq(messageLogs.id, messageLogId), isNull(messageLogs.clickedAt)))
+  } catch (err) {
+    console.error('[recordEmailClick] failed to record click', { shopId, messageLogId, linkUrl, err })
   }
 }
