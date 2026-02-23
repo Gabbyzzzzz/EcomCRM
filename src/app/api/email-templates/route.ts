@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { env } from '@/lib/env'
 import { listEmailTemplates, createEmailTemplate } from '@/lib/db/queries'
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
     }
 
     const template = await createEmailTemplate(shopId, { name: parsed.data.name })
+    revalidatePath('/emails')
     return NextResponse.json(template, { status: 201 })
   } catch (err) {
     console.error('[POST /api/email-templates] error', err)

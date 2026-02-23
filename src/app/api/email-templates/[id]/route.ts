@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { env } from '@/lib/env'
 import {
@@ -81,6 +82,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     }
 
     await deleteEmailTemplate(id)
+    revalidatePath('/emails')
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[DELETE /api/email-templates/[id]] error', err)
@@ -106,6 +108,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: 'Template not found' }, { status: 404 })
       }
 
+      revalidatePath('/emails')
       return NextResponse.json(copy, { status: 201 })
     }
 
