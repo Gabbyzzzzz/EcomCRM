@@ -13,9 +13,41 @@ interface UnlayerEditorProps {
   templateId: string
   templateName: string
   initialDesign: object | null
+  initialHtml: string | null
 }
 
-export function UnlayerEditor({ templateId, templateName, initialDesign }: UnlayerEditorProps) {
+/** Wrap raw HTML in a minimal Unlayer design JSON (single custom-HTML block) */
+function htmlToDesign(html: string): object {
+  return {
+    body: {
+      rows: [
+        {
+          cells: [1],
+          columns: [
+            {
+              contents: [
+                {
+                  type: 'html',
+                  values: {
+                    html,
+                    containerPadding: '0px',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      values: {
+        contentWidth: '600px',
+        backgroundColor: '#ffffff',
+        fontFamily: { label: 'Arial', value: 'arial,helvetica,sans-serif' },
+      },
+    },
+  }
+}
+
+export function UnlayerEditor({ templateId, templateName, initialDesign, initialHtml }: UnlayerEditorProps) {
   const router = useRouter()
   const editorRef = useRef<EditorRef>(null)
   // Store the unlayer instance directly from onReady — editorRef.current.editor
@@ -38,9 +70,12 @@ export function UnlayerEditor({ templateId, templateName, initialDesign }: Unlay
       setEditorReady(true)
 
       // Load saved design on first mount only (prevent React StrictMode double-fire)
-      if (initialDesign !== null && !designLoadedRef.current) {
-        unlayer.loadDesign(initialDesign as Parameters<typeof unlayer.loadDesign>[0])
-        designLoadedRef.current = true
+      if (!designLoadedRef.current) {
+        const design = initialDesign ?? (initialHtml ? htmlToDesign(initialHtml) : null)
+        if (design) {
+          unlayer.loadDesign(design as Parameters<typeof unlayer.loadDesign>[0])
+          designLoadedRef.current = true
+        }
       }
 
       // Register image upload callback
@@ -63,7 +98,7 @@ export function UnlayerEditor({ templateId, templateName, initialDesign }: Unlay
         }
       )
     },
-    [initialDesign]
+    [initialDesign, initialHtml]
   )
 
   const handleSave = useCallback(async () => {

@@ -18,6 +18,7 @@ export default async function EmailEditorPage({
       templateId={template.id}
       templateName={template.name}
       initialDesign={template.designJson as object | null}
+      initialHtml={template.html}
     />
   )
 }
