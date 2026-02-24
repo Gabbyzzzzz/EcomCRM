@@ -25,6 +25,16 @@ export function AutomationToggle({ id, enabled }: { id: string; enabled: boolean
       return
     }
 
+    // Read the DB-confirmed enabled value from the response body.
+    // This ensures the UI reflects the actual persisted state even if the
+    // router.refresh() below returns a stale cached page.
+    try {
+      const data = (await res.json()) as { ok: boolean; automation: { enabled: boolean } }
+      setOptimistic(data.automation.enabled)
+    } catch {
+      // If JSON parsing fails, keep the optimistic value and let router.refresh() correct it
+    }
+
     startTransition(() => router.refresh())
   }
 

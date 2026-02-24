@@ -5,6 +5,8 @@ import { AutomationToggle } from '@/components/automation-toggle'
 import { SeedAutomationsButton } from '@/components/seed-automations-button'
 import CreateFlowButton from './_components/CreateFlowButton'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Automations | EcomCRM',
 }
