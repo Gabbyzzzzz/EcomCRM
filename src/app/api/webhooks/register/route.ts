@@ -18,6 +18,7 @@ interface WebhookCreateResult {
 
 const WEBHOOK_TOPICS = [
   'ORDERS_CREATE',
+  'ORDERS_UPDATED',
   'CUSTOMERS_CREATE',
   'CUSTOMERS_UPDATE',
 ] as const
