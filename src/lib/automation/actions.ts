@@ -39,11 +39,11 @@ interface ActionConfigOverrides {
 // ─── Subject map ──────────────────────────────────────────────────────────────
 
 const SUBJECT_MAP: Record<string, string> = {
-  'welcome':        'Welcome to our store!',
-  'abandoned-cart': 'You left something behind...',
-  'repurchase':     'Time to reorder?',
-  'winback':        "We miss you — here's an offer",
-  'vip':            'Welcome to the VIP club',
+  'welcome':        'Thanks for your order — welcome aboard!',
+  'abandoned-cart': 'Your cart is saved — pick up where you left off',
+  'repurchase':     'Ready for a restock? Your favorites are waiting',
+  'winback':        "A lot has changed — see what's new",
+  'vip':            "You've earned VIP status — exclusive perks inside",
 }
 
 // ─── Variable substitution helper ─────────────────────────────────────────────

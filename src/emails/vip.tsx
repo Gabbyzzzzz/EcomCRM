@@ -180,15 +180,15 @@ export default function VipEmail({
   customCtaText,
 }: VipEmailProps) {
   const greeting = customerName
-    ? `You're a VIP, ${customerName}!`
-    : "You're a VIP!"
-  const defaultBody = `You're one of our most valued customers at ${storeName}. We wanted to take a moment to say thank you for your incredible loyalty and support.`
-  const defaultCtaText = 'Shop the VIP Collection'
+    ? `You've earned VIP status, ${customerName}`
+    : "You've earned VIP status"
+  const defaultBody = `Your loyalty speaks volumes — ${orderCount} order${orderCount !== 1 ? 's' : ''} and ${totalSpent} spent with us. You're among a select group of our most valued customers, and we believe that deserves something special. Here's what we've unlocked just for you.`
+  const defaultCtaText = 'Claim My VIP Perks'
 
   return (
     <Html lang="en">
       <Head />
-      <Preview>You&apos;re a VIP at {storeName} — thank you for your loyalty</Preview>
+      <Preview>Exclusive perks unlocked — see the rewards you&apos;ve earned at {storeName}</Preview>
       <Body style={main}>
         <Container style={container}>
           {logoUrl && (
@@ -240,7 +240,7 @@ export default function VipEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            You received this email because you are a valued VIP customer of {storeName}.
+            Only our top customers receive this email. Thank you for being a VIP at {storeName}.
             <br />
             <a href={unsubscribeUrl} style={unsubscribeLink}>
               Unsubscribe
@@ -258,9 +258,10 @@ VipEmail.PreviewProps = {
   totalSpent: '$1,240.00',
   orderCount: 12,
   perks: [
-    'Free shipping on all orders',
-    'Early access to new collections',
-    'Priority customer support',
+    'Free shipping on every order',
+    'Early access to new arrivals before anyone else',
+    'Priority customer support with faster response times',
+    'Exclusive VIP-only discounts and offers',
   ],
   shopUrl: 'https://example.com',
   unsubscribeUrl: 'https://example.com/unsubscribe?token=abc',

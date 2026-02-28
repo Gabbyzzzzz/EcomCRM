@@ -230,16 +230,16 @@ function makeDesign(id: string, rows: object[], bgColor = '#F4F4F4') {
 // ─── Preset Designs ───────────────────────────────────────────────────────────
 
 const WELCOME_DESIGN = makeDesign('welcome-doc', [
-  row('welcome-header', [headingBlock('welcome-h1', 'Welcome to the Family!', '28px', '#FFFFFF')], '#1E40AF'),
+  row('welcome-header', [headingBlock('welcome-h1', 'Welcome — You\'re Officially One of Us', '28px', '#FFFFFF')], '#1E40AF'),
   row('welcome-content', [
-    textBlock('welcome-t1', "Thank you for joining us. We're thrilled to have you."),
-    buttonBlock('welcome-btn', 'Shop Now', '#', '#1E40AF'),
+    textBlock('welcome-t1', "Thank you for your first order! We put real care into every product we offer, and we're committed to making sure you love what you get. As a customer, you'll be the first to hear about new arrivals, exclusive deals, and insider tips."),
+    buttonBlock('welcome-btn', 'Explore the Store', '#', '#1E40AF'),
   ]),
   row('welcome-footer', [
     dividerBlock('welcome-div'),
     textBlock(
       'welcome-unsub',
-      "You're receiving this because you opted in. <a href='#'>Unsubscribe</a>.",
+      "You received this email because you made a purchase. <a href='#'>Unsubscribe</a>.",
       '#999999'
     ),
   ]),
@@ -248,18 +248,19 @@ const WELCOME_DESIGN = makeDesign('welcome-doc', [
 const ABANDONED_CART_DESIGN = makeDesign('abandoned-cart-doc', [
   row(
     'cart-header',
-    [headingBlock('cart-h1', 'You Left Something Behind', '28px', '#FFFFFF')],
+    [headingBlock('cart-h1', 'Still Thinking It Over?', '28px', '#FFFFFF')],
     '#F59E0B'
   ),
   row('cart-content', [
-    textBlock('cart-t1', 'Your cart is waiting! Complete your purchase before items sell out.'),
-    buttonBlock('cart-btn', 'Return to Cart', '#', '#F59E0B'),
+    textBlock('cart-t1', "Looks like you left a few things in your cart. No worries — we've saved them for you. Your items are ready whenever you are, but popular products can sell out quickly."),
+    buttonBlock('cart-btn', 'Complete My Order', '#', '#F59E0B'),
+    textBlock('cart-trust', 'Free returns · Secure checkout · Fast shipping', '#999999'),
   ]),
   row('cart-footer', [
     dividerBlock('cart-div'),
     textBlock(
       'cart-unsub',
-      "You're receiving this because you opted in. <a href='#'>Unsubscribe</a>.",
+      "You started a cart and we saved it for you. <a href='#'>Unsubscribe</a>.",
       '#999999'
     ),
   ]),
@@ -268,21 +269,21 @@ const ABANDONED_CART_DESIGN = makeDesign('abandoned-cart-doc', [
 const REPURCHASE_DESIGN = makeDesign('repurchase-doc', [
   row(
     'repurchase-header',
-    [headingBlock('repurchase-h1', 'Time to Stock Up?', '28px', '#FFFFFF')],
+    [headingBlock('repurchase-h1', 'Time to Restock?', '28px', '#FFFFFF')],
     '#10B981'
   ),
   row('repurchase-content', [
     textBlock(
       'repurchase-t1',
-      "It's been a while since your last order. Your favorites are still available!"
+      "We hope you're enjoying your recent purchase! Based on your order history, it might be time to restock. We've picked a few items we think you'll love — including some new arrivals."
     ),
-    buttonBlock('repurchase-btn', 'Shop Again', '#', '#10B981'),
+    buttonBlock('repurchase-btn', 'Reorder Now', '#', '#10B981'),
   ]),
   row('repurchase-footer', [
     dividerBlock('repurchase-div'),
     textBlock(
       'repurchase-unsub',
-      "You're receiving this because you opted in. <a href='#'>Unsubscribe</a>.",
+      "You're receiving this because you recently ordered. We thought you might be ready for more. <a href='#'>Unsubscribe</a>.",
       '#999999'
     ),
   ]),
@@ -291,21 +292,21 @@ const REPURCHASE_DESIGN = makeDesign('repurchase-doc', [
 const WINBACK_DESIGN = makeDesign('winback-doc', [
   row(
     'winback-header',
-    [headingBlock('winback-h1', 'We Miss You!', '28px', '#FFFFFF')],
+    [headingBlock('winback-h1', 'A Lot Has Changed — See What\'s New', '28px', '#FFFFFF')],
     '#8B5CF6'
   ),
   row('winback-content', [
     textBlock(
       'winback-t1',
-      "It's been a while. Here's an exclusive offer to welcome you back: use code WINBACK15 for 15% off."
+      "We've been busy making things even better. New arrivals, restocked favorites, and a few surprises are waiting for you. Whether you're looking for something familiar or ready to try something new, we've got you covered."
     ),
-    buttonBlock('winback-btn', 'Claim Your Discount', '#', '#8B5CF6'),
+    buttonBlock('winback-btn', 'See What\'s New', '#', '#8B5CF6'),
   ]),
   row('winback-footer', [
     dividerBlock('winback-div'),
     textBlock(
       'winback-unsub',
-      "You're receiving this because you opted in. <a href='#'>Unsubscribe</a>.",
+      "You previously shopped with us. We'd love to have you back. <a href='#'>Unsubscribe</a>.",
       '#999999'
     ),
   ]),
@@ -314,21 +315,21 @@ const WINBACK_DESIGN = makeDesign('winback-doc', [
 const VIP_DESIGN = makeDesign('vip-doc', [
   row(
     'vip-header',
-    [headingBlock('vip-h1', 'You\'re a VIP \u2746', '28px', '#FFFFFF')],
+    [headingBlock('vip-h1', 'You\'ve Earned VIP Status', '28px', '#FFFFFF')],
     '#B45309'
   ),
   row('vip-content', [
     textBlock(
       'vip-t1',
-      'As one of our most valued customers, you get exclusive early access to new arrivals and special rewards.'
+      "Your loyalty speaks volumes. You're among a select group of our most valued customers, and we believe that deserves something special. Here's what we've unlocked just for you."
     ),
-    buttonBlock('vip-btn', 'Shop the VIP Collection', '#', '#B45309'),
+    buttonBlock('vip-btn', 'Claim My VIP Perks', '#', '#B45309'),
   ]),
   row('vip-footer', [
     dividerBlock('vip-div'),
     textBlock(
       'vip-unsub',
-      "You're receiving this because you opted in. <a href='#'>Unsubscribe</a>.",
+      "Only our top customers receive this email. Thank you for being a VIP. <a href='#'>Unsubscribe</a>.",
       '#999999'
     ),
   ]),

@@ -166,13 +166,13 @@ export default function RepurchaseEmail({
 }: RepurchaseEmailProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi there,'
   const defaultHeadline = 'Time to restock?'
-  const defaultBody = `It's been a while since your last order from ${storeName}. We have new products and restocked favourites waiting for you.`
-  const defaultCtaText = 'Visit the Store'
+  const defaultBody = `We hope you're enjoying your recent purchase! Based on your order history, it might be time to restock. We've picked a few items we think you'll love — including some new arrivals.`
+  const defaultCtaText = 'Reorder Now'
 
   return (
     <Html lang="en">
       <Head />
-      <Preview>Time to restock? Shop the latest from {storeName}</Preview>
+      <Preview>Your last order was {lastOrderDate} — ready for a restock?</Preview>
       <Body style={main}>
         <Container style={container}>
           {logoUrl && (
@@ -221,7 +221,7 @@ export default function RepurchaseEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            You received this email as a valued customer of {storeName}.
+            You&apos;re receiving this because you recently ordered from {storeName}. We thought you might be ready for more.
             <br />
             <a href={unsubscribeUrl} style={unsubscribeLink}>
               Unsubscribe

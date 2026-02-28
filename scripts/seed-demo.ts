@@ -19,6 +19,7 @@ import {
   automations,
   messageLogs,
   emailClicks,
+  emailTemplates,
 } from '../src/lib/db/schema'
 import { PRESET_AUTOMATIONS } from '../src/lib/automation/presets'
 
@@ -123,11 +124,11 @@ const PET_PRODUCTS = [
 
 // Email subjects matching the automation flows
 const AUTOMATION_SUBJECTS: Record<string, string> = {
-  'Welcome Flow': 'Welcome to PawSupply — your first order perks inside 🐾',
-  'Abandoned Cart Recovery': 'You left something in your cart...',
-  'Repurchase Prompt': "Time to stock up? Your pets are waiting 🐶",
-  'Win-Back Campaign': "We miss you! Here's 15% off your next order",
-  'VIP Welcome': "You're a VIP — exclusive access unlocked ✨",
+  'Welcome Flow': 'Thanks for your order — welcome aboard!',
+  'Abandoned Cart Recovery': 'Your cart is saved — pick up where you left off',
+  'Repurchase Prompt': 'Ready for a restock? Your favorites are waiting',
+  'Win-Back Campaign': "A lot has changed — see what's new",
+  'VIP Welcome': "You've earned VIP status — exclusive perks inside",
 }
 
 const DEMO_URLS = [
@@ -284,7 +285,121 @@ async function clearDemoData() {
   await db.execute(
     sql`DELETE FROM customers WHERE shop_id = ${SHOP_ID}`
   )
+  await db.execute(
+    sql`DELETE FROM email_templates WHERE shop_id = ${SHOP_ID}`
+  )
   console.log('  Cleared.')
+}
+
+// ─── Seed preset email templates ──────────────────────────────────────────────
+
+const PRESET_TEMPLATES = [
+  { name: 'Welcome', headline: 'Welcome — You\'re Officially One of Us', body: 'Thank you for your first order! We put real care into every product we offer.', cta: 'Explore the Store', color: '#1E40AF' },
+  { name: 'Abandoned Cart', headline: 'Still Thinking It Over?', body: 'Looks like you left a few things in your cart. No worries — we\'ve saved them for you.', cta: 'Complete My Order', color: '#F59E0B' },
+  { name: 'Repurchase', headline: 'Time to Restock?', body: 'Based on your order history, it might be time to restock. We\'ve picked a few items we think you\'ll love.', cta: 'Reorder Now', color: '#10B981' },
+  { name: 'Win-back', headline: 'A Lot Has Changed — See What\'s New', body: 'We\'ve been busy making things even better. New arrivals, restocked favorites, and a few surprises are waiting.', cta: 'See What\'s New', color: '#8B5CF6' },
+  { name: 'VIP', headline: 'You\'ve Earned VIP Status', body: 'Your loyalty speaks volumes. You\'re among a select group of our most valued customers.', cta: 'Claim My VIP Perks', color: '#B45309' },
+]
+
+async function seedEmailTemplates(): Promise<void> {
+  console.log('\nSeeding preset email templates...')
+
+  // Clear existing presets for this shop
+  await db.execute(
+    sql`DELETE FROM email_templates WHERE shop_id = ${SHOP_ID} AND is_preset = true`
+  )
+
+  for (const tpl of PRESET_TEMPLATES) {
+    const design = {
+      schemaVersion: 12,
+      counters: { u_row: 3, u_column: 3, u_content_text: 2, u_content_button: 1, u_content_heading: 1, u_content_divider: 1 },
+      body: {
+        id: `${tpl.name.toLowerCase().replace(/\s+/g, '-')}-doc`,
+        rows: [
+          {
+            id: `${tpl.name.toLowerCase().replace(/\s+/g, '-')}-header`,
+            cells: [1],
+            columns: [{
+              id: `header-col`,
+              contents: [{
+                id: 'h1', type: 'heading',
+                values: {
+                  containerPadding: '10px', headingType: 'h1', fontWeight: 700, fontSize: '28px', color: '#FFFFFF', lineHeight: '140%',
+                  text: `<h1 style="margin: 0; line-height: 140%; text-align: center;">${tpl.headline}</h1>`,
+                  selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true,
+                },
+              }],
+              values: { backgroundColor: tpl.color, padding: '20px', border: {} },
+            }],
+            values: { backgroundColor: tpl.color, padding: '0px', selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true },
+          },
+          {
+            id: `${tpl.name.toLowerCase().replace(/\s+/g, '-')}-content`,
+            cells: [1],
+            columns: [{
+              id: 'content-col',
+              contents: [
+                {
+                  id: 't1', type: 'text',
+                  values: {
+                    containerPadding: '10px', fontSize: '14px', color: '#555555', lineHeight: '160%',
+                    text: `<p style="margin: 0; text-align: center;">${tpl.body}</p>`,
+                    selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true,
+                  },
+                },
+                {
+                  id: 'btn1', type: 'button',
+                  values: {
+                    containerPadding: '20px', href: { name: 'web', values: { href: '#', target: '_blank' } },
+                    buttonColors: { color: '#FFFFFF', backgroundColor: tpl.color, hoverColor: '#FFFFFF', hoverBackgroundColor: tpl.color },
+                    size: { autoWidth: true, width: '100%' }, fontWeight: 700, fontSize: '14px', textAlign: 'center', lineHeight: '120%',
+                    padding: '12px 30px', border: {}, borderRadius: '4px',
+                    text: `<span style="word-break: break-word; line-height: 168%;">${tpl.cta}</span>`,
+                    selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true,
+                  },
+                },
+              ],
+              values: { backgroundColor: '', padding: '20px', border: {} },
+            }],
+            values: { backgroundColor: '', padding: '0px', selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true },
+          },
+          {
+            id: `${tpl.name.toLowerCase().replace(/\s+/g, '-')}-footer`,
+            cells: [1],
+            columns: [{
+              id: 'footer-col',
+              contents: [{
+                id: 'unsub', type: 'text',
+                values: {
+                  containerPadding: '10px', fontSize: '14px', color: '#999999', lineHeight: '160%',
+                  text: `<p style="margin: 0; text-align: center;">You received this email from PawSupply. <a href='#'>Unsubscribe</a>.</p>`,
+                  selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true,
+                },
+              }],
+              values: { backgroundColor: '', padding: '20px', border: {} },
+            }],
+            values: { backgroundColor: '', padding: '0px', selectable: true, draggable: true, duplicatable: true, deletable: true, hideable: true },
+          },
+        ],
+        headers: [],
+        footers: [],
+        values: {
+          textColor: '#000000', backgroundColor: '#F4F4F4',
+          backgroundImage: { url: '', fullWidth: true, repeat: 'no-repeat', size: 'custom', position: 'center' },
+          fontFamily: { label: 'Arial', value: 'arial,helvetica,sans-serif' },
+        },
+      },
+    }
+
+    await db.insert(emailTemplates).values({
+      shopId: SHOP_ID,
+      name: tpl.name,
+      designJson: design,
+      html: null,
+      isPreset: true,
+    })
+    console.log(`  [${tpl.name}] inserted`)
+  }
 }
 
 // ─── Seed customers + orders ──────────────────────────────────────────────────
@@ -597,6 +712,7 @@ async function main() {
   console.log('='.repeat(60))
 
   await clearDemoData()
+  await seedEmailTemplates()
   const customerIds = await seedCustomersAndOrders()
   const automationIds = await seedAutomations()
   await recalculateRfm()

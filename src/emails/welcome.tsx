@@ -106,15 +106,15 @@ export default function WelcomeEmail({
   customBody,
   customCtaText,
 }: WelcomeEmailProps) {
-  const greeting = customerName ? `Hi ${customerName},` : 'Welcome!'
-  const defaultHeadline = storeName
-  const defaultBody = `Thank you for joining ${storeName}. We're excited to have you as a customer and we can't wait to share what we have in store for you.`
-  const defaultCtaText = 'Shop Now'
+  const greeting = customerName ? `Hi ${customerName},` : 'Hi there,'
+  const defaultHeadline = `Welcome to ${storeName}`
+  const defaultBody = `Thank you for your first order! You've made a great choice. We put real care into every product we offer, and we're committed to making sure you love what you get. As a ${storeName} customer, you'll be the first to hear about new arrivals, exclusive deals, and insider tips.`
+  const defaultCtaText = 'Explore the Store'
 
   return (
     <Html lang="en">
       <Head />
-      <Preview>Welcome to {storeName} — we&apos;re glad you&apos;re here!</Preview>
+      <Preview>Thanks for your order — here&apos;s what to expect as a {storeName} customer</Preview>
       <Body style={main}>
         <Container style={container}>
           {logoUrl && (
@@ -124,14 +124,14 @@ export default function WelcomeEmail({
           )}
 
           <Text style={heading}>{customHeadline ?? defaultHeadline}</Text>
-          <Text style={subheading}>Welcome to the family</Text>
+          <Text style={subheading}>You&apos;re officially one of us</Text>
 
           <Text style={bodyText}>{greeting}</Text>
           <Text style={bodyText}>
             {customBody ?? defaultBody}
           </Text>
           <Text style={bodyText}>
-            Explore our latest collection and find something you&apos;ll love.
+            Ready to explore? Check out our bestsellers and latest arrivals — there&apos;s something for everyone.
           </Text>
 
           <Section style={buttonContainer}>
@@ -143,7 +143,7 @@ export default function WelcomeEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            You received this email because you signed up at {storeName}.
+            You received this email because you made a purchase at {storeName}.
             <br />
             <a href={unsubscribeUrl} style={unsubscribeLink}>
               Unsubscribe

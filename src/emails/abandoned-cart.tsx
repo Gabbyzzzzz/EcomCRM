@@ -148,14 +148,14 @@ export default function AbandonedCartEmail({
   customCtaText,
 }: AbandonedCartEmailProps) {
   const greeting = customerName ? `Hi ${customerName},` : 'Hi there,'
-  const defaultHeadline = 'You left something behind'
-  const defaultBody = `It looks like you left some items in your cart at ${storeName}. They're still waiting for you!`
-  const defaultCtaText = 'Complete Your Purchase'
+  const defaultHeadline = 'Still thinking it over?'
+  const defaultBody = `Looks like you left a few things in your cart. No worries — we've saved them for you. Your items are ready whenever you are, but popular products can sell out quickly.`
+  const defaultCtaText = 'Complete My Order'
 
   return (
     <Html lang="en">
       <Head />
-      <Preview>You left something behind — complete your order at {storeName}</Preview>
+      <Preview>Your cart is saved — pick up where you left off at {storeName}</Preview>
       <Body style={main}>
         <Container style={container}>
           {logoUrl && (
@@ -204,10 +204,14 @@ export default function AbandonedCartEmail({
             </Button>
           </Section>
 
+          <Text style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center' as const, margin: '0 0 8px' }}>
+            Free returns &bull; Secure checkout &bull; Fast shipping
+          </Text>
+
           <Hr style={hr} />
 
           <Text style={footer}>
-            You received this email because you have an abandoned cart at {storeName}.
+            You started a cart at {storeName} and we saved it for you.
             <br />
             <a href={unsubscribeUrl} style={unsubscribeLink}>
               Unsubscribe

@@ -137,15 +137,15 @@ export default function WinbackEmail({
   customBody,
   customCtaText,
 }: WinbackEmailProps) {
-  const greeting = customerName ? `We miss you, ${customerName}` : 'We miss you'
-  const defaultBody = `It's been ${daysSinceLastOrder} days since your last visit and we've been thinking about you. We'd love to have you back.`
-  const defaultCtaText = 'Come Back and Shop'
+  const greeting = customerName ? `It's been a while, ${customerName}` : 'It's been a while'
+  const defaultBody = `It's been ${daysSinceLastOrder} days since your last order, and we've been busy making things even better. New arrivals, restocked favorites, and a few surprises are waiting for you. We'd love to welcome you back.`
+  const defaultCtaText = 'See What's New'
 
   return (
     <Html lang="en">
       <Head />
       <Preview>
-        {`${customerName ? `We miss you, ${customerName}` : 'We miss you'} — it's been ${daysSinceLastOrder} days`}
+        {`A lot has changed since your last order — see what's new at ${storeName}`}
       </Preview>
       <Body style={main}>
         <Container style={container}>
@@ -163,8 +163,8 @@ export default function WinbackEmail({
           </Text>
 
           <Text style={bodyText}>
-            A lot has changed since your last order — new arrivals, restocks, and
-            surprises await you.
+            Whether you&apos;re looking for something familiar or ready to try something new,
+            we&apos;ve got you covered.
           </Text>
 
           {incentive && (
@@ -183,7 +183,7 @@ export default function WinbackEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            You received this email as a past customer of {storeName}.
+            You&apos;re receiving this because you previously shopped at {storeName}. We&apos;d love to have you back.
             <br />
             <a href={unsubscribeUrl} style={unsubscribeLink}>
               Unsubscribe
@@ -199,7 +199,7 @@ WinbackEmail.PreviewProps = {
   storeName: 'Acme Store',
   customerName: 'Jane',
   daysSinceLastOrder: 90,
-  incentive: '15% off your next order — use code COMEBACK15',
+  incentive: '15% off your next order with code COMEBACK15',
   shopUrl: 'https://example.com',
   unsubscribeUrl: 'https://example.com/unsubscribe?token=abc',
 } satisfies WinbackEmailProps
