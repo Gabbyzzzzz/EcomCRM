@@ -4,6 +4,7 @@ import { env } from '@/lib/env'
 import { CustomerFilters } from '@/components/customer-filters'
 import { and, eq, isNull, desc } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Customers | EcomCRM',
 }

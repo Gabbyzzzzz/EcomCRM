@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { listEmailTemplates } from '@/lib/db/queries'
 import { env } from '@/lib/env'

@@ -13,6 +13,7 @@ import { InfoPopover } from '@/components/info-popover'
 import Link from 'next/link'
 import Decimal from 'decimal.js'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Dashboard | EcomCRM' }
 
 // ─── Relative time helper ──────────────────────────────────────────────────────
