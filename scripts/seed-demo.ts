@@ -5,7 +5,19 @@
  *
  * Run with:  npx tsx scripts/seed-demo.ts
  *
- * Uses DEMO_DATABASE_URL env var if set, falls back to DATABASE_URL.
+ * DB isolation (recommended):
+ *   Set DEMO_DATABASE_URL to a separate database so demo data never touches
+ *   the production DB. Falls back to DATABASE_URL if not set.
+ *
+ * Shop ID isolation (required to prevent real Shopify sync contamination):
+ *   Set DEMO_SHOP_ID to a fake shop hostname, e.g. "demo.myshopify.com".
+ *   This keeps demo data under a different shop_id so real webhook/cron sync
+ *   (which uses SHOPIFY_STORE_URL) can never overwrite it.
+ *
+ *   To view demo data in the app, also set:
+ *     SHOPIFY_STORE_URL=https://demo.myshopify.com
+ *   Since the URL is fake, no real Shopify sync will run — demo data stays clean.
+ *
  * Safe to re-run — clears all existing data for the demo shop first.
  */
 
@@ -25,7 +37,24 @@ import { PRESET_AUTOMATIONS } from '../src/lib/automation/presets'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const SHOP_ID = '66pqxy-de.myshopify.com'
+// Prefer an explicit DEMO_SHOP_ID so demo data is stored under a shop_id that
+// real Shopify sync will never touch. Falls back to the SHOPIFY_STORE_URL
+// hostname — but that means real sync events CAN overwrite demo data.
+const rawDemoShopId = process.env.DEMO_SHOP_ID
+const rawStoreUrl   = process.env.SHOPIFY_STORE_URL
+
+if (!rawDemoShopId && !rawStoreUrl) {
+  console.error('ERROR: Set DEMO_SHOP_ID (recommended) or SHOPIFY_STORE_URL.')
+  process.exit(1)
+}
+
+const SHOP_ID = rawDemoShopId ?? new URL(rawStoreUrl!).hostname
+
+if (!rawDemoShopId) {
+  console.warn(`⚠️  DEMO_SHOP_ID not set — using real store shop_id "${SHOP_ID}"`)
+  console.warn('   Real Shopify sync events will contaminate demo data.')
+  console.warn('   Add DEMO_SHOP_ID=demo.myshopify.com to your .env.local to isolate demo data.\n')
+}
 
 // ─── DB connection ────────────────────────────────────────────────────────────
 
