@@ -137,9 +137,9 @@ export default function WinbackEmail({
   customBody,
   customCtaText,
 }: WinbackEmailProps) {
-  const greeting = customerName ? `It's been a while, ${customerName}` : 'It's been a while'
+  const greeting = customerName ? `It's been a while, ${customerName}` : `It's been a while`
   const defaultBody = `It's been ${daysSinceLastOrder} days since your last order, and we've been busy making things even better. New arrivals, restocked favorites, and a few surprises are waiting for you. We'd love to welcome you back.`
-  const defaultCtaText = 'See What's New'
+  const defaultCtaText = `See What's New`
 
   return (
     <Html lang="en">
