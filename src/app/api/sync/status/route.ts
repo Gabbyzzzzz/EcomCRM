@@ -1,8 +1,8 @@
 import { getLatestSyncLog } from '@/lib/db/queries'
 import { db } from '@/lib/db'
-import { syncLogs, webhookDeliveries } from '@/lib/db/schema'
+import { syncLogs, webhookDeliveries, customers, orders } from '@/lib/db/schema'
 import { env } from '@/lib/env'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, count } from 'drizzle-orm'
 
 // ─── Shop ID derivation ───────────────────────────────────────────────────────
 
@@ -57,6 +57,29 @@ export interface SyncHistoryEntry {
  *   - Every 2s when status='running'
  */
 export async function GET(request: Request): Promise<Response> {
+  // In demo mode, return a synthetic "completed" status with real DB counts
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    const shopId = getShopId()
+    const [{ value: customerCount }] = await db
+      .select({ value: count() })
+      .from(customers)
+      .where(eq(customers.shopId, shopId))
+    const [{ value: orderCount }] = await db
+      .select({ value: count() })
+      .from(orders)
+      .where(eq(orders.shopId, shopId))
+
+    const response: SyncStatus = {
+      status: 'completed',
+      lastSyncAt: new Date().toISOString(),
+      isStale: false,
+      customersCount: customerCount,
+      ordersCount: orderCount,
+      deadLetterCount: 0,
+    }
+    return Response.json(response)
+  }
+
   const shopId = getShopId()
   const url = new URL(request.url)
   const includeHistory = url.searchParams.get('history') === 'true'
