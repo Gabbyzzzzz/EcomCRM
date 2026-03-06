@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle2, AlertCircle, RefreshCw, Info } from 'lucide-react'
+
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 interface WebhookResult {
   topic: string
@@ -32,6 +34,25 @@ export function WebhookRegistration() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isDemoMode) {
+    return (
+      <div className="flex items-start gap-3 p-4 rounded-lg border border-blue-200 bg-blue-50">
+        <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-blue-900">
+            Webhooks are disabled in demo mode
+          </p>
+          <p className="text-sm text-blue-700 mt-1">
+            In production, Shopify sends real-time webhook notifications
+            (orders/create, customers/create, customers/update) so the CRM
+            stays in sync without polling. Webhook payloads are verified
+            using HMAC-SHA256 before processing.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

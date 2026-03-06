@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { RefreshCw, ChevronDown } from 'lucide-react'
+import { RefreshCw, ChevronDown, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -33,11 +33,36 @@ import { toast } from 'sonner'
  * Per user decision: Force full sync is behind an Advanced toggle.
  * Per user decision: Confirmation dialog warns about re-importing all data.
  */
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export function SyncActions() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isForceSyncing, setIsForceSyncing] = useState(false)
   const [isRecalculating, setIsRecalculating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  if (isDemoMode) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 p-4 rounded-lg border border-blue-200 bg-blue-50">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-blue-900">
+              Sync is disabled in demo mode
+            </p>
+            <p className="text-sm text-blue-700 mt-1">
+              This demo uses pre-seeded data to showcase the CRM features.
+              In a production environment, this page connects to your Shopify
+              store via OAuth (client credentials grant) to sync customers and
+              orders in real time. The sync engine supports both incremental
+              syncs (pulling only changes since the last sync) and full bulk
+              imports using Shopify&apos;s Bulk Operation API.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // ─── Incremental sync ────────────────────────────────────────────
 
