@@ -8,6 +8,7 @@ import { getAutomationEmailStats, getAutomationEmailTimeSeries, listEmailTemplat
 import { EmailCopyGenerator } from '@/components/email-copy-generator'
 import { AutomationDetailClient } from '@/components/automation-detail-client'
 import { EmailPerformanceChart } from '@/components/email-performance-chart'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 // ─── Human-readable trigger label ─────────────────────────────────────────────
 
@@ -59,15 +60,11 @@ export default async function AutomationDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back link */}
-      <div>
-        <Link
-          href="/automations"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          &larr; Back to Automations
-        </Link>
-      </div>
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: 'Automations', href: '/automations' },
+        { label: automation.name },
+      ]} />
 
       {/* Heading + status badge */}
       <div className="flex items-center gap-3">

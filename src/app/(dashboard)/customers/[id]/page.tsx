@@ -5,6 +5,7 @@ import { env } from '@/lib/env'
 import { getCustomerProfile, getCustomerOrders, getCustomerMessages } from '@/lib/db/queries'
 import { InfoPopover } from '@/components/info-popover'
 import { CustomerAiInsight } from '@/components/customer-ai-insight'
+import { Breadcrumb } from '@/components/breadcrumb'
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
@@ -131,16 +132,14 @@ export default async function CustomerProfilePage({
   const segment = customer.segment as CustomerSegment | null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2">
-        <Link
-          href="/customers"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 w-fit"
-        >
-          &larr; Back to Customers
-        </Link>
+      {/* Header */}
+      <div className="flex flex-col gap-3">
+        <Breadcrumb items={[
+          { label: 'Customers', href: '/customers' },
+          { label: customer.name ?? 'Customer' },
+        ]} />
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold tracking-tight">
             {customer.name ?? 'Unknown Customer'}

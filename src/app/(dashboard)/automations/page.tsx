@@ -4,6 +4,7 @@ import { env } from '@/lib/env'
 import { AutomationToggle } from '@/components/automation-toggle'
 import { SeedAutomationsButton } from '@/components/seed-automations-button'
 import CreateFlowButton from './_components/CreateFlowButton'
+import { ZapIcon } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ export default async function AutomationsPage() {
   ])
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
@@ -65,10 +66,13 @@ export default async function AutomationsPage() {
 
       {/* Empty state */}
       {automationList.length === 0 ? (
-        <div className="rounded-lg border bg-card p-12 text-center">
+        <div className="rounded-lg border bg-card p-16 text-center flex flex-col items-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <ZapIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
           <h2 className="text-lg font-medium mb-2">No automation flows configured</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Seed the 5 preset flows to get started with automated email marketing.
+          <p className="text-sm text-muted-foreground mb-6 max-w-md">
+            Set up automated email flows that trigger on customer events like first orders, segment changes, and cart abandonment.
           </p>
           <SeedAutomationsButton />
         </div>

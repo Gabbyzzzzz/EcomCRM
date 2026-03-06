@@ -44,7 +44,7 @@ export default async function EmailTemplatesPage() {
   const templates = await listEmailTemplates(shopId)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Email Templates</h1>
@@ -59,10 +59,18 @@ export default async function EmailTemplatesPage() {
       </div>
 
       {templates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            No templates yet. Create your first template to get started.
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 px-6 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <svg className="h-8 w-8 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <h2 className="text-lg font-medium mb-2">No templates yet</h2>
+          <p className="text-sm text-muted-foreground max-w-md mb-6">
+            Create your first email template to use in your automation flows. You can start from scratch or import an existing design.
           </p>
+          <div className="flex items-center gap-2">
+            <ImportTemplateButton />
+            <CreateTemplateButton />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

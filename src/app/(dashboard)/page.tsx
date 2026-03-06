@@ -12,11 +12,21 @@ import { RevenueChart } from '@/components/revenue-chart'
 import { InfoPopover } from '@/components/info-popover'
 import Link from 'next/link'
 import Decimal from 'decimal.js'
+import {
+  UsersIcon,
+  DollarSignIcon,
+  UserPlusIcon,
+  SendIcon,
+  MailIcon,
+  EyeIcon,
+  MousePointerClickIcon,
+  ShoppingCartIcon,
+  ArrowUpRightIcon,
+  DatabaseIcon,
+} from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Dashboard | EcomCRM' }
-
-// ─── Relative time helper ──────────────────────────────────────────────────────
 
 function relativeTime(date: Date | null): string {
   if (!date) return 'Unknown'
@@ -30,19 +40,15 @@ function relativeTime(date: Date | null): string {
   return `${days}d ago`
 }
 
-// ─── Segment badge colors ─────────────────────────────────────────────────────
-
 const SEGMENT_BADGE: Record<string, string> = {
-  at_risk: 'bg-amber-100 text-amber-800',
-  hibernating: 'bg-orange-100 text-orange-800',
-  lost: 'bg-red-100 text-red-800',
+  at_risk: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  hibernating: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  lost: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 }
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).replace('_', ' ')
 }
-
-// ─── Dashboard page ────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const shopId = new URL(env.SHOPIFY_STORE_URL).hostname
@@ -57,7 +63,6 @@ export default async function DashboardPage() {
       getEmailPerformanceKpis(shopId, 30),
     ])
 
-  // ── Recent Activity: merge messages + orders into single timeline ─────────
   type ActivityItem =
     | { type: 'email'; id: string; customerName: string | null; subject: string | null; status: string; time: Date | null }
     | { type: 'order'; id: string; customerName: string | null; totalPrice: string | null; time: Date | null }
@@ -86,8 +91,8 @@ export default async function DashboardPage() {
   const churnOverflow = churnAlerts.length - displayedChurns.length
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* ── Heading ─────────────────────────────────────────────────────── */}
+    <div className="flex flex-col gap-8">
+      {/* Heading */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -95,126 +100,159 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* ── Zero-customer empty state OR full dashboard content ───────── */}
       {kpis.totalCustomers === 0 ? (
-        <div className="rounded-lg border bg-card p-12 text-center">
+        /* Empty state */
+        <div className="rounded-lg border bg-card p-16 text-center flex flex-col items-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <DatabaseIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
           <h2 className="text-lg font-medium mb-2">No customers yet</h2>
-          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-            Sync your Shopify store to import customers and start seeing CRM metrics here.
+          <p className="text-sm text-muted-foreground mb-6 max-w-md">
+            Connect and sync your Shopify store to import customers, orders, and start seeing CRM metrics on this dashboard.
           </p>
           <a
             href="/settings/sync"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Go to Sync Settings
+            <ArrowUpRightIcon className="h-4 w-4" />
           </a>
         </div>
       ) : (
         <>
-          {/* ── KPI Cards ──────────────────────────────────────────────── */}
+          {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total Customers */}
             <div className="rounded-lg border bg-card p-6">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                Total Customers
-              </p>
-              <p className="text-2xl font-semibold">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Total Customers
+                </p>
+                <div className="rounded-md bg-blue-100 dark:bg-blue-900/30 p-1.5">
+                  <UsersIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold tabular-nums">
                 {kpis.totalCustomers.toLocaleString()}
               </p>
             </div>
 
-            {/* Total Revenue */}
             <div className="rounded-lg border bg-card p-6">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                Total Revenue
-              </p>
-              <p className="text-2xl font-semibold">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Total Revenue
+                </p>
+                <div className="rounded-md bg-green-100 dark:bg-green-900/30 p-1.5">
+                  <DollarSignIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold tabular-nums">
                 ${new Decimal(kpis.totalRevenue).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               </p>
             </div>
 
-            {/* New Customers (30d) */}
             <div className="rounded-lg border bg-card p-6">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                New Customers (30d)
-              </p>
-              <p className="text-2xl font-semibold">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  New Customers (30d)
+                </p>
+                <div className="rounded-md bg-purple-100 dark:bg-purple-900/30 p-1.5">
+                  <UserPlusIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold tabular-nums">
                 {kpis.newCustomers30d.toLocaleString()}
               </p>
             </div>
 
-            {/* Emails Sent (30d) */}
             <div className="rounded-lg border bg-card p-6">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                Emails Sent (30d)
-              </p>
-              <p className="text-2xl font-semibold">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Emails Sent (30d)
+                </p>
+                <div className="rounded-md bg-amber-100 dark:bg-amber-900/30 p-1.5">
+                  <SendIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold tabular-nums">
                 {kpis.emailsSent30d.toLocaleString()}
               </p>
             </div>
           </div>
 
-          {/* ── Email Performance ──────────────────────────────────────── */}
+          {/* Email Performance */}
           <div className="rounded-lg border bg-card p-6">
-            <h2 className="text-sm font-semibold mb-4">Email Performance</h2>
-            <p className="text-xs text-muted-foreground mb-4">
+            <h2 className="text-sm font-semibold mb-1">Email Performance</h2>
+            <p className="text-xs text-muted-foreground mb-5">
               Last 30 days. Open rates may be inflated by Apple Mail Privacy Protection.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Total Sent</p>
-                <p className="text-2xl font-semibold tabular-nums">
-                  {emailPerf.totalSent.toLocaleString()}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-blue-100 dark:bg-blue-900/30 p-2">
+                  <MailIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Sent</p>
+                  <p className="text-xl font-semibold tabular-nums">
+                    {emailPerf.totalSent.toLocaleString()}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Open Rate</p>
-                <p className="text-2xl font-semibold tabular-nums">
-                  {emailPerf.openRate}%
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-green-100 dark:bg-green-900/30 p-2">
+                  <EyeIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Open Rate</p>
+                  <p className="text-xl font-semibold tabular-nums">
+                    {emailPerf.openRate}%
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Click Rate</p>
-                <p className="text-2xl font-semibold tabular-nums">
-                  {emailPerf.clickRate}%
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="rounded-md bg-amber-100 dark:bg-amber-900/30 p-2">
+                  <MousePointerClickIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Click Rate</p>
+                  <p className="text-xl font-semibold tabular-nums">
+                    {emailPerf.clickRate}%
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ── Charts ─────────────────────────────────────────────────── */}
+          {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Segment Distribution */}
             <div className="rounded-lg border bg-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-sm font-semibold">Segment Distribution</h2>
                 <InfoPopover side="bottom" align="start" width="w-80">
                   <p className="font-medium mb-2">How segments work</p>
                   <p className="text-muted-foreground mb-2">
-                    Customers with orders are scored 1–5 on Recency (R), Frequency (F), and Monetary (M) via quintile ranking, then assigned a segment:
+                    Customers with orders are scored 1-5 on Recency (R), Frequency (F), and Monetary (M) via quintile ranking, then assigned a segment:
                   </p>
                   <ul className="flex flex-col gap-1">
-                    <li><span className="font-medium">Champion</span> <span className="text-muted-foreground">— R≥4, F≥4, M≥4. Best customers: recent, frequent, high-spend.</span></li>
-                    <li><span className="font-medium">Loyal</span> <span className="text-muted-foreground">— R≥3, F≥3, M≥3. Consistent buyers with solid spend.</span></li>
-                    <li><span className="font-medium">New</span> <span className="text-muted-foreground">— R≥4, F≤1. Bought recently for the first time.</span></li>
-                    <li><span className="font-medium">Potential</span> <span className="text-muted-foreground">— R≥3, other criteria. Recent but not yet loyal.</span></li>
-                    <li><span className="font-medium">At Risk</span> <span className="text-muted-foreground">— R≤2, F≥2. Used to buy regularly but drifting away.</span></li>
-                    <li><span className="font-medium">Hibernating</span> <span className="text-muted-foreground">— R≤2, F≤2, M≥2. Long inactive with decent lifetime spend.</span></li>
-                    <li><span className="font-medium">Lost</span> <span className="text-muted-foreground">— Everything else. Low recency, frequency, and spend.</span></li>
+                    <li><span className="font-medium">Champion</span>{' '}<span className="text-muted-foreground">{'— R\u22654, F\u22654, M\u22654. Best customers: recent, frequent, high-spend.'}</span></li>
+                    <li><span className="font-medium">Loyal</span>{' '}<span className="text-muted-foreground">{'— R\u22653, F\u22653, M\u22653. Consistent buyers with solid spend.'}</span></li>
+                    <li><span className="font-medium">New</span>{' '}<span className="text-muted-foreground">{'— R\u22654, F\u22641. Bought recently for the first time.'}</span></li>
+                    <li><span className="font-medium">Potential</span>{' '}<span className="text-muted-foreground">{'— R\u22653, other criteria. Recent but not yet loyal.'}</span></li>
+                    <li><span className="font-medium">At Risk</span>{' '}<span className="text-muted-foreground">{'— R\u22642, F\u22652. Used to buy regularly but drifting away.'}</span></li>
+                    <li><span className="font-medium">Hibernating</span>{' '}<span className="text-muted-foreground">{'— R\u22642, F\u22642, M\u22652. Long inactive with decent lifetime spend.'}</span></li>
+                    <li><span className="font-medium">Lost</span>{' '}<span className="text-muted-foreground">{'— Everything else. Low recency, frequency, and spend.'}</span></li>
                   </ul>
                 </InfoPopover>
               </div>
               <SegmentChart data={segmentData} />
             </div>
 
-            {/* Revenue Over Time */}
             <div className="rounded-lg border bg-card p-6">
               <h2 className="text-sm font-semibold mb-4">Revenue (Last 90 Days)</h2>
               <RevenueChart data={revenueData} />
             </div>
           </div>
 
-          {/* ── Churn Alerts ───────────────────────────────────────────── */}
+          {/* Churn Alerts */}
           <div className="rounded-lg border bg-card p-6">
             <div className="flex items-center gap-3 mb-4">
               <h2 className="text-sm font-semibold">Churn Alerts</h2>
@@ -255,7 +293,7 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* ── Recent Activity ─────────────────────────────────────────── */}
+          {/* Recent Activity */}
           <div className="rounded-lg border bg-card p-6">
             <h2 className="text-sm font-semibold mb-4">Recent Activity</h2>
 
@@ -265,19 +303,20 @@ export default async function DashboardPage() {
               <ul className="flex flex-col gap-3">
                 {allActivity.map((item) => (
                   <li key={`${item.type}-${item.id}`} className="flex items-start gap-3 text-sm">
-                    {/* Type indicator */}
-                    <span className="mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-mono font-medium bg-muted text-muted-foreground">
+                    <span className={`mt-0.5 shrink-0 rounded-md px-2 py-0.5 text-xs font-medium ${
+                      item.type === 'email'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    }`}>
                       {item.type === 'email' ? 'Email' : 'Order'}
                     </span>
 
-                    {/* Description */}
                     <span className="flex-1 text-foreground">
                       {item.type === 'email'
                         ? `Sent "${item.subject ?? 'email'}" to ${item.customerName ?? 'customer'}`
                         : `Order ${item.totalPrice != null ? `$${new Decimal(item.totalPrice).toFixed(2)}` : ''} by ${item.customerName ?? 'customer'}`}
                     </span>
 
-                    {/* Relative time */}
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {relativeTime(item.time)}
                     </span>
