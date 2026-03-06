@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
-import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
+import { RefreshCw, CheckCircle2, AlertCircle, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -52,6 +52,8 @@ function formatCount(n: number): string {
  * Completion toast: fires when status transitions from 'running' to 'completed',
  * showing "Sync complete: X customers, Y orders imported".
  */
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export function SyncIndicator() {
   const pathname = usePathname()
   const isOnSyncPage = pathname === '/settings/sync'
@@ -146,6 +148,7 @@ export function SyncIndicator() {
 
   useEffect(() => {
     if (
+      !isDemoMode &&
       syncStatus !== null &&
       syncStatus.lastSyncAt === null &&
       syncStatus.status === 'no_sync_yet' &&
@@ -283,31 +286,48 @@ export function SyncIndicator() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1 border-t">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1"
-              disabled={isRunning}
-              onClick={() => triggerSync(false)}
-            >
-              {isRunning ? (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-1.5" />
-                  Sync Now
-                </>
-              )}
-            </Button>
-            <a
-              href="/settings/sync"
-              className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-            >
-              Details
-            </a>
+            {isDemoMode ? (
+              <>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Database className="h-3 w-3" />
+                  Demo mode — using pre-seeded data
+                </span>
+                <a
+                  href="/settings/sync"
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                >
+                  Details
+                </a>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled={isRunning}
+                  onClick={() => triggerSync(false)}
+                >
+                  {isRunning ? (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1.5" />
+                      Sync Now
+                    </>
+                  )}
+                </Button>
+                <a
+                  href="/settings/sync"
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                >
+                  Details
+                </a>
+              </>
+            )}
           </div>
         </div>
       </PopoverContent>
