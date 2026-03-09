@@ -679,7 +679,7 @@ export async function getDashboardKpis(shopId: string): Promise<DashboardKpis> {
         WHERE shop_id = ${shopId} AND deleted_at IS NULL AND shopify_created_at >= NOW() - INTERVAL '30 days')
         AS new_customers_30d,
       (SELECT COUNT(*) FROM ${messageLogs}
-        WHERE shop_id = ${shopId} AND status = 'sent' AND sent_at >= NOW() - INTERVAL '30 days')
+        WHERE shop_id = ${shopId} AND status IN ('sent', 'opened', 'clicked', 'converted') AND sent_at >= NOW() - INTERVAL '30 days')
         AS emails_sent_30d
   `)
 
