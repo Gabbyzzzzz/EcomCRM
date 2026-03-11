@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed:templates": "npx tsx --env-file .env.local scripts/seed-preset-templates.ts"
+    "seed:templates": "npx tsx --env-file .env.local scripts/seed-preset-templates.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.46",
@@ -28,6 +30,7 @@
     "inngest": "^3.52.1",
     "lucide-react": "^0.574.0",
     "next": "14.2.35",
+    "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.8",
     "react": "^18",
@@ -44,10 +47,12 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^5.1.4",
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.9",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
