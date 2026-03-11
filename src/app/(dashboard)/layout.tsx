@@ -4,11 +4,19 @@ import { SyncIndicator } from '@/components/sync-indicator'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { Toaster } from '@/components/ui/sonner'
 
+const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      {isDemo && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-amber-950 text-center text-sm font-medium py-1.5 px-4">
+          Demo environment — data shown is simulated and resets periodically
+        </div>
+      )}
+
       {/* Sidebar */}
-      <aside className="hidden md:flex w-56 flex-col border-r bg-card px-4 py-6 gap-2 shrink-0">
+      <aside className={`hidden md:flex w-56 flex-col border-r bg-card px-4 py-6 gap-2 shrink-0 ${isDemo ? 'mt-9' : ''}`}>
         <Link
           href="/"
           className="mb-6 flex items-center gap-2 font-semibold text-lg px-2"
@@ -20,7 +28,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className={`flex flex-1 flex-col overflow-hidden ${isDemo ? 'mt-9' : ''}`}>
         <header className="flex h-14 items-center justify-between border-b px-4 bg-card shrink-0">
           <Link
             href="/"
