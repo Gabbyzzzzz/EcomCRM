@@ -1,4 +1,4 @@
-# Domain Pitfalls
+let# Domain Pitfalls
 
 **Domain:** Shopify CRM + Marketing Automation (EcomCRM)
 **Researched:** 2026-02-19
