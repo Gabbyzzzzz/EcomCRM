@@ -35,28 +35,36 @@ function isAiEndpoint(pathname: string): boolean {
   )
 }
 
+// ─── Demo mode ──────────────────────────────────────────────────────────────
+const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+
 // ─── Middleware ──────────────────────────────────────────────────────────────
 export default auth((req) => {
   const { pathname } = req.nextUrl
 
-  // Public routes — no auth required
-  const isPublic =
-    pathname === "/login" ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/webhooks") ||
-    pathname.startsWith("/api/track") ||
-    pathname.startsWith("/api/inngest") ||
-    pathname === "/api/unsubscribe" ||
-    pathname.startsWith("/unsubscribe") ||
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
+  // Demo mode — skip auth, only enforce rate limits
+  if (isDemo) {
+    // Redirect /login to / in demo mode (no login needed)
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
+  } else {
+    // Production: enforce auth
+    const isPublic =
+      pathname === "/login" ||
+      pathname.startsWith("/api/auth") ||
+      pathname.startsWith("/api/webhooks") ||
+      pathname.startsWith("/api/track") ||
+      pathname.startsWith("/api/inngest") ||
+      pathname === "/api/unsubscribe" ||
+      pathname.startsWith("/unsubscribe") ||
+      pathname.startsWith("/_next") ||
+      pathname === "/favicon.ico"
 
-  if (isPublic) return NextResponse.next()
-
-  // Auth check
-  if (!req.auth) {
-    const loginUrl = new URL("/login", req.url)
-    return NextResponse.redirect(loginUrl)
+    if (!isPublic && !req.auth) {
+      const loginUrl = new URL("/login", req.url)
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   // Rate limit AI endpoints
